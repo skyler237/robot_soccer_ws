@@ -13,6 +13,7 @@ using namespace std;
 using namespace geometry_msgs;
 using namespace Eigen;
 
+typedef boost::shared_ptr< ::slash_dash_bang_hash::RobotState const> RobotStateConstPtr;
 
 #define CONTROL_K_XY 5
 #define CONTROL_K_OMEGA 2
@@ -53,20 +54,24 @@ public class PathPlanner {
   Vector2d goal_;
 
   // Publishers and Subscribers
-  ros::Publisher ally1_goal_pub_;
-  ros::Publisher ally2_goal_pub_;
+  ros::Publisher ally1_desired_pose_pub_;
+  ros::Publisher ally2_desired_pose_pub_;
 
   ros::Subscriber game_state_sub_;
+  ros::Subscriber ally1_state_sub_, ally2_state_sub_;
+  ros::Subscriber opp1_state_sub_, opp2_state_sub_;
+  ros::Subscriber ball_state_;
   soccerref::GameState gameState_;
 
+  slash_dash_bang_hash::RobotState ally1_destination_, ally2_destination_; // End goal
+  slash_dash_bang_hash::RobotState ally1_desired_pose_, ally2_desired_pose_; // Next step to get there
   slash_dash_bang_hash::RobotState ally1_state_, ally2_state_;
-  slash_dash_bang_hash::RobotState ally1_goal_, ally2_goal_;
   slash_dash_bang_hash::RobotState opp1_state_, opp2_state_;
-  BallState ball_;
+  BallState ball_state_;
 
-  void param_init();
-  void computeGoal();
+  void planPath();
 
-  void destinationCallback(const geometry_msgs::Pose2D::ConstPtr &msg, const std::string& robot);
+
+  void destinationCallback(RobotStateConstPtr &msg, const std::string& robot);
   void gameStateCallback(const soccerref::GameState::ConstPtr &msg);
 }

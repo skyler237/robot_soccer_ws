@@ -54,8 +54,8 @@ public class AI {
   Vector2d goal_;
 
   // Publishers and Subscribers
-  ros::Publisher ally1_goal_pub_;
-  ros::Publisher ally2_goal_pub_;
+  ros::Publisher ally1_destination_pub_;
+  ros::Publisher ally2_destination_pub_;
   ros::Subscriber vsub_ally1_, vsub_ally2_;
   ros::Subscriber vsub_opp1_, vsub_opp2_;
   ros::Subscriber vsub_ball_;
@@ -63,18 +63,15 @@ public class AI {
   soccerref::GameState gameState_;
 
   slash_dash_bang_hash::RobotState ally1_state_, ally2_state_;
-  slash_dash_bang_hash::RobotState ally1_goal_, ally2_goal_;
+  slash_dash_bang_hash::RobotState ally1_destination_, ally2_destination_;
   slash_dash_bang_hash::RobotState opp1_state_, opp2_state_;
-  BallState ball_;
+  BallState ball_state_;
   slash_dash_bang_hash::RobotState ally1_startingPos_;
   slash_dash_bang_hash::RobotState ally2_startingPos_;
 
   void param_init();
-  void computeGoal();
+  void computeDestination();
 
-  void moveRobot(int robotId, Vector3d v_world);
-  void skill_followBallOnLine(RobotState robot, Vector2d ball, double x_pos, int robotId);
-  void skill_goToPoint(RobotState robot, Vector2d point, int robotId);
   void play_rushGoal(RobotState robot, Vector2d ball, int robotId);
   void visionCallback(const geometry_msgs::Pose2D::ConstPtr &msg, const std::string& robot);
   void gameStateCallback(const soccerref::GameState::ConstPtr &msg);
