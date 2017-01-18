@@ -4,6 +4,7 @@
 
 using namespace Eigen;
 using namespace std;
+using namespace slash_dash_bang_hash;
 
 struct BallState
 {
@@ -22,11 +23,11 @@ struct BallState
 public class Skills
 {
   // ====================== Offensive Skills =================================
-  ballIntercept(int robotId, RobotState robot, Vector2d ball);
-  goToPoint(int robotId, RobotState robot, Vector2d point);
+  RobotState ballIntercept(int robotId, RobotState robot, Vector2d ball);
+  RobotState goToPoint(int robotId, RobotState robot, Vector2d point);
 
   // ====================== Defensive Skills =================================
-  followBallOnLine(int robotId, RobotState robot, Vector2d ball, double x_pos);
+  RobotState followBallOnLine(int robotId, RobotState robot, Vector2d ball, double x_pos);
 
   // ====================== Helper Functions =================================
   Vector2d ballPredict(BallState ball, double time);

@@ -8,28 +8,28 @@
 //=============================================================================
 
 // Moves to the predicted position of the ball, facing the goal, along a smoothed path
-static void Skills::ballIntercept(int robotId, RobotState robot, Vector2d ball)
+static RobotState Skills::ballIntercept(int robotId, RobotState robot, Vector2d ball)
 {
   // TODO: Finish this skill
 }
 
 // skill - go to point
 //   Travels towards a point. Angle always faces the goal.
-static void Skills::goToPoint(int robotId, RobotState robot, Vector2d point)
+static RobotState Skills::goToPoint(int robotId, RobotState robot, Vector2d point)
 {
-    Vector2d dirPoint = point - robot.pos;
+    Vector2d dirPoint = point - Utilities::robotStateToVector(robot);
     Vector2d vxy = dirPoint * CONTROL_K_XY;
 
     // control angle to face the goal
-    Vector2d dirGoal = goal - robot.pos;
+    Vector2d dirGoal = goal - Utilities::robotStateToVector(robot);
     double theta_d = atan2(dirGoal(1), dirGoal(0));
     double omega = -CONTROL_K_OMEGA * (robot.theta - theta_d);
 
     // Output velocities to motors
     Vector2d v;
     v << vxy, omega;
-    v = utility_saturateVelocity(v);
-    moveRobot(robotId, v);
+    v = Utilities::saturateVelocity(v);
+    return Utilities::toRobotState(v);
 }
 
 //=============================================================================
@@ -39,24 +39,24 @@ static void Skills::goToPoint(int robotId, RobotState robot, Vector2d point)
 // skill - follow ball on line
 //   Follows the y-position of the ball, while maintaining x-position at x_pos.
 //   Angle always faces the goal.
-static void Skills::followBallOnLine(int robotId, RobotState robot, Vector2d ball, double x_pos)
+static RobotState Skills::followBallOnLine(int robotId, RobotState robot, Vector2d ball, double x_pos)
 {
     // control x position to stay on current line
-    double vx = CONTROL_K_XY * (x_pos - robot.pos(0));
+    double vx = CONTROL_K_XY * (x_pos - robot.x);
 
     // control y position to match the ball's y-position
-    double vy = CONTROL_K_XY * (ball(1) - robot.pos(1));
+    double vy = CONTROL_K_XY * (ball_.y - robot.y);
 
     // control angle to face the goal
-    Vector2d dirGoal = goal - robot.pos;
+    Vector2d dirGoal = goal - Utilities::robotStateToVector(robot);
     double theta_d = atan2(dirGoal(1), dirGoal(0));
     double omega = -CONTROL_K_OMEGA * (robot.theta - theta_d);
 
     // Output velocities to motors
     Vector2d v;
     v << vx, vy, omega;
-    v = utility_saturateVelocity(v);
-    moveRobot(robotId, v);
+    v = Utilities::saturateVelocity(v);
+    return Utilities::toRobotState(v);
 }
 
 //=============================================================================
