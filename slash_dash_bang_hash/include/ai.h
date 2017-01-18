@@ -7,6 +7,7 @@
 #include <geometry_msgs/Pose2D.h>
 #include <geometry_msgs/Twist.h>
 #include "soccerref/GameState.h"
+#include "slash_dash_bang_hash/RobotState.h"
 
 using namespace std;
 using namespace geometry_msgs;
@@ -19,21 +20,21 @@ using namespace Eigen;
 #define FIELD_HEIGHT 2.38
 #define ROBOT_RADIUS 0.10
 
-struct RobotState
-{
-    // Positions
-    double x;
-    double y;
-    double theta;
-    // Velocities
-    double xdot;
-    double ydot;
-    double thetadot;
-    // Estimated states
-    double xhat;
-    double yhat;
-    double thetahat;
-};
+// struct RobotState
+// {
+//     // Positions
+//     double x;
+//     double y;
+//     double theta;
+//     // Velocities
+//     double xdot;
+//     double ydot;
+//     double thetadot;
+//     // Estimated states
+//     double xhat;
+//     double yhat;
+//     double thetahat;
+// };
 
 struct BallState
 {
@@ -53,19 +54,20 @@ public class AI {
   Vector2d goal_;
 
   // Publishers and Subscribers
-  ros::Publisher motor_pub1_;
-  ros::Publisher motor_pub2_;
+  ros::Publisher ally1_goal_pub_;
+  ros::Publisher ally2_goal_pub_;
   ros::Subscriber vsub_ally1_, vsub_ally2_;
   ros::Subscriber vsub_opp1_, vsub_opp2_;
   ros::Subscriber vsub_ball_;
   ros::Subscriber game_state_sub_;
   soccerref::GameState gameState_;
 
-  RobotState ally1_, ally2_;
-  RobotState opp1_, opp2_;
+  slash_dash_bang_hash::RobotState ally1_state_, ally2_state_;
+  slash_dash_bang_hash::RobotState ally1_goal_, ally2_goal_;
+  slash_dash_bang_hash::RobotState opp1_state_, opp2_state_;
   BallState ball_;
-  RobotState ally1_startingPos_;
-  RobotState ally2_startingPos_;
+  slash_dash_bang_hash::RobotState ally1_startingPos_;
+  slash_dash_bang_hash::RobotState ally2_startingPos_;
 
   void param_init();
   void computeGoal();

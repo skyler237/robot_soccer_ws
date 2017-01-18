@@ -1,5 +1,5 @@
-#include "controller.h"
-#include "utilities.h"
+#include "slash_dash_bang_hash/controller.h"
+#include "slash_dash_bang_hash/utilities.h"
 
 #define CONTROL_TIME_STEP 0.0
 
@@ -10,13 +10,33 @@ priv_nh("~")
   // Private node handle to get whether we are home or away.
   // Having the nh private properly namespaces it.
   ros::NodeHandle priv_nh("~");
-  priv_nh.param<string>("team", team, "home");
 
-  ally1_vision_sub_ = nh.subscribe<geometry_msgs::Pose2D>("ally1_vision", 1, boost::bind(visionCallback, _1, "ally1"));
-  ally2_vision_sub_ = nh.subscribe<geometry_msgs::Pose2D>("ally2_vision", 1, boost::bind(visionCallback, _1, "ally2"));
-  opp1_vision_sub_ = nh.subscribe<geometry_msgs::Pose2D>("opponent1_vision", 1, boost::bind(visionCallback, _1, "opponent1"));
-  opp2_vision_sub_ = nh.subscribe<geometry_msgs::Pose2D>("opponent2_vision", 1, boost::bind(visionCallback, _1, "opponent2"));
-  ball_vision_sub_ = nh.subscribe<geometry_msgs::Pose2D>("ball_vision", 1, boost::bind(visionCallback, _1, "ball"));
+  // Set PID Gains
+  double P, I, D, tau;
+  tau = priv_nh.param<double>("tau", 0.05);
+  P = priv_nh.param<double>("x_P", 2.5);
+  I = priv_nh.param<double>("x_I", 0.0);
+  D = priv_nh.param<double>("x_D", 0.0);
+  x1_PID_.setGains(P, I, D, tau);
+  x2_PID_.setGains(P, I, D, tau);
+
+  P = priv_nh.param<double>("y_P", 2.5);
+  I = priv_nh.param<double>("y_I", 0.0);
+  D = priv_nh.param<double>("y_D", 0.0);
+  y1_PID_.setGains(P, I, D, tau);
+  y2_PID_.setGains(P, I, D, tau);
+
+  P = priv_nh.param<double>("theta_P", 2.5);
+  I = priv_nh.param<double>("theta_I", 0.0);
+  D = priv_nh.param<double>("theta_D", 0.0);
+  theta1_PID_.setGains(P, I, D, tau);
+  theta2_PID_.setGains(P, I, D, tau);
+
+
+  ally1_goal_sub_ = nh.subscribe<slash_dash_bang_hash::RobotState>("ally1_goal", 1, boost::bind(goalCallback, _1, "ally1"));
+  ally2_goal_sub_ = nh.subscribe<slash_dash_bang_hash::RobotState>("ally2_goal", 1, boost::bind(goalCallback, _1, "ally2"));
+  ally1_state_sub_ = nh.subscribe<slash_dash_bang_hash::RobotState>("ally1_state", 1, boost::bind(stateCallback, _1, "ally1"));
+  ally2_state_sub_ = nh.subscribe<slash_dash_bang_hash::RobotState>("ally2_state", 1, boost::bind(stateCallback, _1, "ally2"));
   game_state_sub_ = nh.subscribe<soccerref::GameState>("/game_state", 1, gameStateCallback);
 
   motor_pub1_ = nh.advertise<geometry_msgs::Twist>("ally1/vel_cmds", 5);
@@ -28,12 +48,27 @@ priv_nh("~")
 
   ally2_startingPos_.x = -1.0;
   ally2_startingPos_.y = -0.0;
-
+  
 }
 
-void Controller::param_init()
+void Controller::stateCallback(RobotStateConstPtr &msg, const std::string& robot)
 {
-    goal_ << FIELD_WIDTH/2, 0;
+    if(robot == "ally1")
+        ally1_state_ = *msg;
+
+    else if(robot == "ally2")
+        ally2_state_ = *msg;
+}
+
+void Controller::goalCallback(RobotStateConstPtr &msg, const std::string& robot)
+{
+    if(robot == "ally1")
+        ally1_goal_ = *msg;
+
+    else if(robot == "ally2")
+        ally2_goal_ = *msg;
+
+    computeControl();
 }
 
 void Controller::computeControl() {
@@ -42,41 +77,48 @@ void Controller::computeControl() {
   double dt = now - prev;
   prev = now;
 
+  double x1_command, x2_command;
+  double y1_command, y2_command;
+  double theta1_command, theta2_command;
+
   if (dt > CONTROL_TIME_STEP)
   {
-    if (gameState.play)
-    {
-        /*********************************************************************/
-        // Choose strategies
+    // Update ally1_command_ and ally2_command_ variables
 
-        // robot #1 positions itself behind ball and rushes the goal.
-        play_rushGoal(1, ally1, ball);
+    // Compute the PID values for each state variable
+    x1_command = x1_PID_.computePID(ally1_state_.x, ally1_goal_.x, dt);
+    y1_command = y1_PID_.computePID(ally1_state_.y, ally1_goal_.y, dt);
+    theta1_command = theta1_PID_.computePID(ally1_state_.theta, ally1_goal_.theta, dt);
 
-        // robot #2 stays on line, following the ball, facing the goal
-        skill_followBallOnLine(2, ally2, ball, -2 * FIELD_WIDTH / 6);
+    x2_command = x2_PID_.computePID(ally2_state_.x, ally2_goal_.x, dt);
+    y2_command = y2_PID_.computePID(ally2_state_.y, ally2_goal_.y, dt);
+    theta2_command = theta2_PID_.computePID(ally2_state_.theta, ally2_goal_.theta, dt);
 
-        /*********************************************************************/
-    }
-    else if (gameState.reset_field)
-    {
-        skill_goToPoint(ally1, ally1_startingPos_, 1);
-        skill_goToPoint(ally2, ally2_startingPos_, 2);
-    }
-    else //paused - do nothing
-    {
-        Vector3d zeroVel;
-        zeroVel << 0, 0, 0;
-        moveRobot(1, zeroVel);
-        moveRobot(2, zeroVel);
-    }
+    // TODO: We don't currently use theta to compute our command... would we like to change that?
+    ally1_command_ << x1_command, y1_command;
+    ally2_command_ << x2_command, y2_command;
+
+
+    // --- OR ---
+
+    // // If we are able to reliable determine the velocity beforehand, we can use these functions:
+    // x1_command = x1_PID_.computePIDDirect(ally1_state_.x, ally1_goal_.x, ally1_state_.xdot, dt);
+    // y1_command = y1_PID_.computePIDDirect(ally1_state_.y, ally1_goal_.y, ally1_state_.ydot, dt);
+    // theta1_command = theta1_PID_.computePIDDirect(ally1_state_.theta, ally1_goal_.theta, ally1_state_.thetadot, dt);
+    //
+    // x2_command = x2_PID_.computePIDDirect(ally2_state_.x, ally2_goal_.x, ally2_state_.xdot, dt);
+    // y2_command = y2_PID_.computePIDDirect(ally2_state_.y, ally2_goal_.y, ally2_state_.ydot, dt);
+    // theta2_command = theta2_PID_.computePIDDirect(ally2_state_.theta, ally2_goal_.theta, ally2_state_.thetadot, dt);
+
   }
 
-  // TODO: Do we even need this??
-  // Clean up
-  Vector3d zeroVel;
-  zeroVel << 0, 0, 0;
-  moveRobot(1, zeroVel);
-  moveRobot(2, zeroVel);
+  publishCommands();
+}
+
+void Controller::publishCommands()
+{
+  moveRobot(1, ally1_command_);
+  moveRobot(2, ally2_command_);
 }
 
 void Controller::moveRobot(int robotId, Vector3d vel_world)
@@ -92,88 +134,7 @@ void Controller::moveRobot(int robotId, Vector3d vel_world)
         motor_pub2_.publish(vel);
 }
 
-// skill - follow ball on line
-//   Follows the y-position of the ball, while maintaining x-position at x_pos.
-//   Angle always faces the goal.
-void Controller::skill_followBallOnLine(int robotId, RobotState robot, Vector2d ball, double x_pos)
-{
-    // control x position to stay on current line
-    double vx = CONTROL_K_XY * (x_pos - robot.pos(0));
 
-    // control y position to match the ball's y-position
-    double vy = CONTROL_K_XY * (ball(1) - robot.pos(1));
-
-    // control angle to face the goal
-    Vector2d dirGoal = goal - robot.pos;
-    double theta_d = atan2(dirGoal(1), dirGoal(0));
-    double omega = -CONTROL_K_OMEGA * (robot.theta - theta_d);
-
-    // Output velocities to motors
-    Vector3d v;
-    v << vx, vy, omega;
-    v = utility_saturateVelocity(v);
-    moveRobot(robotId, v);
-}
-
-// skill - go to point
-//   Travels towards a point. Angle always faces the goal.
-void Controller::skill_goToPoint(RobotState robot, Vector2d point, int robotId)
-{
-    Vector2d dirPoint = point - robot.pos;
-    Vector2d vxy = dirPoint * CONTROL_K_XY;
-
-    // control angle to face the goal
-    Vector2d dirGoal = goal - robot.pos;
-    double theta_d = atan2(dirGoal(1), dirGoal(0));
-    double omega = -CONTROL_K_OMEGA * (robot.theta - theta_d);
-
-    // Output velocities to motors
-    Vector3d v;
-    v << vxy, omega;
-    v = utility_saturateVelocity(v);
-    moveRobot(robotId, v);
-}
-
-// play - rush goal
-//   - go to position behind ball
-//   - if ball is between robot and goal, go to goal
-// NOTE:  This is a play because it is built on skills, and not control
-// commands.  Skills are built on control commands.  A strategy would employ
-// plays at a lower level.  For example, switching between offense and
-// defense would be a strategy.
-void Controller::play_rushGoal(int robotId, RobotState robot, Vector2d ball)
-{
-    // normal vector from ball to goal
-    Vector2d n = utility_unitVector(goal - ball);
-
-    // compute position 10cm behind ball, but aligned with goal.
-    Vector2d position = ball - 0.2*n;
-
-    if(utility_vecLength(position - robot.pos) < 0.21)
-        skill_goToPoint(robot, goal, robotId);
-    else
-        skill_goToPoint(robot, position, robotId);
-}
-
-void Controller::visionCallback(const geometry_msgs::Pose2D::ConstPtr &msg, const std::string& robot)
-{
-    if(robot == "ally1")
-        ally1 = utility_toRobotPose(*msg);
-
-    else if(robot == "ally2")
-        ally2 = utility_toRobotPose(*msg);
-
-    else if(robot == "opponent1")
-        opp1 = utility_toRobotPose(*msg);
-
-    else if(robot == "opponent2")
-        opp2 = utility_toRobotPose(*msg);
-
-    else if(robot == "ball")
-        ball = utility_toBallPose(*msg);
-
-    computeControl();
-}
 
 
 void Controller::gameStateCallback(const soccerref::GameState::ConstPtr &msg)
