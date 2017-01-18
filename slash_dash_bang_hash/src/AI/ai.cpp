@@ -79,60 +79,6 @@ void AI::computeGoal() {
   moveRobot(2, zeroVel);
 }
 
-void AI::moveRobot(int robotId, Vector3d vel_world)
-{
-    geometry_msgs::Twist vel;
-    vel.linear.x = vel_world(0);
-    vel.linear.y = vel_world(1);
-    vel.angular.z = vel_world(2);
-
-    if(robotId == 1)
-        motor_pub1_.publish(vel);
-    else if(robotId == 2)
-        motor_pub2_.publish(vel);
-}
-
-// skill - follow ball on line
-//   Follows the y-position of the ball, while maintaining x-position at x_pos.
-//   Angle always faces the goal.
-void AI::skill_followBallOnLine(int robotId, RobotState robot, Vector2d ball, double x_pos)
-{
-    // control x position to stay on current line
-    double vx = CONTROL_K_XY * (x_pos - robot.pos(0));
-
-    // control y position to match the ball's y-position
-    double vy = CONTROL_K_XY * (ball(1) - robot.pos(1));
-
-    // control angle to face the goal
-    Vector2d dirGoal = goal - robot.pos;
-    double theta_d = atan2(dirGoal(1), dirGoal(0));
-    double omega = -CONTROL_K_OMEGA * (robot.theta - theta_d);
-
-    // Output velocities to motors
-    Vector3d v;
-    v << vx, vy, omega;
-    v = utility_saturateVelocity(v);
-    moveRobot(robotId, v);
-}
-
-// skill - go to point
-//   Travels towards a point. Angle always faces the goal.
-void AI::skill_goToPoint(RobotState robot, Vector2d point, int robotId)
-{
-    Vector2d dirPoint = point - robot.pos;
-    Vector2d vxy = dirPoint * CONTROL_K_XY;
-
-    // control angle to face the goal
-    Vector2d dirGoal = goal - robot.pos;
-    double theta_d = atan2(dirGoal(1), dirGoal(0));
-    double omega = -CONTROL_K_OMEGA * (robot.theta - theta_d);
-
-    // Output velocities to motors
-    Vector3d v;
-    v << vxy, omega;
-    v = utility_saturateVelocity(v);
-    moveRobot(robotId, v);
-}
 
 // play - rush goal
 //   - go to position behind ball
