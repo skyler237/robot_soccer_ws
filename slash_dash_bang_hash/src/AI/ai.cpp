@@ -19,8 +19,8 @@ priv_nh("~")
   ball_vision_sub_ = nh.subscribe<geometry_msgs::Pose2D>("ball_vision", 1, boost::bind(visionCallback, _1, "ball"));
   game_state_sub_ = nh.subscribe<soccerref::GameState>("/game_state", 1, gameStateCallback);
 
-  motor_pub1_ = nh.advertise<geometry_msgs::Twist>("ally1/vel_cmds", 5);
-  motor_pub2_ = nh.advertise<geometry_msgs::Twist>("ally2/vel_cmds", 5);
+  ally1_goal_pub_ = nh.advertise<slash_dash_bang_hash::RobotState>("ally1_goal", 5);
+  ally2_goal_pub_ = nh.advertise<slash_dash_bang_hash::RobotState>("ally2_goal", 5);
 
   // This is sort of ad-hoc (would be much better to be a parameter) but it works for now
   ally1_startingPos_.x = -0.5;
@@ -158,19 +158,19 @@ void AI::play_rushGoal(int robotId, RobotState robot, Vector2d ball)
 void AI::visionCallback(const geometry_msgs::Pose2D::ConstPtr &msg, const std::string& robot)
 {
     if(robot == "ally1")
-        ally1 = utility_toRobotPose(*msg);
+        ally1_state_ = utility_toRobotPose(*msg);
 
     else if(robot == "ally2")
-        ally2 = utility_toRobotPose(*msg);
+        ally2_state_ = utility_toRobotPose(*msg);
 
     else if(robot == "opponent1")
-        opp1 = utility_toRobotPose(*msg);
+        opp1_state_ = utility_toRobotPose(*msg);
 
     else if(robot == "opponent2")
-        opp2 = utility_toRobotPose(*msg);
+        opp2_state_ = utility_toRobotPose(*msg);
 
     else if(robot == "ball")
-        ball = utility_toBallPose(*msg);
+        ball_state_ = utility_toBallPose(*msg);
 
     computeGoal();
 }
@@ -178,7 +178,7 @@ void AI::visionCallback(const geometry_msgs::Pose2D::ConstPtr &msg, const std::s
 
 void AI::gameStateCallback(const soccerref::GameState::ConstPtr &msg)
 {
-    gameState = *msg;
+    gameState_ = *msg;
 }
 
 int main(int argc, char **argv)
