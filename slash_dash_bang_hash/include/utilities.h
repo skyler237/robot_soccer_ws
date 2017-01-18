@@ -7,8 +7,10 @@
 #define ROBOT_MAX_VXY 2.0
 #define ROBOT_MAX_OMEGA 2*M_PI
 
-int sgn(double val);
-Vector3d saturateVelocity(Vector3d v);
-double angleMod(double angle);
-RobotState toRobotState(Pose2D robot);
-BallState toBallState(Pose2D ball);
+static int sgn(double val);
+static Vector3d saturateVelocity(Vector3d v);
+static double angleMod(double angle);
+static RobotState poseToRobotState(Pose2D robot);
+static RobotState vectorToRobotState(Vector2d vec);
+static Vector2d robotStateToVector(RobotState robot);
+static BallState toBallState(Pose2D ball);

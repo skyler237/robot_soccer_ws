@@ -1,14 +1,14 @@
 #include "utilities.h"
 
 
-int sgn(double val)
+static int Utilities::sgn(double val)
 {
     return (0 < val) - (val < 0);
 }
 
 // utility - saturate velocity
 //  Saturate the commanded velocity .
-Vector3d saturateVelocity(Vector3d v)
+static Vector3d Utilities::saturateVelocity(Vector3d v)
 {
     if(fabs(v(0)) > ROBOT_MAX_VXY)
         v(0) = sgn(v(0)) * ROBOT_MAX_VXY;
@@ -19,14 +19,14 @@ Vector3d saturateVelocity(Vector3d v)
     return v;
 }
 
-double angleMod(double angle)
+static double Utilities::angleMod(double angle)
 {
     while(angle < 0)
         angle += 2*M_PI;
     return fmod(angle + M_PI, (2*M_PI)) - M_PI;
 }
 
-RobotState toRobotState(Pose2D robot)
+static RobotState Utilities::poseToRobotState(Pose2D robot)
 {
     RobotState state;
     // Flip coordinates if team is away or if we've swapped sides
@@ -40,7 +40,23 @@ RobotState toRobotState(Pose2D robot)
     return state;
 }
 
-BallState toBallState(Pose2D ball)
+static RobotState Utilities::vectorToRobotState(Vector2d vec)
+{
+  RobotState state;
+  state.x = vec(0);
+  state.y = vec(1);
+
+  return state;
+}
+
+static Vector2d Utilities::robotStateToVector(RobotState robot)
+{
+  Vector2d vec(robot.x, robot.y);
+  return vec;
+}
+
+
+static BallState Utilities::poseToBallState(Pose2D ball)
 {
     BallState state;
     // Flip coordinates if team is away or if we've swapped sides
