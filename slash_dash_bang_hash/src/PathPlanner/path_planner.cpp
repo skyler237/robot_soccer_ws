@@ -52,11 +52,12 @@ void PathPlanner::planPath(int robotId)
   switch(robotId)
   {
     case 1:
-
+      // For now, just make the destination the desired pose
+      ally1_desired_pose_ = ally1_destination_;
       break;
 
     case 2:
-
+      ally2_desired_pose_ = ally2_destination_;
       break;
 
     default:

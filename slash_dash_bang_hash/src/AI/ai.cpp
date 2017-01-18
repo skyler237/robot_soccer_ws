@@ -71,12 +71,13 @@ void AI::computeDestination() {
     }
   }
 
-  // TODO: Do we even need this??
-  // Clean up
-  Vector3d zeroVel;
-  zeroVel << 0, 0, 0;
-  moveRobot(1, zeroVel);
-  moveRobot(2, zeroVel);
+  publishDestinations();
+}
+
+void AI::publishDestinations()
+{
+  ally1_destination_pub_.publish(ally1_destination_);
+  ally2_destination_pub_.publish(ally2_destination_);
 }
 
 
