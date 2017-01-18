@@ -66,8 +66,8 @@ void AI::computeDestination() {
     {
         Vector2d zeroVel;
         zeroVel << 0, 0;
-        ally1_destination_ = Utilities::toRobotState(zeroVel);
-        ally2_destination_ = Utilities::toRobotState(zeroVel);
+        ally1_destination_ = Utilities::vectorToRobotState(zeroVel);
+        ally2_destination_ = Utilities::vectorToRobotState(zeroVel);
     }
   }
 
@@ -106,19 +106,19 @@ RobotState AI::play_rushGoal(int robotId, RobotState robot, Vector2d ball)
 void AI::visionCallback(const geometry_msgs::Pose2D::ConstPtr &msg, const std::string& robot)
 {
     if(robot == "ally1")
-        ally1_state_ = Utilities::toRobotState(*msg);
+        ally1_state_ = Utilities::poseToRobotState(*msg);
 
     else if(robot == "ally2")
-        ally2_state_ = Utilities::toRobotState(*msg);
+        ally2_state_ = Utilities::poseToRobotState(*msg);
 
     else if(robot == "opponent1")
-        opp1_state_ = Utilities::toRobotState(*msg);
+        opp1_state_ = Utilities::poseToRobotState(*msg);
 
     else if(robot == "opponent2")
-        opp2_state_ = Utilities::toRobotState(*msg);
+        opp2_state_ = Utilities::poseToRobotState(*msg);
 
     else if(robot == "ball")
-        ball_state_ = Utilities::toBallState(*msg);
+        ball_state_ = Utilities::poseToBallState(*msg);
 
     computeDestination();
 }

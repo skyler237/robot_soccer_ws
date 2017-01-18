@@ -29,7 +29,7 @@ static RobotState Skills::goToPoint(int robotId, RobotState robot, Vector2d poin
     Vector2d v;
     v << vxy, omega;
     v = Utilities::saturateVelocity(v);
-    return Utilities::toRobotState(v);
+    return Utilities::vectorToRobotState(v);
 }
 
 //=============================================================================
@@ -56,7 +56,7 @@ static RobotState Skills::followBallOnLine(int robotId, RobotState robot, Vector
     Vector2d v;
     v << vx, vy, omega;
     v = Utilities::saturateVelocity(v);
-    return Utilities::toRobotState(v);
+    return Utilities::vectorToRobotState(v);
 }
 
 //=============================================================================
@@ -66,7 +66,7 @@ static RobotState Skills::followBallOnLine(int robotId, RobotState robot, Vector
 /**
  * Returns the predicted position of the target a given time away from the present
  * @param time - the time into the future we want to predict the target position
- * @return Vector2d - predicted position vector of the ball
+ * @return Vector2d - predicted position
  */
 Eigen::Vector2d Skills::ballPredict(BallState ball, double time) {
 
