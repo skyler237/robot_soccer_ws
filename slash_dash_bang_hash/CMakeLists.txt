@@ -7,7 +7,6 @@ project(slash_dash_bang_hash)
 find_package(catkin REQUIRED
 	message_generation
 	std_msgs
-	Eigen3
 	)
 
 ## System dependencies are found with CMake's conventions
@@ -101,7 +100,7 @@ generate_messages(
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES slash_dash_bang_hash
-#  CATKIN_DEPENDS other_catkin_pkg
+ CATKIN_DEPENDS roscpp rospy std_msgs gazebo_msgs geometry_msgs eigen3 message_runtime gazebo_ros
 #  DEPENDS system_lib
 )
 
