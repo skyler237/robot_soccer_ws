@@ -1,9 +1,0 @@
-float64 x
-float64 y
-float64 theta
-float64 xhat
-float64 yhat
-float64 thetahat
-float64 xdot
-float64 ydot
-float64 thetadot
