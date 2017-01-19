@@ -12,11 +12,11 @@ priv_nh("~")
   ros::NodeHandle priv_nh("~");
   priv_nh.param<string>("team", team, "home");
 
-  ally1_vision_sub_ = nh.subscribe<geometry_msgs::Pose2D>("ally1_vision", 1, boost::bind(visionCallback, _1, "ally1"));
-  ally2_vision_sub_ = nh.subscribe<geometry_msgs::Pose2D>("ally2_vision", 1, boost::bind(visionCallback, _1, "ally2"));
-  opp1_vision_sub_ = nh.subscribe<geometry_msgs::Pose2D>("opponent1_vision", 1, boost::bind(visionCallback, _1, "opponent1"));
-  opp2_vision_sub_ = nh.subscribe<geometry_msgs::Pose2D>("opponent2_vision", 1, boost::bind(visionCallback, _1, "opponent2"));
-  ball_vision_sub_ = nh.subscribe<geometry_msgs::Pose2D>("ball_vision", 1, boost::bind(visionCallback, _1, "ball"));
+  ally1_state_sub_ = nh.subscribe<slash_dash_bang_hash::State>("ally1_state", 1, boost::bind(stateCallback, _1, "ally1"));
+  ally2_state_sub_ = nh.subscribe<slash_dash_bang_hash::State>("ally2_state", 1, boost::bind(stateCallback, _1, "ally2"));
+  opp1_state_sub_ = nh.subscribe<slash_dash_bang_hash::State>("opponent1_state", 1, boost::bind(stateCallback, _1, "opponent1"));
+  opp2_state_sub_ = nh.subscribe<slash_dash_bang_hash::State>("opponent2_state", 1, boost::bind(stateCallback, _1, "opponent2"));
+  ball_state_sub_ = nh.subscribe<slash_dash_bang_hash::State>("ball_state", 1, boost::bind(stateCallback, _1, "ball"));
   game_state_sub_ = nh.subscribe<soccerref::GameState>("/game_state", 1, gameStateCallback);
 
   ally1_destination_pub_ = nh.advertise<slash_dash_bang_hash::State>("ally1_destination", 5);
@@ -104,22 +104,22 @@ State AI::play_rushGoal(int robotId, State robot, Vector2d ball)
         return Skills::goToPoint(robotId, robot, position);
 }
 
-void AI::visionCallback(const geometry_msgs::Pose2D::ConstPtr &msg, const std::string& robot)
+void AI::stateCallback(StateConstPtr &msg, const std::string& robot)
 {
     if(robot == "ally1")
-        ally1_state_ = Utilities::poseToState(*msg);
+        ally1_state_ = *msg;
 
     else if(robot == "ally2")
-        ally2_state_ = Utilities::poseToState(*msg);
+        ally2_state_ = *msg;
 
     else if(robot == "opponent1")
-        opp1_state_ = Utilities::poseToState(*msg);
+        opp1_state_ = *msg;
 
     else if(robot == "opponent2")
-        opp2_state_ = Utilities::poseToState(*msg);
+        opp2_state_ = *msg;
 
     else if(robot == "ball")
-        ball_state_ = Utilities::poseToState(*msg);
+        ball_state_ = *msg;
 
     computeDestination();
 }

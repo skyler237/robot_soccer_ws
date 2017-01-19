@@ -59,7 +59,7 @@ public class PathPlanner {
   void planPath(int robotId);
   void publishDesiredPose(int robotId);
 
-  void stateCallback(const geometry_msgs::Pose2D::ConstPtr &msg, const std::string& robot);
+  void stateCallback(StateConstPtr &msg, const std::string& robot);
   void destinationCallback(StateConstPtr &msg, const std::string& robot);
   void gameStateCallback(const soccerref::GameState::ConstPtr &msg);
 }

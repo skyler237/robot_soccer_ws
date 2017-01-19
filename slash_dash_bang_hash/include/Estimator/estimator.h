@@ -8,13 +8,11 @@
 #include <geometry_msgs/Twist.h>
 #include "soccerref/GameState.h"
 #include "slash_dash_bang_hash/State.h"
-#include "slash_dash_bang_hash/State.h"
 
 using namespace std;
 using namespace geometry_msgs;
 using namespace Eigen;
 
-typedef boost::shared_ptr< ::slash_dash_bang_hash::State const> StateConstPtr;
 typedef boost::shared_ptr< ::slash_dash_bang_hash::State const> StateConstPtr;
 
 #define FIELD_WIDTH 3.40  // in meters

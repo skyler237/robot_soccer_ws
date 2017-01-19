@@ -13,6 +13,7 @@ using namespace std;
 using namespace geometry_msgs;
 using namespace Eigen;
 
+typedef boost::shared_ptr< ::slash_dash_bang_hash::State const> StateConstPtr;
 
 #define CONTROL_K_XY 5
 #define CONTROL_K_OMEGA 2
@@ -36,36 +37,27 @@ using namespace Eigen;
 //     double thetahat;
 // };
 
-struct State
-{
-    // Positions
-    double x;
-    double y;
-    // Velocities
-    double xdot;
-    double ydot;
-    // Estimated states
-    double xhat;
-    double yhat;
-};
-
 public class AI {
   string team_;
   Vector2d goal_;
 
   // Publishers and Subscribers
+
   ros::Publisher ally1_destination_pub_;
   ros::Publisher ally2_destination_pub_;
-  ros::Subscriber vsub_ally1_, vsub_ally2_;
-  ros::Subscriber vsub_opp1_, vsub_opp2_;
-  ros::Subscriber vsub_ball_;
+  
+  ros::Subscriber ally1_state_sub, ally2_state_sub;
+  ros::Subscriber opp1_state_sub, opp2_state_sub;
+  ros::Subscriber ball_state_sub;
   ros::Subscriber game_state_sub_;
+
   soccerref::GameState gameState_;
 
   slash_dash_bang_hash::State ally1_state_, ally2_state_;
   slash_dash_bang_hash::State ally1_destination_, ally2_destination_;
   slash_dash_bang_hash::State opp1_state_, opp2_state_;
   State ball_state_;
+
   slash_dash_bang_hash::State ally1_startingPos_;
   slash_dash_bang_hash::State ally2_startingPos_;
 
