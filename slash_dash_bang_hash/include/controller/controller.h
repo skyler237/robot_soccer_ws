@@ -7,7 +7,7 @@
 #include <geometry_msgs/Pose2D.h>
 #include <geometry_msgs/Twist.h>
 #include "soccerref/GameState.h"
-#include "slash_dash_bang_hash/RobotState.h"
+#include "slash_dash_bang_hash/State.h"
 #include "slash_dash_bang_hash/PID.h"
 
 using namespace std;
@@ -21,7 +21,7 @@ using namespace Eigen;
 #define FIELD_HEIGHT 2.38
 #define ROBOT_RADIUS 0.10
 
-typedef boost::shared_ptr< ::slash_dash_bang_hash::RobotState const> RobotStateConstPtr;
+typedef boost::shared_ptr< ::slash_dash_bang_hash::State const> StateConstPtr;
 
 public class Controller {
   // Publishers and Subscribers
@@ -37,8 +37,8 @@ public class Controller {
   PID y1_PID_, y2_PID_;
   PID theta1_PID_, theta2_PID_;
 
-  slash_dash_bang_hash::RobotState ally1_state_, ally2_state_;
-  slash_dash_bang_hash::RobotState ally1_goal_, ally2_goal_;
+  slash_dash_bang_hash::State ally1_state_, ally2_state_;
+  slash_dash_bang_hash::State ally1_goal_, ally2_goal_;
 
   Vector3d ally1_command_;
   Vector3d ally2_command_;
@@ -47,7 +47,7 @@ public class Controller {
   void publishCommands();
 
   void moveRobot(int robotId, Vector3d v_world);
-  void goalCallback(RobotStateConstPtr &msg, const std::string& robot);
-  void stateCallback(RobotStateConstPtr &msg, const std::string& robot);
+  void goalCallback(StateConstPtr &msg, const std::string& robot);
+  void stateCallback(StateConstPtr &msg, const std::string& robot);
   void gameStateCallback(const soccerref::GameState::ConstPtr &msg);
 }

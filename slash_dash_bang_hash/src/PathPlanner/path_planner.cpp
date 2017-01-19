@@ -15,44 +15,44 @@ priv_nh("~")
   opp2_state_sub_  = nh.subscribe<geometry_msgs::Pose2D>("opponent2_state", 1, boost::bind(stateCallback, _1, "opponent2"));
   ball_state_sub_  = nh.subscribe<geometry_msgs::Pose2D>("ball_state", 1, boost::bind(stateCallback, _1, "ball"));
 
-  ally1_destination_sub_ = nh.subscribe<slash_dash_bang_hash::RobotState>("ally1_destination", 1, boost::bind(destinationCallback, _1, "ally1"));
-  ally2_destination_sub_ = nh.subscribe<slash_dash_bang_hash::RobotState>("ally2_destination", 1, boost::bind(destinationCallback, _1, "ally2"));
+  ally1_destination_sub_ = nh.subscribe<slash_dash_bang_hash::State>("ally1_destination", 1, boost::bind(destinationCallback, _1, "ally1"));
+  ally2_destination_sub_ = nh.subscribe<slash_dash_bang_hash::State>("ally2_destination", 1, boost::bind(destinationCallback, _1, "ally2"));
   game_state_sub_ = nh.subscribe<soccerref::GameState>("/game_state", 1, gameStateCallback);
 
-  ally1_desired_pose_pub_ = nh.advertise<slash_dash_bang_hash::RobotState>("ally1_desired_pose", 5);
-  ally2_desired_pose_pub_ = nh.advertise<slash_dash_bang_hash::RobotState>("ally2_desired_pose", 5);
+  ally1_desired_pose_pub_ = nh.advertise<slash_dash_bang_hash::State>("ally1_desired_pose", 5);
+  ally2_desired_pose_pub_ = nh.advertise<slash_dash_bang_hash::State>("ally2_desired_pose", 5);
 
 }
 
 void PathPlanner::stateCallback(const geometry_msgs::Pose2D::ConstPtr &msg, const std::string& robot)
 {
     if(robot == "ally1")
-        ally1_state_ = Utilities::poseToRobotState(*msg);
+        ally1_state_ = Utilities::poseToState(*msg);
 
     else if(robot == "ally2")
-        ally2_state_ = Utilities::poseToRobotState(*msg);
+        ally2_state_ = Utilities::poseToState(*msg);
 
     else if(robot == "opponent1")
-        opp1_state_ = Utilities::poseToRobotState(*msg);
+        opp1_state_ = Utilities::poseToState(*msg);
 
     else if(robot == "opponent2")
-        opp2_state_ = Utilities::poseToRobotState(*msg);
+        opp2_state_ = Utilities::poseToState(*msg);
 
     else if(robot == "ball")
-        ball_state_ = Utilities::poseToBallState(*msg);
+        ball_state_ = Utilities::poseToState(*msg);
 
 }
 
 
-void PathPlanner::destinationCallback(RobotStateConstPtr &msg, const std::string& robot)
+void PathPlanner::destinationCallback(StateConstPtr &msg, const std::string& robot)
 {
     int robotId = 0;
     if(robot == "ally1") {
-      ally1_destination_ = utility_toRobotPose(*msg);
+      ally1_destination_ = (*msg);
       robotId = 1;
     }
     else if(robot == "ally2") {
-      ally2_destination_ = utility_toRobotPose(*msg);
+      ally2_destination_ = (*msg);
       robotId = 2;
     }
 

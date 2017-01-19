@@ -7,21 +7,21 @@
 #include <geometry_msgs/Pose2D.h>
 #include <geometry_msgs/Twist.h>
 #include "soccerref/GameState.h"
-#include "slash_dash_bang_hash/RobotState.h"
-#include "slash_dash_bang_hash/BallState.h"
+#include "slash_dash_bang_hash/State.h"
+#include "slash_dash_bang_hash/State.h"
 
 using namespace std;
 using namespace geometry_msgs;
 using namespace Eigen;
 
-typedef boost::shared_ptr< ::slash_dash_bang_hash::RobotState const> RobotStateConstPtr;
-typedef boost::shared_ptr< ::slash_dash_bang_hash::BallState const> BallStateConstPtr;
+typedef boost::shared_ptr< ::slash_dash_bang_hash::State const> StateConstPtr;
+typedef boost::shared_ptr< ::slash_dash_bang_hash::State const> StateConstPtr;
 
 #define FIELD_WIDTH 3.40  // in meters
 #define FIELD_HEIGHT 2.38
 #define ROBOT_RADIUS 0.10
 
-// struct RobotState
+// struct State
 // {
 //     // Positions
 //     double x;
@@ -37,7 +37,7 @@ typedef boost::shared_ptr< ::slash_dash_bang_hash::BallState const> BallStateCon
 //     double thetahat;
 // };
 
-// struct BallState
+// struct State
 // {
 //     // Positions
 //     double x;
@@ -68,17 +68,17 @@ public class Estimator {
   ros::Subscriber ball_state_;
   soccerref::GameState gameState_;
 
-  slash_dash_bang_hash::RobotState ally1_vision_, ally2_vision_;
-  slash_dash_bang_hash::RobotState opp1_vision_, opp2_vision_;
-  slash_dash_bang_hash::BallState ball_vision_;
+  slash_dash_bang_hash::State ally1_vision_, ally2_vision_;
+  slash_dash_bang_hash::State opp1_vision_, opp2_vision_;
+  slash_dash_bang_hash::State ball_vision_;
 
-  slash_dash_bang_hash::RobotState ally1_state_, ally2_state_;
-  slash_dash_bang_hash::RobotState opp1_state_, opp2_state_;
-  slash_dash_bang_hash::BallState ball_state_;
+  slash_dash_bang_hash::State ally1_state_, ally2_state_;
+  slash_dash_bang_hash::State opp1_state_, opp2_state_;
+  slash_dash_bang_hash::State ball_state_;
 
   void estimateStates();
   void publishStates();
-  
+
   void visionCallback(const geometry_msgs::Pose2D::ConstPtr &msg, const std::string& robot);
   void gameStateCallback(const soccerref::GameState::ConstPtr &msg);
 }

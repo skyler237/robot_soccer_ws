@@ -15,10 +15,10 @@ priv_nh("~")
   opp2_vision_sub_  = nh.subscribe<geometry_msgs::Pose2D>("opponent2_vision", 1, boost::bind(visionCallback, _1, "opponent2"));
   ball_vision_sub_  = nh.subscribe<geometry_msgs::Pose2D>("ball_vision", 1, boost::bind(visionCallback, _1, "ball"));
 
-  ally1_state_pub_ = nh.advertise<slash_dash_bang_hash::RobotState>("ally1_state", 5);
-  ally2_state_pub_ = nh.advertise<slash_dash_bang_hash::RobotState>("ally2_state", 5);
-  opp1_state_pub_ = nh.advertise<slash_dash_bang_hash::RobotState>("opp1_state", 5);
-  opp2_state_pub_ = nh.advertise<slash_dash_bang_hash::RobotState>("opp2_state", 5);
+  ally1_state_pub_ = nh.advertise<slash_dash_bang_hash::State>("ally1_state", 5);
+  ally2_state_pub_ = nh.advertise<slash_dash_bang_hash::State>("ally2_state", 5);
+  opp1_state_pub_ = nh.advertise<slash_dash_bang_hash::State>("opp1_state", 5);
+  opp2_state_pub_ = nh.advertise<slash_dash_bang_hash::State>("opp2_state", 5);
   ball_state_pub_ = nh.advertise<slash_dash_bang_hash::BallState>("ball_state", 5);
 
   game_state_sub_ = nh.subscribe<soccerref::GameState>("/game_state", 1, gameStateCallback);
@@ -28,19 +28,19 @@ priv_nh("~")
 void Estimator::visionCallback(const geometry_msgs::Pose2D::ConstPtr &msg, const std::string& robot)
 {
     if(robot == "ally1")
-        ally1_vision_ = Utilities::poseToRobotState(*msg);
+        ally1_vision_ = Utilities::poseToState(*msg);
 
     else if(robot == "ally2")
-        ally2_vision_ = Utilities::poseToRobotState(*msg);
+        ally2_vision_ = Utilities::poseToState(*msg);
 
     else if(robot == "opponent1")
-        opp1_vision_ = Utilities::poseToRobotState(*msg);
+        opp1_vision_ = Utilities::poseToState(*msg);
 
     else if(robot == "opponent2")
-        opp2_vision_ = Utilities::poseToRobotState(*msg);
+        opp2_vision_ = Utilities::poseToState(*msg);
 
     else if(robot == "ball")
-        ball_vision_ = Utilities::poseToBallState(*msg);
+        ball_vision_ = Utilities::poseToState(*msg);
 
     estimateStates();
 }

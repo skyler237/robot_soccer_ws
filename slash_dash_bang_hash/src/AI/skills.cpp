@@ -8,20 +8,20 @@
 //=============================================================================
 
 // Moves to the predicted position of the ball, facing the goal, along a smoothed path
-static RobotState Skills::ballIntercept(int robotId, RobotState robot, Vector2d ball)
+static State Skills::ballIntercept(int robotId, State robot, Vector2d ball)
 {
   // TODO: Finish this skill
 }
 
 // skill - go to point
 //   Travels towards a point. Angle always faces the goal.
-static RobotState Skills::goToPoint(int robotId, RobotState robot, Vector2d point)
+static State Skills::goToPoint(int robotId, State robot, Vector2d point)
 {
-    Vector2d dirPoint = point - Utilities::robotStateToVector(robot);
+    Vector2d dirPoint = point - Utilities::stateToVector(robot);
     Vector2d vxy = dirPoint * CONTROL_K_XY;
 
     // control angle to face the goal
-    Vector2d dirGoal = goal - Utilities::robotStateToVector(robot);
+    Vector2d dirGoal = goal - Utilities::stateToVector(robot);
     double theta_d = atan2(dirGoal(1), dirGoal(0));
     double omega = -CONTROL_K_OMEGA * (robot.theta - theta_d);
 
@@ -29,7 +29,7 @@ static RobotState Skills::goToPoint(int robotId, RobotState robot, Vector2d poin
     Vector2d v;
     v << vxy, omega;
     v = Utilities::saturateVelocity(v);
-    return Utilities::vectorToRobotState(v);
+    return Utilities::vectorToState(v);
 }
 
 //=============================================================================
@@ -39,7 +39,7 @@ static RobotState Skills::goToPoint(int robotId, RobotState robot, Vector2d poin
 // skill - follow ball on line
 //   Follows the y-position of the ball, while maintaining x-position at x_pos.
 //   Angle always faces the goal.
-static RobotState Skills::followBallOnLine(int robotId, RobotState robot, Vector2d ball, double x_pos)
+static State Skills::followBallOnLine(int robotId, State robot, Vector2d ball, double x_pos)
 {
     // control x position to stay on current line
     double vx = CONTROL_K_XY * (x_pos - robot.x);
@@ -48,7 +48,7 @@ static RobotState Skills::followBallOnLine(int robotId, RobotState robot, Vector
     double vy = CONTROL_K_XY * (ball_.y - robot.y);
 
     // control angle to face the goal
-    Vector2d dirGoal = goal - Utilities::robotStateToVector(robot);
+    Vector2d dirGoal = goal - Utilities::stateToVector(robot);
     double theta_d = atan2(dirGoal(1), dirGoal(0));
     double omega = -CONTROL_K_OMEGA * (robot.theta - theta_d);
 
@@ -56,7 +56,7 @@ static RobotState Skills::followBallOnLine(int robotId, RobotState robot, Vector
     Vector2d v;
     v << vx, vy, omega;
     v = Utilities::saturateVelocity(v);
-    return Utilities::vectorToRobotState(v);
+    return Utilities::vectorToState(v);
 }
 
 //=============================================================================
@@ -68,7 +68,7 @@ static RobotState Skills::followBallOnLine(int robotId, RobotState robot, Vector
  * @param time - the time into the future we want to predict the target position
  * @return Vector2d - predicted position
  */
-Eigen::Vector2d Skills::ballPredict(BallState ball, double time) {
+Eigen::Vector2d Skills::ballPredict(State ball, double time) {
 
   // Extrapolate the specified amount of time into the future
   Eigen::Vector2d prediction(ball.x, ball.y); // Initialize with current position

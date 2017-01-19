@@ -26,9 +26,9 @@ static double Utilities::angleMod(double angle)
     return fmod(angle + M_PI, (2*M_PI)) - M_PI;
 }
 
-static RobotState Utilities::poseToRobotState(Pose2D robot)
+static State Utilities::poseToState(Pose2D robot)
 {
-    RobotState state;
+    State state;
     // Flip coordinates if team is away or if we've swapped sides
     if((team == "away") ^ gameState.second_half)
     {
@@ -40,31 +40,17 @@ static RobotState Utilities::poseToRobotState(Pose2D robot)
     return state;
 }
 
-static RobotState Utilities::vectorToRobotState(Vector2d vec)
+static State Utilities::vectorToState(Vector2d vec)
 {
-  RobotState state;
+  State state;
   state.x = vec(0);
   state.y = vec(1);
 
   return state;
 }
 
-static Vector2d Utilities::robotStateToVector(RobotState robot)
+static Vector2d Utilities::stateToVector(State robot)
 {
   Vector2d vec(robot.x, robot.y);
   return vec;
-}
-
-
-static BallState Utilities::poseToBallState(Pose2D ball)
-{
-    BallState state;
-    // Flip coordinates if team is away or if we've swapped sides
-    if((team == "away") ^ gameState.second_half)
-    {
-        state.x = -ball.x;
-        state.y = -ball.y;
-    }
-
-    return state;
 }

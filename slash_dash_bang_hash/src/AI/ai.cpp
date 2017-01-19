@@ -19,8 +19,8 @@ priv_nh("~")
   ball_vision_sub_ = nh.subscribe<geometry_msgs::Pose2D>("ball_vision", 1, boost::bind(visionCallback, _1, "ball"));
   game_state_sub_ = nh.subscribe<soccerref::GameState>("/game_state", 1, gameStateCallback);
 
-  ally1_destination_pub_ = nh.advertise<slash_dash_bang_hash::RobotState>("ally1_destination", 5);
-  ally2_destination_pub_ = nh.advertise<slash_dash_bang_hash::RobotState>("ally2_destination", 5);
+  ally1_destination_pub_ = nh.advertise<slash_dash_bang_hash::State>("ally1_destination", 5);
+  ally2_destination_pub_ = nh.advertise<slash_dash_bang_hash::State>("ally2_destination", 5);
 
   // This is sort of ad-hoc (would be much better to be a parameter) but it works for now
   ally1_startingPos_.x = -0.5;
@@ -66,8 +66,8 @@ void AI::computeDestination() {
     {
         Vector2d zeroVel;
         zeroVel << 0, 0;
-        ally1_destination_ = Utilities::vectorToRobotState(zeroVel);
-        ally2_destination_ = Utilities::vectorToRobotState(zeroVel);
+        ally1_destination_ = Utilities::vectorToState(zeroVel);
+        ally2_destination_ = Utilities::vectorToState(zeroVel);
     }
   }
 
@@ -88,17 +88,17 @@ void AI::publishDestinations()
 // commands.  Skills are built on control commands.  A strategy would employ
 // plays at a lower level.  For example, switching between offense and
 // defense would be a strategy.
-RobotState AI::play_rushGoal(int robotId, RobotState robot, Vector2d ball)
+State AI::play_rushGoal(int robotId, State robot, Vector2d ball)
 {
     // normal vector from ball to goal
-    Vector2d ball_vec = Utiliies::robotStateToVector(robot);
+    Vector2d ball_vec = Utiliies::stateToVector(robot);
     Vector2d n = (goal_ - ball_vec).normalized();
 
     // compute position 10cm behind ball, but aligned with goal.
     Vector2d position = ball_vec - 0.2*n;
 
 
-    if((position - Utiliies::robotStateToVector(robot)).norm() < 0.21)
+    if((position - Utiliies::stateToVector(robot)).norm() < 0.21)
         return Skills::goToPoint(robotId, robot, goal);
     else
         return Skills::goToPoint(robotId, robot, position);
@@ -107,19 +107,19 @@ RobotState AI::play_rushGoal(int robotId, RobotState robot, Vector2d ball)
 void AI::visionCallback(const geometry_msgs::Pose2D::ConstPtr &msg, const std::string& robot)
 {
     if(robot == "ally1")
-        ally1_state_ = Utilities::poseToRobotState(*msg);
+        ally1_state_ = Utilities::poseToState(*msg);
 
     else if(robot == "ally2")
-        ally2_state_ = Utilities::poseToRobotState(*msg);
+        ally2_state_ = Utilities::poseToState(*msg);
 
     else if(robot == "opponent1")
-        opp1_state_ = Utilities::poseToRobotState(*msg);
+        opp1_state_ = Utilities::poseToState(*msg);
 
     else if(robot == "opponent2")
-        opp2_state_ = Utilities::poseToRobotState(*msg);
+        opp2_state_ = Utilities::poseToState(*msg);
 
     else if(robot == "ball")
-        ball_state_ = Utilities::poseToBallState(*msg);
+        ball_state_ = Utilities::poseToState(*msg);
 
     computeDestination();
 }
