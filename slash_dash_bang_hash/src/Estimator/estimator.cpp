@@ -19,7 +19,7 @@ priv_nh("~")
   ally2_state_pub_ = nh.advertise<slash_dash_bang_hash::State>("ally2_state", 5);
   opp1_state_pub_ = nh.advertise<slash_dash_bang_hash::State>("opp1_state", 5);
   opp2_state_pub_ = nh.advertise<slash_dash_bang_hash::State>("opp2_state", 5);
-  ball_state_pub_ = nh.advertise<slash_dash_bang_hash::BallState>("ball_state", 5);
+  ball_state_pub_ = nh.advertise<slash_dash_bang_hash::State>("ball_state", 5);
 
   game_state_sub_ = nh.subscribe<soccerref::GameState>("/game_state", 1, gameStateCallback);
 

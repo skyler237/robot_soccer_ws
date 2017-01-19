@@ -33,10 +33,10 @@ priv_nh("~")
   theta2_PID_.setGains(P, I, D, tau);
 
 
-  ally1_desired_pose_sub_ = nh.subscribe<slash_dash_bang_hash::RobotState>("ally1_desired_pose", 1, boost::bind(desiredPoseCallback, _1, "ally1"));
-  ally2_desired_pose_sub_ = nh.subscribe<slash_dash_bang_hash::RobotState>("ally2_desired_pose", 1, boost::bind(desiredPoseCallback, _1, "ally2"));
-  ally1_state_sub_ = nh.subscribe<slash_dash_bang_hash::RobotState>("ally1_state", 1, boost::bind(stateCallback, _1, "ally1"));
-  ally2_state_sub_ = nh.subscribe<slash_dash_bang_hash::RobotState>("ally2_state", 1, boost::bind(stateCallback, _1, "ally2"));
+  ally1_desired_pose_sub_ = nh.subscribe<slash_dash_bang_hash::State>("ally1_desired_pose", 1, boost::bind(desiredPoseCallback, _1, "ally1"));
+  ally2_desired_pose_sub_ = nh.subscribe<slash_dash_bang_hash::State>("ally2_desired_pose", 1, boost::bind(desiredPoseCallback, _1, "ally2"));
+  ally1_state_sub_ = nh.subscribe<slash_dash_bang_hash::State>("ally1_state", 1, boost::bind(stateCallback, _1, "ally1"));
+  ally2_state_sub_ = nh.subscribe<slash_dash_bang_hash::State>("ally2_state", 1, boost::bind(stateCallback, _1, "ally2"));
   game_state_sub_ = nh.subscribe<soccerref::GameState>("/game_state", 1, gameStateCallback);
 
   motor_pub1_ = nh.advertise<geometry_msgs::Twist>("ally1/vel_cmds", 5);
@@ -51,7 +51,7 @@ priv_nh("~")
 
 }
 
-void Controller::stateCallback(RobotStateConstPtr &msg, const std::string& robot)
+void Controller::stateCallback(StateConstPtr &msg, const std::string& robot)
 {
     if(robot == "ally1")
         ally1_state_ = *msg;
@@ -60,7 +60,7 @@ void Controller::stateCallback(RobotStateConstPtr &msg, const std::string& robot
         ally2_state_ = *msg;
 }
 
-void Controller::desiredPoseCallback(RobotStateConstPtr &msg, const std::string& robot)
+void Controller::desiredPoseCallback(StateConstPtr &msg, const std::string& robot)
 {
     int robotId = 0;
     if(robot == "ally1")
@@ -113,7 +113,7 @@ void Controller::computeControl(int robotId) {
     else {
       ROS_INFO("ERROR: Invalid Robot ID in controller::computeControl() function!");
     }
-    
+
     // --- OR ---
 
     // // If we are able to reliable determine the velocity beforehand, we can use these functions:
