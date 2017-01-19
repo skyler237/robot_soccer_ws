@@ -24,6 +24,25 @@ priv_nh("~")
 
 }
 
+void PathPlanner::stateCallback(const geometry_msgs::Pose2D::ConstPtr &msg, const std::string& robot)
+{
+    if(robot == "ally1")
+        ally1_state_ = Utilities::poseToRobotState(*msg);
+
+    else if(robot == "ally2")
+        ally2_state_ = Utilities::poseToRobotState(*msg);
+
+    else if(robot == "opponent1")
+        opp1_state_ = Utilities::poseToRobotState(*msg);
+
+    else if(robot == "opponent2")
+        opp2_state_ = Utilities::poseToRobotState(*msg);
+
+    else if(robot == "ball")
+        ball_state_ = Utilities::poseToBallState(*msg);
+
+}
+
 
 void PathPlanner::destinationCallback(RobotStateConstPtr &msg, const std::string& robot)
 {
