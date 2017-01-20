@@ -1,35 +1,40 @@
-#include "slash_dash_bang_hash/skills.h"
+#include "AI/skills.h"
+#include "Utilities/utilities.h"
 
 #define FIELD_WIDTH 3.40  // in meters
 #define FIELD_HEIGHT 2.38
+
+static Vector2d goal_(FIELD_WIDTH/2, 0);
+
+Skills::Skills()
+{
+  // goal_ << FIELD_WIDTH/2, 0;
+}
 
 //=============================================================================
 //                            Offensive Skills
 //=============================================================================
 
 // Moves to the predicted position of the ball, facing the goal, along a smoothed path
-static State Skills::ballIntercept(int robotId, State robot, Vector2d ball)
+State Skills::ballIntercept(int robotId, State robot, Vector2d ball)
 {
   // TODO: Finish this skill
 }
 
 // skill - go to point
 //   Travels towards a point. Angle always faces the goal.
-static State Skills::goToPoint(int robotId, State robot, Vector2d point)
+State Skills::goToPoint(int robotId, State robot, Vector2d point)
 {
-    Vector2d dirPoint = point - Utilities::stateToVector(robot);
-    Vector2d vxy = dirPoint * CONTROL_K_XY;
-
     // control angle to face the goal
-    Vector2d dirGoal = goal - Utilities::stateToVector(robot);
+    Vector2d dirGoal = goal_ - stateToVector(robot);
     double theta_d = atan2(dirGoal(1), dirGoal(0));
-    double omega = -CONTROL_K_OMEGA * (robot.theta - theta_d);
 
-    // Output velocities to motors
-    Vector2d v;
-    v << vxy, omega;
-    v = Utilities::saturateVelocity(v);
-    return Utilities::vectorToState(v);
+    State destination;
+    destination.x = point(0);
+    destination.y = point(1);
+    destination.theta = theta_d;
+
+    return destination;
 }
 
 //=============================================================================
@@ -39,24 +44,18 @@ static State Skills::goToPoint(int robotId, State robot, Vector2d point)
 // skill - follow ball on line
 //   Follows the y-position of the ball, while maintaining x-position at x_pos.
 //   Angle always faces the goal.
-static State Skills::followBallOnLine(int robotId, State robot, Vector2d ball, double x_pos)
+State Skills::followBallOnLine(int robotId, State robot, State ball, double x_pos)
 {
-    // control x position to stay on current line
-    double vx = CONTROL_K_XY * (x_pos - robot.x);
-
-    // control y position to match the ball's y-position
-    double vy = CONTROL_K_XY * (ball_.y - robot.y);
-
     // control angle to face the goal
-    Vector2d dirGoal = goal - Utilities::stateToVector(robot);
+    Vector2d dirGoal = goal_ - stateToVector(robot);
     double theta_d = atan2(dirGoal(1), dirGoal(0));
-    double omega = -CONTROL_K_OMEGA * (robot.theta - theta_d);
 
-    // Output velocities to motors
-    Vector2d v;
-    v << vx, vy, omega;
-    v = Utilities::saturateVelocity(v);
-    return Utilities::vectorToState(v);
+    State destination;
+    destination.x = x_pos;
+    destination.y = ball.y;
+    destination.theta = theta_d;
+
+    return destination;
 }
 
 //=============================================================================

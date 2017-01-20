@@ -1,4 +1,6 @@
-#include "PID.h"
+#include "controller/PID.h"
+#include <stdlib.h>
+#include <math.h>
 
 PID::PID()
 {
@@ -26,7 +28,7 @@ double PID::computePID(double current, double desired, double dt)
   double error = desired - current;
 
   // Handle border cases (don't compute anything)
-  if(dt == 0.0 || std::abs(error) > 9999999)
+  if(dt == 0.0 || abs(error) > 9999999)
   {
     last_error_ = error;
     last_state_ = current;
@@ -40,7 +42,7 @@ double PID::computePID(double current, double desired, double dt)
   if(dt > 0.0)
   {
     // Should I use (current - last_state_) at the end??
-    differentiator_ = (2.0*tau_ - dt)/(2.0*tau_ + dt)*differentiator_ + 2.0/(2.0*tau_ + dt)*(error_ - last_error_);
+    differentiator_ = (2.0*tau_ - dt)/(2.0*tau_ + dt)*differentiator_ + 2.0/(2.0*tau_ + dt)*(error - last_error_);
   }
 
   last_error_ = error;
@@ -55,10 +57,9 @@ double PID::computePIDDirect(double x, double x_r, double xdot, double dt)
   double error = x_r - x;
 
   // Handle border cases (don't compute anything)
-  if(dt == 0.0 || std::abs(error) > 9999999)
+  if(dt == 0.0 || abs(error) > 9999999)
   {
     last_error_ = error;
-    last_state_ = current;
     return 0.0;
   }
 
@@ -66,7 +67,6 @@ double PID::computePIDDirect(double x, double x_r, double xdot, double dt)
   integrator_ += dt/2*(error + last_error_);
 
   last_error_ = error;
-  last_state_ = current;
 
   return kp_*error + ki_*integrator_ - kd_*xdot;
 }

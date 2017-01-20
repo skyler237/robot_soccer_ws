@@ -5,8 +5,11 @@ project(slash_dash_bang_hash)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED
+  roscpp
+	rospy
 	message_generation
 	std_msgs
+  geometry_msgs
 	)
 
 ## System dependencies are found with CMake's conventions
@@ -45,8 +48,6 @@ find_package(catkin REQUIRED
 ## Generate messages in the 'msg' folder
 add_message_files(
   FILES
-  RobotState.msg
-	BallState.msg
 	State.msg
 )
 
@@ -112,11 +113,20 @@ catkin_package(
 
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
-# include_directories(include)
+include_directories(include)
+include_directories(
+  ${catkin_INCLUDE_DIRS} ${GAZEBO_INCLUDE_DIRS} ${SDFormat_INCLUDE_DIRS}
+)
 
-## Declare a C++ library
-# add_library(slash_dash_bang_hash
-#   src/${PROJECT_NAME}/slash_dash_bang_hash.cpp
+# add_executable(Utilities
+#   include/Utilities/utilities.h
+#   src/Utilities/utilities.cpp
+# )
+#
+# add_executable(Skills
+#   include/AI/skills.h
+#   src/AI/skills.cpp
+#   src/Utilities/utilities.cpp
 # )
 
 ## Add cmake target dependencies of the library
@@ -125,16 +135,37 @@ catkin_package(
 # add_dependencies(slash_dash_bang_hash ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Declare a C++ executable
-# add_executable(slash_dash_bang_hash_node src/slash_dash_bang_hash_node.cpp)
+
+add_executable(Estimator
+    include/Estimator/estimator.h
+    src/Estimator/estimator.cpp
+    include/Utilities/utilities.h
+    src/Utilities/utilities.cpp)
+target_link_libraries(Estimator ${catkin_LIBRARIES})
+
+add_executable(AI
+    src/Utilities/utilities.cpp
+    src/AI/skills.cpp
+	  src/AI/ai.cpp
+   )
+target_link_libraries(AI ${catkin_LIBRARIES})
+
+add_executable(PathPlanner
+    include/PathPlanner/path_planner.h
+    src/PathPlanner/path_planner.cpp)
+target_link_libraries(PathPlanner ${catkin_LIBRARIES})
+
+add_executable(Controller
+    include/controller/controller.h
+    src/controller/controller.cpp
+  src/controller/PID.cpp)
+target_link_libraries(Controller ${catkin_LIBRARIES})
+
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
-# add_dependencies(slash_dash_bang_hash_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+# add_dependencies(AI Skills Utilities ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
-## Specify libraries to link a library or executable target against
-# target_link_libraries(slash_dash_bang_hash_node
-#   ${catkin_LIBRARIES}
-# )
 
 #############
 ## Install ##

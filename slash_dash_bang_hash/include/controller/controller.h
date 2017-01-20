@@ -8,7 +8,7 @@
 #include <geometry_msgs/Twist.h>
 #include "soccerref/GameState.h"
 #include "slash_dash_bang_hash/State.h"
-#include "slash_dash_bang_hash/PID.h"
+#include "controller/PID.h"
 
 using namespace std;
 using namespace geometry_msgs;
@@ -23,11 +23,18 @@ using namespace Eigen;
 
 typedef boost::shared_ptr< ::slash_dash_bang_hash::State const> StateConstPtr;
 
-public class Controller {
+class Controller {
+public:
+   Controller();
+
+ private:
+  ros::NodeHandle nh_;
+  ros::NodeHandle priv_nh;
+
   // Publishers and Subscribers
   ros::Publisher motor_pub1_;
   ros::Publisher motor_pub2_;
-  ros::Subscriber ally1_goal_sub_, ally2_goal_sub_;
+  ros::Subscriber ally1_desired_pose_sub_, ally2_desired_pose_sub_;
   ros::Subscriber ally1_state_sub_, ally2_state_sub_;
   ros::Subscriber game_state_sub_;
   soccerref::GameState gameState_;
@@ -38,16 +45,16 @@ public class Controller {
   PID theta1_PID_, theta2_PID_;
 
   slash_dash_bang_hash::State ally1_state_, ally2_state_;
-  slash_dash_bang_hash::State ally1_goal_, ally2_goal_;
+  slash_dash_bang_hash::State ally1_desired_pose_, ally2_desired_pose_;
 
   Vector3d ally1_command_;
   Vector3d ally2_command_;
 
-  void computeControl();
-  void publishCommands();
+  void computeControl(int robotId);
+  void publishCommand(int robotId);
 
   void moveRobot(int robotId, Vector3d v_world);
-  void goalCallback(StateConstPtr &msg, const std::string& robot);
-  void stateCallback(StateConstPtr &msg, const std::string& robot);
+  void desiredPoseCallback(const StateConstPtr &msg, const std::string &robot);
+  void stateCallback(const StateConstPtr &msg, const std::string &robot);
   void gameStateCallback(const soccerref::GameState::ConstPtr &msg);
-}
+};

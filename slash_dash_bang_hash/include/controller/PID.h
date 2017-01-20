@@ -1,8 +1,9 @@
 #pragma once
 
-public class PID
+class PID
 {
   // Constructors
+public:
   PID();
   PID(double p, double i, double d, double tau);
 
@@ -15,8 +16,8 @@ public class PID
   double last_state_;
   double tau_;
 
-  computePID(double current, double desired, double dt);
+  double computePID(double current, double desired, double dt);
   // Use this when the derivative of the state is already known
-  computePIDDirect(double x, double x_r, double xdot, double dt);
+  double computePIDDirect(double x, double x_r, double xdot, double dt);
   void setGains(double p, double i, double d, double tau);
-}
+};

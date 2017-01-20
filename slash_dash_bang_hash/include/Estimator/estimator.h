@@ -8,6 +8,7 @@
 #include <geometry_msgs/Twist.h>
 #include "soccerref/GameState.h"
 #include "slash_dash_bang_hash/State.h"
+#include <string.h>
 
 using namespace std;
 using namespace geometry_msgs;
@@ -48,7 +49,14 @@ typedef boost::shared_ptr< ::slash_dash_bang_hash::State const> StateConstPtr;
 //     double yhat;
 // };
 
-public class Estimator {
+class Estimator {
+public:
+   Estimator();
+
+ private:
+  ros::NodeHandle nh_;
+  ros::NodeHandle priv_nh;
+  string team_;
   Vector2d goal_;
 
   // Publishers and Subscribers
@@ -63,7 +71,7 @@ public class Estimator {
   ros::Subscriber game_state_sub_;
   ros::Subscriber ally1_state_sub_, ally2_state_sub_;
   ros::Subscriber opp1_state_sub_, opp2_state_sub_;
-  ros::Subscriber ball_state_;
+  ros::Subscriber ball_state_sub_;
   soccerref::GameState gameState_;
 
   slash_dash_bang_hash::State ally1_vision_, ally2_vision_;
@@ -79,4 +87,7 @@ public class Estimator {
 
   void visionCallback(const geometry_msgs::Pose2D::ConstPtr &msg, const std::string& robot);
   void gameStateCallback(const soccerref::GameState::ConstPtr &msg);
-}
+
+  // Helper functions
+  slash_dash_bang_hash::State poseToState(geometry_msgs::Pose2D pose);
+};

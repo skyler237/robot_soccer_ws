@@ -37,17 +37,28 @@ typedef boost::shared_ptr< ::slash_dash_bang_hash::State const> StateConstPtr;
 //     double thetahat;
 // };
 
-public class PathPlanner {
+class PathPlanner
+{
+public:
+   PathPlanner();
+
+ private:
+   // Node handles, publishers, subscribers
+   ros::NodeHandle nh_;
+   ros::NodeHandle priv_nh;
+
   Vector2d goal_;
 
   // Publishers and Subscribers
   ros::Publisher ally1_desired_pose_pub_;
   ros::Publisher ally2_desired_pose_pub_;
 
+  ros::Subscriber ally1_destination_sub_, ally2_destination_sub_;
+
   ros::Subscriber game_state_sub_;
   ros::Subscriber ally1_state_sub_, ally2_state_sub_;
   ros::Subscriber opp1_state_sub_, opp2_state_sub_;
-  ros::Subscriber ball_state_;
+  ros::Subscriber ball_state_sub_;
   soccerref::GameState gameState_;
 
   slash_dash_bang_hash::State ally1_destination_, ally2_destination_; // End goal
@@ -59,7 +70,7 @@ public class PathPlanner {
   void planPath(int robotId);
   void publishDesiredPose(int robotId);
 
-  void stateCallback(StateConstPtr &msg, const std::string& robot);
-  void destinationCallback(StateConstPtr &msg, const std::string& robot);
+  void stateCallback(const StateConstPtr &msg, const std::string& robot);
+  void destinationCallback(const StateConstPtr &msg, const std::string& robot);
   void gameStateCallback(const soccerref::GameState::ConstPtr &msg);
-}
+};

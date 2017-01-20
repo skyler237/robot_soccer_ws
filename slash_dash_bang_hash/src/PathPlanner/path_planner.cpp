@@ -1,4 +1,4 @@
-#include "slash_dash_bang_hash/path_planner.h"
+#include "PathPlanner/path_planner.h"
 
 
 PathPlanner::PathPlanner() :
@@ -6,25 +6,28 @@ nh_(ros::NodeHandle()),
 priv_nh("~")
 {
   // Private node handle to get whether we are home or away.
-  // Having the nh private properly namespaces it.
+  // Having the nh_ private properly namespaces it.
   ros::NodeHandle priv_nh("~");
 
-  ally1_state_sub_  = nh.subscribe<slash_dash_bang_hash::State>("ally1_state", 1, boost::bind(stateCallback, _1, "ally1"));
-  ally2_state_sub_  = nh.subscribe<slash_dash_bang_hash::State>("ally2_state", 1, boost::bind(stateCallback, _1, "ally2"));
-  opp1_state_sub_  = nh.subscribe<slash_dash_bang_hash::State>("opponent1_state", 1, boost::bind(stateCallback, _1, "opponent1"));
-  opp2_state_sub_  = nh.subscribe<slash_dash_bang_hash::State>("opponent2_state", 1, boost::bind(stateCallback, _1, "opponent2"));
-  ball_state_sub_  = nh.subscribe<slash_dash_bang_hash::State>("ball_state", 1, boost::bind(stateCallback, _1, "ball"));
 
-  ally1_destination_sub_ = nh.subscribe<slash_dash_bang_hash::State>("ally1_destination", 1, boost::bind(destinationCallback, _1, "ally1"));
-  ally2_destination_sub_ = nh.subscribe<slash_dash_bang_hash::State>("ally2_destination", 1, boost::bind(destinationCallback, _1, "ally2"));
-  game_state_sub_ = nh.subscribe<soccerref::GameState>("/game_state", 1, gameStateCallback);
 
-  ally1_desired_pose_pub_ = nh.advertise<slash_dash_bang_hash::State>("ally1_desired_pose", 5);
-  ally2_desired_pose_pub_ = nh.advertise<slash_dash_bang_hash::State>("ally2_desired_pose", 5);
+
+  ally1_state_sub_  = nh_.subscribe<slash_dash_bang_hash::State>("ally1_state", 1, boost::bind(&PathPlanner::stateCallback, this, _1, "ally1"));
+  ally2_state_sub_  = nh_.subscribe<slash_dash_bang_hash::State>("ally2_state", 1, boost::bind(&PathPlanner::stateCallback, this, _1, "ally2"));
+  opp1_state_sub_  = nh_.subscribe<slash_dash_bang_hash::State>("opponent1_state", 1, boost::bind(&PathPlanner::stateCallback, this, _1, "opponent1"));
+  opp2_state_sub_  = nh_.subscribe<slash_dash_bang_hash::State>("opponent2_state", 1, boost::bind(&PathPlanner::stateCallback, this, _1, "opponent2"));
+  ball_state_sub_  = nh_.subscribe<slash_dash_bang_hash::State>("ball_state", 1, boost::bind(&PathPlanner::stateCallback, this, _1, "ball"));
+
+  ally1_destination_sub_ = nh_.subscribe<slash_dash_bang_hash::State>("ally1_destination", 1, boost::bind(&PathPlanner::destinationCallback, this, _1, "ally1"));
+  ally2_destination_sub_ = nh_.subscribe<slash_dash_bang_hash::State>("ally2_destination", 1, boost::bind(&PathPlanner::destinationCallback, this, _1, "ally2"));
+  game_state_sub_ = nh_.subscribe<soccerref::GameState>("/game_state", 1, &PathPlanner::gameStateCallback, this);
+
+  ally1_desired_pose_pub_ = nh_.advertise<slash_dash_bang_hash::State>("ally1_desired_pose", 5);
+  ally2_desired_pose_pub_ = nh_.advertise<slash_dash_bang_hash::State>("ally2_desired_pose", 5);
 
 }
 
-void PathPlanner::stateCallback(StateConstPtr &msg, const std::string& robot)
+void PathPlanner::stateCallback(const StateConstPtr &msg, const std::string& robot)
 {
     if(robot == "ally1")
         ally1_state_ = *msg;
@@ -44,7 +47,7 @@ void PathPlanner::stateCallback(StateConstPtr &msg, const std::string& robot)
 }
 
 
-void PathPlanner::destinationCallback(StateConstPtr &msg, const std::string& robot)
+void PathPlanner::destinationCallback(const StateConstPtr &msg, const std::string& robot)
 {
     int robotId = 0;
     if(robot == "ally1") {
@@ -165,9 +168,8 @@ void PathPlanner::publishDesiredPose(int robotId)
 
 int main(int argc, char **argv)
 {
-    param_init();
     ros::init(argc, argv, "home");
-    ros::NodeHandle nh;
+    ros::NodeHandle nh_;
 
 
     ros::spin();
