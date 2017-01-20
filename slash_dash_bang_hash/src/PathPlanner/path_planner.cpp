@@ -171,6 +171,7 @@ int main(int argc, char **argv)
     ros::init(argc, argv, "home");
     ros::NodeHandle nh_;
 
+    PathPlanner path_planner_node;
 
     ros::spin();
     // ros::Rate loop_rate(30);

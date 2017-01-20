@@ -168,6 +168,7 @@ int main(int argc, char **argv)
     ros::init(argc, argv, "home");
     ros::NodeHandle nh_;
 
+    Controller controller_node;
 
     ros::spin();
     // ros::Rate loop_rate(30);

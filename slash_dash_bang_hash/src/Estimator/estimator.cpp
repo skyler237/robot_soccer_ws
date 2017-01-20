@@ -93,6 +93,7 @@ int main(int argc, char **argv)
     ros::init(argc, argv, "home");
     ros::NodeHandle nh_;
 
+    Estimator estimator_node;
 
     ros::spin();
     // ros::Rate loop_rate(30);

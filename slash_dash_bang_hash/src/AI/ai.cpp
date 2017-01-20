@@ -52,9 +52,11 @@ void AI::computeDestination() {
 
         // robot #1 positions itself behind ball and rushes the goal.
         ally1_destination_ = play_rushGoal(1, ally1_state_, ball_state_);
+        ROS_INFO("Ally1_destination: x=%f, y=%f", ally1_destination_.x, ally1_destination_.y);
 
         // robot #2 stays on line, following the ball, facing the goal
         ally2_destination_ = Skills::followBallOnLine(2, ally2_state_, ball_state_, -2 * FIELD_WIDTH / 6);
+        ROS_INFO("Ally2_destination: x=%f, y=%f", ally2_destination_.x, ally2_destination_.y);
 
         /*********************************************************************/
     }
@@ -139,6 +141,7 @@ int main(int argc, char **argv)
     ros::init(argc, argv, "home");
     ros::NodeHandle nh_;
 
+    AI ai_node;
 
     ros::spin();
     // ros::Rate loop_rate(30);
