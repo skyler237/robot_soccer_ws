@@ -30,11 +30,13 @@ priv_nh("~")
   ally2_startingPos_(0) = -1.0;
   ally2_startingPos_(1) = -0.0;
 
+  goal_ << FIELD_WIDTH/2, 0;
+
 }
 
 void AI::param_init()
 {
-    goal_ << FIELD_WIDTH/2, 0;
+
 }
 
 void AI::computeDestination() {

@@ -41,11 +41,14 @@ priv_nh("~")
 
   motor_pub1_ = nh_.advertise<geometry_msgs::Twist>("ally1/vel_cmds", 5);
   motor_pub2_ = nh_.advertise<geometry_msgs::Twist>("ally2/vel_cmds", 5);
+  //ROS_INFO("Init");
 
 }
 
 void Controller::stateCallback(const StateConstPtr &msg, const std::string& robot)
 {
+  //ROS_INFO("Controller state call back");
+
     if(robot == "ally1")
         ally1_state_ = *msg;
 
@@ -55,6 +58,8 @@ void Controller::stateCallback(const StateConstPtr &msg, const std::string& robo
 
 void Controller::desiredPoseCallback(const StateConstPtr &msg, const std::string& robot)
 {
+  //ROS_INFO("C desiredPoseCallback");
+
     int robotId = 0;
     if(robot == "ally1")
     {
@@ -71,6 +76,8 @@ void Controller::desiredPoseCallback(const StateConstPtr &msg, const std::string
 }
 
 void Controller::computeControl(int robotId) {
+  //ROS_INFO("C computeControl");
+
   double now = ros::Time::now().toSec();
   static double prev = 0;
   double dt = now - prev;
@@ -92,7 +99,7 @@ void Controller::computeControl(int robotId) {
       theta1_command = theta1_PID_.computePID(ally1_state_.theta, ally1_desired_pose_.theta, dt);
 
       // TODO: We don't currently use theta to compute our command... would we like to change that?
-      ally1_command_ << x1_command, y1_command;
+      ally1_command_ << x1_command, y1_command, theta1_command;
     }
     else if(robotId == 2)
     {
@@ -101,7 +108,7 @@ void Controller::computeControl(int robotId) {
       theta2_command = theta2_PID_.computePID(ally2_state_.theta, ally2_desired_pose_.theta, dt);
 
       // TODO: We don't currently use theta to compute our command... would we like to change that?
-      ally2_command_ << x2_command, y2_command;
+      ally2_command_ << x2_command, y2_command, theta2_command;
     }
     else {
       ROS_INFO("ERROR: Invalid Robot ID in controller::computeControl() function!");
@@ -125,6 +132,8 @@ void Controller::computeControl(int robotId) {
 
 void Controller::publishCommand(int robotId)
 {
+  //ROS_INFO("C publishCommand");
+
   switch (robotId) {
     case 1:
       moveRobot(1, ally1_command_);
@@ -144,6 +153,8 @@ void Controller::publishCommand(int robotId)
 
 void Controller::moveRobot(int robotId, Vector3d vel_world)
 {
+  //ROS_INFO("C moveRobot");
+
     geometry_msgs::Twist vel;
     vel.linear.x = vel_world(0);
     vel.linear.y = vel_world(1);
@@ -160,17 +171,23 @@ void Controller::moveRobot(int robotId, Vector3d vel_world)
 
 void Controller::gameStateCallback(const soccerref::GameState::ConstPtr &msg)
 {
+  //ROS_INFO("C gameStateCallback");
+
     gameState_ = *msg;
 }
 
 int main(int argc, char **argv)
 {
+//  ROS_INFO("C main");
+
     ros::init(argc, argv, "home");
     ros::NodeHandle nh_;
 
     Controller controller_node;
 
     ros::spin();
+    //ROS_INFO("C main 2");
+
     // ros::Rate loop_rate(30);
     // while(ros::ok())
     // {

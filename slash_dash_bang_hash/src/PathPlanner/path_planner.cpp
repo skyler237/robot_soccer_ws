@@ -24,11 +24,15 @@ priv_nh("~")
 
   ally1_desired_pose_pub_ = nh_.advertise<slash_dash_bang_hash::State>("ally1_desired_pose", 5);
   ally2_desired_pose_pub_ = nh_.advertise<slash_dash_bang_hash::State>("ally2_desired_pose", 5);
+  //ROS_INFO("Init");
+
 
 }
 
 void PathPlanner::stateCallback(const StateConstPtr &msg, const std::string& robot)
 {
+  //ROS_INFO("state call back");
+
     if(robot == "ally1")
         ally1_state_ = *msg;
 
@@ -49,6 +53,8 @@ void PathPlanner::stateCallback(const StateConstPtr &msg, const std::string& rob
 
 void PathPlanner::destinationCallback(const StateConstPtr &msg, const std::string& robot)
 {
+  //ROS_INFO("destination");
+
     int robotId = 0;
     if(robot == "ally1") {
       ally1_destination_ = (*msg);
@@ -66,11 +72,14 @@ void PathPlanner::destinationCallback(const StateConstPtr &msg, const std::strin
 
 void PathPlanner::gameStateCallback(const soccerref::GameState::ConstPtr &msg)
 {
+  //ROS_INFO("game state call back");
+
     gameState_ = *msg;
 }
 
 void PathPlanner::planPath(int robotId)
 {
+  //ROS_INFO("Plan path");
   switch(robotId)
   {
     case 1:
@@ -172,8 +181,11 @@ int main(int argc, char **argv)
     ros::NodeHandle nh_;
 
     PathPlanner path_planner_node;
+    //ROS_INFO("main");
 
     ros::spin();
+    //ROS_INFO("main 2");
+
     // ros::Rate loop_rate(30);
     // while(ros::ok())
     // {
