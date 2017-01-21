@@ -14,13 +14,13 @@ priv_nh("~")
   // Set PID Gains
   double P, I, D, tau;
   tau = priv_nh.param<double>("tau", 0.05);
-  P = priv_nh.param<double>("x_P", 5.0);
+  P = priv_nh.param<double>("x_P", 3.0);
   I = priv_nh.param<double>("x_I", 0.0);
   D = priv_nh.param<double>("x_D", 0.0);
   x1_PID_.setGains(P, I, D, tau);
   x2_PID_.setGains(P, I, D, tau);
 
-  P = priv_nh.param<double>("y_P", 5.0);
+  P = priv_nh.param<double>("y_P", 3.0);
   I = priv_nh.param<double>("y_I", 0.0);
   D = priv_nh.param<double>("y_D", 0.0);
   y1_PID_.setGains(P, I, D, tau);
@@ -87,7 +87,7 @@ void Controller::computeControl(int robotId) {
   double y1_command, y2_command;
   double theta1_command, theta2_command;
 
-  if (dt > CONTROL_TIME_STEP)
+  if (dt > CONTROL_TIME_STEP && gameState_.play)
   {
     // Update ally1_command_ and ally2_command_ variables
 
@@ -100,6 +100,7 @@ void Controller::computeControl(int robotId) {
 
       // TODO: We don't currently use theta to compute our command... would we like to change that?
       ally1_command_ << x1_command, y1_command, theta1_command;
+      ROS_INFO("Robot 1 Control: x_vel=%f, y_vel=%f, omega=%f", x1_command, y1_command, theta1_command);
     }
     else if(robotId == 2)
     {
@@ -109,6 +110,7 @@ void Controller::computeControl(int robotId) {
 
       // TODO: We don't currently use theta to compute our command... would we like to change that?
       ally2_command_ << x2_command, y2_command, theta2_command;
+      ROS_INFO("Robot 2 Control: x_vel=%f, y_vel=%f, omega=%f", x2_command, y2_command, theta2_command);
     }
     else {
       ROS_INFO("ERROR: Invalid Robot ID in controller::computeControl() function!");
@@ -126,6 +128,17 @@ void Controller::computeControl(int robotId) {
     // theta2_command = theta2_PID_.computePIDDirect(ally2_state_.theta, ally2_desired_pose_.theta, ally2_state_.thetadot, dt);
 
   }
+  else {
+    x1_command = 0;
+    y1_command = 0;
+    theta1_command = 0;
+
+    x2_command = 0;
+    y2_command = 0;
+    theta2_command = 0;
+  }
+
+
 
   publishCommand(robotId);
 }

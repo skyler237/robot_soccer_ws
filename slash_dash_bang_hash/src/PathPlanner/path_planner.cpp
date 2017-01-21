@@ -24,7 +24,6 @@ priv_nh("~")
 
   ally1_desired_pose_pub_ = nh_.advertise<slash_dash_bang_hash::State>("ally1_desired_pose", 5);
   ally2_desired_pose_pub_ = nh_.advertise<slash_dash_bang_hash::State>("ally2_desired_pose", 5);
-  //ROS_INFO("Init");
 
 
 }
