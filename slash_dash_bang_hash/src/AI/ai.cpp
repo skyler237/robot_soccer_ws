@@ -54,12 +54,27 @@ void AI::computeDestination() {
 
         // robot #1 positions itself behind ball and rushes the goal.
         ally1_destination_ = play_rushGoal(1, ally1_state_, ball_state_);
-        ROS_INFO("Ally1_destination: x=%f, y=%f", ally1_destination_.x, ally1_destination_.y);
+        //ROS_INFO("Ally1_destination: x=%f, y=%f", ally1_destination_.x, ally1_destination_.y);
+
+
 
         // robot #2 stays on line, following the ball, facing the goal
         ally2_destination_ = Skills::followBallOnLine(2, ally2_state_, ball_state_, -2 * FIELD_WIDTH / 6);
-        ROS_INFO("Ally2_destination: x=%f, y=%f", ally2_destination_.x, ally2_destination_.y);
 
+        ///////////////////////////////////////////////////////
+        ////////////////////DEBUG//////////////////////////////
+        //Vector2d dirGoal;
+        //dirGoal << 1, 1;
+        ///////////////////////////////////////////////////////
+        //go to the center of the field, as a test to see if our controll is correct
+        //ally2_destination_ = Skills::goToPoint(2, ally2_state_, dirGoal);
+        //////////////////////////////////////////////////////////
+
+
+
+
+        //ROS_INFO("Ally2_destination: x=%f, y=%f", ally2_destination_.x, ally2_destination_.y);
+          //ROS_INFO("positionx: %d   positiony: %d", x_pos, ball.y);
         /*********************************************************************/
     }
     else if (gameState_.reset_field)
@@ -104,7 +119,6 @@ State AI::play_rushGoal(int robotId, State robot, State ball)
 
     // compute position 10cm behind ball, but aligned with goal.
     Vector2d position = ball_vec - 0.2*n;
-
 
     if((position - stateToVector(robot)).norm() < 0.21)
         return Skills::goToPoint(robotId, robot, goal_);

@@ -54,6 +54,7 @@ State Skills::followBallOnLine(int robotId, State robot, State ball, double x_po
     destination.x = x_pos;
     destination.y = ball.y;
     destination.theta = theta_d;
+  
 
     return destination;
 }
