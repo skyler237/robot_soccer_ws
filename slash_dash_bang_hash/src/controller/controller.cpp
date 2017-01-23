@@ -32,8 +32,8 @@ priv_nh("~")
   theta1_PID_.setGains(P, I, D, tau);
   theta2_PID_.setGains(P, I, D, tau);
 
-  max_xy_vel_ = priv_nh.param<double>("max_xy_vel", 5.0);
-  max_omega_ = priv_nh.param<double>("max_omega", 5.0);
+  max_xy_vel_ = priv_nh.param<double>("max_xy_vel", 10.0);
+  max_omega_ = priv_nh.param<double>("max_omega", 45.0);
 
 
   ally1_desired_pose_sub_ = nh_.subscribe<slash_dash_bang_hash::State>("ally1_desired_pose", 1, boost::bind(&Controller::desiredPoseCallback, this, _1, "ally1"));
@@ -42,8 +42,8 @@ priv_nh("~")
   ally2_state_sub_ = nh_.subscribe<slash_dash_bang_hash::State>("ally2_state", 1, boost::bind(&Controller::stateCallback, this, _1, "ally2"));
   game_state_sub_ = nh_.subscribe<soccerref::GameState>("/game_state", 1, &Controller::gameStateCallback, this);
 
-  motor_pub1_ = nh_.advertise<geometry_msgs::Twist>("ally1/vel_cmds", 5);
-  motor_pub2_ = nh_.advertise<geometry_msgs::Twist>("ally2/vel_cmds", 5);
+  motor_pub1_ = nh_.advertise<geometry_msgs::Twist>("ally1/vel_cmds", 1);
+  motor_pub2_ = nh_.advertise<geometry_msgs::Twist>("ally2/vel_cmds", 1);
   //ROS_INFO("Init");
 
 }
@@ -51,31 +51,33 @@ priv_nh("~")
 void Controller::stateCallback(const StateConstPtr &msg, const std::string& robot)
 {
   //ROS_INFO("Controller state call back");
-
-    if(robot == "ally1")
-        ally1_state_ = *msg;
-
-    else if(robot == "ally2")
+    int robotId = 0;
+    if(robot == "ally1") {
+      ally1_state_ = *msg;
+      robotId = 1;
+    }
+    else if(robot == "ally2") {
         ally2_state_ = *msg;
+        robotId = 2;
+    }
+
+    computeControl(robotId);
 }
 
 void Controller::desiredPoseCallback(const StateConstPtr &msg, const std::string& robot)
 {
   //ROS_INFO("C desiredPoseCallback");
 
-    int robotId = 0;
+
     if(robot == "ally1")
     {
       ally1_desired_pose_ = *msg;
-      robotId = 1;
     }
     else if(robot == "ally2")
     {
       ally2_desired_pose_ = *msg;
-      robotId = 2;
     }
 
-    computeControl(robotId);
 }
 
 void Controller::computeControl(int robotId) {
@@ -90,7 +92,7 @@ void Controller::computeControl(int robotId) {
   double y1_command, y2_command;
   double theta1_command, theta2_command;
 
-  if (dt > CONTROL_TIME_STEP && gameState_.play)
+  if (dt > CONTROL_TIME_STEP && (gameState_.play || gameState_.reset_field))
   {
     // Update ally1_command_ and ally2_command_ variables
 
@@ -103,7 +105,7 @@ void Controller::computeControl(int robotId) {
 
       // TODO: We don't currently use theta to compute our command... would we like to change that?
       ally1_command_ << x1_command, y1_command, theta1_command;
-      ROS_INFO("Robot 1 Control: x_vel=%f, y_vel=%f, omega=%f", x1_command, y1_command, theta1_command);
+      // ROS_INFO("Robot 1 Control: x_vel=%f, y_vel=%f, omega=%f", x1_command, y1_command, theta1_command);
     }
     else if(robotId == 2)
     {
@@ -113,7 +115,7 @@ void Controller::computeControl(int robotId) {
 
       // TODO: We don't currently use theta to compute our command... would we like to change that?
       ally2_command_ << x2_command, y2_command, theta2_command;
-      ROS_INFO("Robot 2 Control: x_vel=%f, y_vel=%f, omega=%f", x2_command, y2_command, theta2_command);
+      // ROS_INFO("Robot 2 Control: x_vel=%f, y_vel=%f, omega=%f", x2_command, y2_command, theta2_command);
     }
     else {
       ROS_INFO("ERROR: Invalid Robot ID in controller::computeControl() function!");
@@ -129,7 +131,7 @@ void Controller::computeControl(int robotId) {
     // x2_command = x2_PID_.computePIDDirect(ally2_state_.x, ally2_desired_pose_.x, ally2_state_.xdot, dt);
     // y2_command = y2_PID_.computePIDDirect(ally2_state_.y, ally2_desired_pose_.y, ally2_state_.ydot, dt);
     // theta2_command = theta2_PID_.computePIDDirect(ally2_state_.theta, ally2_desired_pose_.theta, ally2_state_.thetadot, dt);
-
+    publishCommand(robotId);
   }
   else {
     x1_command = 0;
@@ -139,11 +141,13 @@ void Controller::computeControl(int robotId) {
     x2_command = 0;
     y2_command = 0;
     theta2_command = 0;
+    publishCommand(1);
+    publishCommand(2);
   }
 
 
 
-  publishCommand(robotId);
+
 }
 
 // ================ Original Demoteam implementation of control ================

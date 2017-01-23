@@ -156,6 +156,7 @@ add_executable(PathPlanner
 target_link_libraries(PathPlanner ${catkin_LIBRARIES})
 
 add_executable(Controller
+    src/Utilities/utilities.cpp
     include/controller/controller.h
     src/controller/controller.cpp
   src/controller/PID.cpp)

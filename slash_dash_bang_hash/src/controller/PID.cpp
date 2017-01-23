@@ -50,7 +50,7 @@ double PID::computePID(double current, double desired, double dt)
   last_error_ = error;
   last_state_ = current;
 
-  ROS_INFO("PID: error=%f, integrator=%f, differentiator=%f", error, integrator_, differentiator_);
+  // ROS_INFO("PID: error=%f, integrator=%f, differentiator=%f", error, integrator_, differentiator_);
 
   return kp_*error + ki_*integrator_ - kd_*differentiator_;
 }

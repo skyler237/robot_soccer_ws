@@ -2,7 +2,7 @@
 #include "Utilities/utilities.h"
 #include "AI/skills.h"
 
-#define AI_TIME_STEP 0.0
+#define AI_TIME_STEP 0.01
 
 AI::AI() :
 nh_(ros::NodeHandle()),
@@ -76,25 +76,18 @@ void AI::computeDestination() {
         //ROS_INFO("Ally2_destination: x=%f, y=%f", ally2_destination_.x, ally2_destination_.y);
           //ROS_INFO("positionx: %d   positiony: %d", x_pos, ball.y);
         /*********************************************************************/
+
+        publishDestinations();
     }
     else if (gameState_.reset_field)
     {
         ally1_destination_ = Skills::goToPoint(1, ally1_state_, ally1_startingPos_);
         ally2_destination_ = Skills::goToPoint(2, ally2_state_, ally2_startingPos_);
-    }
-    else //paused - do nothing
-    {
-        Vector2d zeroVel;
-        zeroVel << 0, 0;
-        ally1_destination_.x = 0.0;
-        ally1_destination_.y = 0.0;
 
-        ally2_destination_.x = 0.0;
-        ally2_destination_.y = 0.0;
+        publishDestinations();
     }
   }
 
-  publishDestinations();
 }
 
 void AI::publishDestinations()
