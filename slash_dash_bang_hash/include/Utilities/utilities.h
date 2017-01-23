@@ -17,6 +17,7 @@ using namespace Eigen;
 // public:
   int sgn(double val);
   Vector3d saturateVelocity(Vector3d v);
+  double saturate(double x, double min, double max);
   double angleMod(double angle);
   static slash_dash_bang_hash::State poseToState(geometry_msgs::Pose2D robot);
   slash_dash_bang_hash::State vectorToState(Vector2d vec);

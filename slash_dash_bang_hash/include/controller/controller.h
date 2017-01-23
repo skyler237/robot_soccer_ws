@@ -50,6 +50,9 @@ public:
   Vector3d ally1_command_;
   Vector3d ally2_command_;
 
+  double max_xy_vel_;
+  double max_omega_;
+
   void computeControl(int robotId);
   void publishCommand(int robotId);
 

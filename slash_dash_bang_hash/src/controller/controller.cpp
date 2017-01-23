@@ -32,6 +32,9 @@ priv_nh("~")
   theta1_PID_.setGains(P, I, D, tau);
   theta2_PID_.setGains(P, I, D, tau);
 
+  max_xy_vel_ = priv_nh.param<double>("max_xy_vel", 5.0);
+  max_omega_ = priv_nh.param<double>("max_omega", 5.0);
+
 
   ally1_desired_pose_sub_ = nh_.subscribe<slash_dash_bang_hash::State>("ally1_desired_pose", 1, boost::bind(&Controller::desiredPoseCallback, this, _1, "ally1"));
   ally2_desired_pose_sub_ = nh_.subscribe<slash_dash_bang_hash::State>("ally2_desired_pose", 1, boost::bind(&Controller::desiredPoseCallback, this, _1, "ally2"));
@@ -94,9 +97,9 @@ void Controller::computeControl(int robotId) {
     // Compute the PID values for each state variable
     if(robotId == 1)
     {
-      x1_command = x1_PID_.computePID(ally1_state_.x, ally1_desired_pose_.x, dt);
-      y1_command = y1_PID_.computePID(ally1_state_.y, ally1_desired_pose_.y, dt);
-      theta1_command = theta1_PID_.computePID(ally1_state_.theta, ally1_desired_pose_.theta, dt);
+      x1_command = saturate(x1_PID_.computePID(ally1_state_.x, ally1_desired_pose_.x, dt), -1*max_xy_vel_, max_xy_vel_);
+      y1_command = saturate(y1_PID_.computePID(ally1_state_.y, ally1_desired_pose_.y, dt), -1*max_xy_vel_, max_xy_vel_);
+      theta1_command = saturate(theta1_PID_.computePID(ally1_state_.theta, ally1_desired_pose_.theta, dt), -1*max_omega_, max_omega_);
 
       // TODO: We don't currently use theta to compute our command... would we like to change that?
       ally1_command_ << x1_command, y1_command, theta1_command;
@@ -104,9 +107,9 @@ void Controller::computeControl(int robotId) {
     }
     else if(robotId == 2)
     {
-      x2_command = x2_PID_.computePID(ally2_state_.x, ally2_desired_pose_.x, dt);
-      y2_command = y2_PID_.computePID(ally2_state_.y, ally2_desired_pose_.y, dt);
-      theta2_command = theta2_PID_.computePID(ally2_state_.theta, ally2_desired_pose_.theta, dt);
+      x2_command = saturate(x2_PID_.computePID(ally2_state_.x, ally2_desired_pose_.x, dt), -1*max_xy_vel_, max_xy_vel_);
+      y2_command = saturate(y2_PID_.computePID(ally2_state_.y, ally2_desired_pose_.y, dt), -1*max_xy_vel_, max_xy_vel_);
+      theta2_command = saturate(theta2_PID_.computePID(ally2_state_.theta, ally2_desired_pose_.theta, dt), -1*max_omega_, max_omega_);
 
       // TODO: We don't currently use theta to compute our command... would we like to change that?
       ally2_command_ << x2_command, y2_command, theta2_command;
@@ -142,6 +145,24 @@ void Controller::computeControl(int robotId) {
 
   publishCommand(robotId);
 }
+
+// ================ Original Demoteam implementation of control ================
+// void skill_goToPoint(RobotPose robot, Vector2d point, int robotId)
+// {
+//     Vector2d dirPoint = point - robot.pos;
+//     Vector2d vxy = dirPoint * CONTROL_K_XY;
+//
+//     // control angle to face the goal
+//     Vector2d dirGoal = goal - robot.pos;
+//     double theta_d = atan2(dirGoal(1), dirGoal(0));
+//     double omega = -CONTROL_K_OMEGA * (robot.theta - theta_d);
+//
+//     // Output velocities to motors
+//     Vector3d v;
+//     v << vxy, omega;
+//     v = utility_saturateVelocity(v);
+//     moveRobot(v, robotId);
+// }
 
 void Controller::publishCommand(int robotId)
 {
