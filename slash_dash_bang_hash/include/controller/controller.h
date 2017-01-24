@@ -32,32 +32,29 @@ public:
   ros::NodeHandle priv_nh;
 
   // Publishers and Subscribers
-  ros::Publisher motor_pub1_;
-  ros::Publisher motor_pub2_;
-  ros::Subscriber ally1_desired_pose_sub_, ally2_desired_pose_sub_;
-  ros::Subscriber ally1_state_sub_, ally2_state_sub_;
+  ros::Publisher motor_pub_;
+  ros::Subscriber desired_pose_sub_;
+  ros::Subscriber state_sub_;
   ros::Subscriber game_state_sub_;
   soccerref::GameState gameState_;
 
   // PID controllers for each variable for each robot
-  PID x1_PID_, x2_PID_;
-  PID y1_PID_, y2_PID_;
-  PID theta1_PID_, theta2_PID_;
+  PID x_PID_;
+  PID y_PID_;
+  PID theta_PID_;
 
-  slash_dash_bang_hash::State ally1_state_, ally2_state_;
-  slash_dash_bang_hash::State ally1_desired_pose_, ally2_desired_pose_;
+  slash_dash_bang_hash::State robot_state_;
+  slash_dash_bang_hash::State desired_pose_;
 
-  Vector3d ally1_command_;
-  Vector3d ally2_command_;
+  Vector3d command_;
 
   double max_xy_vel_;
   double max_omega_;
 
-  void computeControl(int robotId);
-  void publishCommand(int robotId);
+  void computeControl();
+  void publishCommand();
 
-  void moveRobot(int robotId, Vector3d v_world);
-  void desiredPoseCallback(const StateConstPtr &msg, const std::string &robot);
-  void stateCallback(const StateConstPtr &msg, const std::string &robot);
+  void desiredPoseCallback(const StateConstPtr &msg);
+  void stateCallback(const StateConstPtr &msg);
   void gameStateCallback(const soccerref::GameState::ConstPtr &msg);
 };

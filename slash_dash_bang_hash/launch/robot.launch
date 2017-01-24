@@ -3,6 +3,7 @@
     <!-- declare arg to be passed in -->
     <arg name="me" default="ally1" />
     <arg name="ally" default="ally2" />
+    <arg name="robot_number" default="1" />
     <!-- <arg name="sim_mode" default="false" /> -->
     <arg name="team_side" default="home" />
     <arg name="vel_cmds_remap" default="vel_cmds" />
@@ -26,8 +27,9 @@
     </node>
     <node name="controller" pkg="slash_dash_bang_hash" type="Controller" output="screen">
         <!-- The controller needs to know which robot state to listen to -->
-        <remap from="ally1/vel_cmds" to="/$(arg team_side)1/command" />
-        <remap from="ally2/vel_cmds" to="/$(arg team_side)2/command" />
+        <remap from="vel_command" to="/$(arg team_side)$(arg robot_number)/command" />
+        <remap from="robot_state" to="/slash_dash_bang_hash_$(arg team_side)/$(arg me)/$(arg me)_state" />
+        <remap from="desired_pose" to="/slash_dash_bang_hash_$(arg team_side)/$(arg me)/$(arg me)_desired_pose" />
     </node>
 
 </launch>

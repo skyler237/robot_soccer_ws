@@ -14,73 +14,47 @@ priv_nh("~")
   // Set PID Gains
   double P, I, D, tau;
   tau = priv_nh.param<double>("tau", 0.05);
-  P = priv_nh.param<double>("x_P", 2.5);
+  P = priv_nh.param<double>("x_P", 3.5);
   I = priv_nh.param<double>("x_I", 0.0);
   D = priv_nh.param<double>("x_D", 0.0);
-  x1_PID_.setGains(P, I, D, tau);
-  x2_PID_.setGains(P, I, D, tau);
+  x_PID_.setGains(P, I, D, tau);
 
-  P = priv_nh.param<double>("y_P", 2.5);
+  P = priv_nh.param<double>("y_P", 3.5);
   I = priv_nh.param<double>("y_I", 0.0);
   D = priv_nh.param<double>("y_D", 0.0);
-  y1_PID_.setGains(P, I, D, tau);
-  y2_PID_.setGains(P, I, D, tau);
+  y_PID_.setGains(P, I, D, tau);
 
-  P = priv_nh.param<double>("theta_P", 2.5);
+  P = priv_nh.param<double>("theta_P", 3.5);
   I = priv_nh.param<double>("theta_I", 0.0);
   D = priv_nh.param<double>("theta_D", 0.0);
-  theta1_PID_.setGains(P, I, D, tau);
-  theta2_PID_.setGains(P, I, D, tau);
+  theta_PID_.setGains(P, I, D, tau);
 
   max_xy_vel_ = priv_nh.param<double>("max_xy_vel", 10.0);
   max_omega_ = priv_nh.param<double>("max_omega", 30.0);
 
 
-  ally1_desired_pose_sub_ = nh_.subscribe<slash_dash_bang_hash::State>("ally1_desired_pose", 1, boost::bind(&Controller::desiredPoseCallback, this, _1, "ally1"));
-  ally2_desired_pose_sub_ = nh_.subscribe<slash_dash_bang_hash::State>("ally2_desired_pose", 1, boost::bind(&Controller::desiredPoseCallback, this, _1, "ally2"));
-  ally1_state_sub_ = nh_.subscribe<slash_dash_bang_hash::State>("ally1_state", 1, boost::bind(&Controller::stateCallback, this, _1, "ally1"));
-  ally2_state_sub_ = nh_.subscribe<slash_dash_bang_hash::State>("ally2_state", 1, boost::bind(&Controller::stateCallback, this, _1, "ally2"));
+  desired_pose_sub_ = nh_.subscribe<slash_dash_bang_hash::State>("desired_pose", 1, &Controller::desiredPoseCallback, this);
+  state_sub_ = nh_.subscribe<slash_dash_bang_hash::State>("robot_state", 1, &Controller::stateCallback, this);
   game_state_sub_ = nh_.subscribe<soccerref::GameState>("/game_state", 1, &Controller::gameStateCallback, this);
 
-  motor_pub1_ = nh_.advertise<geometry_msgs::Twist>("ally1/vel_cmds", 5);
-  motor_pub2_ = nh_.advertise<geometry_msgs::Twist>("ally2/vel_cmds", 5);
+  motor_pub_ = nh_.advertise<geometry_msgs::Twist>("vel_command", 5);
   //ROS_INFO("Init");
 
 }
 
-void Controller::stateCallback(const StateConstPtr &msg, const std::string& robot)
+void Controller::stateCallback(const StateConstPtr &msg)
 {
-  //ROS_INFO("Controller state call back");
-    int robotId = 0;
-    if(robot == "ally1") {
-      ally1_state_ = *msg;
-      robotId = 1;
-    }
-    else if(robot == "ally2") {
-        ally2_state_ = *msg;
-        robotId = 2;
-    }
+    robot_state_ = *msg;
 
-    computeControl(robotId);
+    computeControl();
 }
 
-void Controller::desiredPoseCallback(const StateConstPtr &msg, const std::string& robot)
+void Controller::desiredPoseCallback(const StateConstPtr &msg)
 {
-  //ROS_INFO("C desiredPoseCallback");
-
-
-    if(robot == "ally1")
-    {
-      ally1_desired_pose_ = *msg;
-    }
-    else if(robot == "ally2")
-    {
-      ally2_desired_pose_ = *msg;
-    }
-
+  desired_pose_ = *msg;
 }
 
-void Controller::computeControl(int robotId) {
+void Controller::computeControl() {
   //ROS_INFO("C computeControl");
 
   double now = ros::Time::now().toSec();
@@ -89,68 +63,45 @@ void Controller::computeControl(int robotId) {
   prev = now;
 
 
-  double x1_command, x2_command;
-  double y1_command, y2_command;
-  double theta1_command, theta2_command;
+  double x_command;
+  double y_command;
+  double theta_command;
 
   if (dt > CONTROL_TIME_STEP && (gameState_.play || gameState_.reset_field))
   // if ((gameState_.play || gameState_.reset_field))
   {
-    ROS_INFO("Computing control for robot %d", robotId);
-
-    // Update ally1_command_ and ally2_command_ variables
+    // Update ally_command_ and ally2_command_ variables
 
     // Compute the PID values for each state variable
-    // if(robotId == 1)
-    // {
-      x1_command = saturate(x1_PID_.computePID(ally1_state_.x, ally1_desired_pose_.x, dt), -1*max_xy_vel_, max_xy_vel_);
-      y1_command = saturate(y1_PID_.computePID(ally1_state_.y, ally1_desired_pose_.y, dt), -1*max_xy_vel_, max_xy_vel_);
-      theta1_command = saturate(theta1_PID_.computePID(ally1_state_.theta, ally1_desired_pose_.theta, dt), -1*max_omega_, max_omega_);
 
-      // TODO: We don't currently use theta to compute our command... would we like to change that?
-      ally1_command_ << x1_command, y1_command, theta1_command;
-      // ROS_INFO("Robot 1 Control: x_vel=%f, y_vel=%f, omega=%f", x1_command, y1_command, theta1_command);
-    // }
-    // else if(robotId == 2)
-    // {
-      x2_command = saturate(x2_PID_.computePID(ally2_state_.x, ally2_desired_pose_.x, dt), -1*max_xy_vel_, max_xy_vel_);
-      y2_command = saturate(y2_PID_.computePID(ally2_state_.y, ally2_desired_pose_.y, dt), -1*max_xy_vel_, max_xy_vel_);
-      theta2_command = saturate(theta2_PID_.computePID(ally2_state_.theta, ally2_desired_pose_.theta, dt), -1*max_omega_, max_omega_);
+    x_command = saturate(x_PID_.computePID(robot_state_.x, desired_pose_.x, dt), -1*max_xy_vel_, max_xy_vel_);
+    y_command = saturate(y_PID_.computePID(robot_state_.y, desired_pose_.y, dt), -1*max_xy_vel_, max_xy_vel_);
+    theta_command = saturate(theta_PID_.computePID(robot_state_.theta, desired_pose_.theta, dt), -1*max_omega_, max_omega_);
 
-      // TODO: We don't currently use theta to compute our command... would we like to change that?
-      ally2_command_ << x2_command, y2_command, theta2_command;
-      // ROS_INFO("Robot 2 Control: x_vel=%f, y_vel=%f, omega=%f", x2_command, y2_command, theta2_command);
-    // }
-    // else {
-    //   ROS_INFO("ERROR: Invalid Robot ID in controller::computeControl() function!");
-    // }
+    command_ << x_command, y_command, theta_command;
+    // ROS_INFO("Robot 1 Control: x_vel=%f, y_vel=%f, omega=%f", x_command, y_command, theta_command);
 
     // --- OR ---
 
     // // If we are able to reliable determine the velocity beforehand, we can use these functions:
-    // x1_command = x1_PID_.computePIDDirect(ally1_state_.x, ally1_desired_pose_.x, ally1_state_.xdot, dt);
-    // y1_command = y1_PID_.computePIDDirect(ally1_state_.y, ally1_desired_pose_.y, ally1_state_.ydot, dt);
-    // theta1_command = theta1_PID_.computePIDDirect(ally1_state_.theta, ally1_desired_pose_.theta, ally1_state_.thetadot, dt);
+    // x_command = x_PID_.computePIDDirect(robot_state_.x, desired_pose_.x, robot_state_.xdot, dt);
+    // y_command = y_PID_.computePIDDirect(robot_state_.y, desired_pose_.y, robot_state_.ydot, dt);
+    // theta_command = theta_PID_.computePIDDirect(robot_state_.theta, desired_pose_.theta, robot_state_.thetadot, dt);
     //
     // x2_command = x2_PID_.computePIDDirect(ally2_state_.x, ally2_desired_pose_.x, ally2_state_.xdot, dt);
     // y2_command = y2_PID_.computePIDDirect(ally2_state_.y, ally2_desired_pose_.y, ally2_state_.ydot, dt);
     // theta2_command = theta2_PID_.computePIDDirect(ally2_state_.theta, ally2_desired_pose_.theta, ally2_state_.thetadot, dt);
 
 
-    publishCommand(1);
-    publishCommand(2);
+    publishCommand();
   }
   else {
 
-    x1_command = 0;
-    y1_command = 0;
-    theta1_command = 0;
+    x_command = 0;
+    y_command = 0;
+    theta_command = 0;
 
-    x2_command = 0;
-    y2_command = 0;
-    theta2_command = 0;
-    publishCommand(1);
-    publishCommand(2);
+    publishCommand();
   }
 
 
@@ -176,44 +127,18 @@ void Controller::computeControl(int robotId) {
 //     moveRobot(v, robotId);
 // }
 
-void Controller::publishCommand(int robotId)
+void Controller::publishCommand()
 {
   //ROS_INFO("C publishCommand");
 
-  switch (robotId) {
-    case 1:
-      moveRobot(1, ally1_command_);
-      break;
+  geometry_msgs::Twist vel;
+  vel.linear.x = command_(0);
+  vel.linear.y = command_(1);
+  vel.angular.z = command_(2);
 
-    case 2:
-      moveRobot(2, ally2_command_);
-      break;
-
-    default:
-      ROS_INFO("ERROR: Invalid Robot ID in controller::publishCommands() function!");
-      break;
-  }
-
+  motor_pub_.publish(vel);
 
 }
-
-void Controller::moveRobot(int robotId, Vector3d vel_world)
-{
-  //ROS_INFO("C moveRobot");
-
-    geometry_msgs::Twist vel;
-    vel.linear.x = vel_world(0);
-    vel.linear.y = vel_world(1);
-    vel.angular.z = vel_world(2);
-
-    if(robotId == 1)
-        motor_pub1_.publish(vel);
-    else if(robotId == 2)
-        motor_pub2_.publish(vel);
-}
-
-
-
 
 void Controller::gameStateCallback(const soccerref::GameState::ConstPtr &msg)
 {

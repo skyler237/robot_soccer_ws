@@ -4,6 +4,7 @@
     <!-- <arg name="sim_mode" default="false" /> -->
     <arg name="team_side" default="home" />
     <arg name="vel_cmds_remap" default="vel_cmds" />
+    <arg name="robot_number" default="2" />
 
     <group ns="ally2">
         <!-- Load this robot's param file with physical params -->
@@ -19,6 +20,7 @@
             <arg name="ally" value="ally1" />
             <!-- <arg name="sim_mode" value="$(arg sim_mode)" /> -->
             <arg name="team_side" value="$(arg team_side)" />
+            <arg name="robot_number" value="$(arg robot_number)" />
             <arg name="vel_cmds_remap" value="$(arg vel_cmds_remap)" />
         </include>
 
