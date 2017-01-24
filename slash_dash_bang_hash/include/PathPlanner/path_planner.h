@@ -12,6 +12,7 @@
 using namespace std;
 using namespace geometry_msgs;
 using namespace Eigen;
+using namespace slash_dash_bang_hash;
 
 typedef boost::shared_ptr< ::slash_dash_bang_hash::State const> StateConstPtr;
 
@@ -21,21 +22,6 @@ typedef boost::shared_ptr< ::slash_dash_bang_hash::State const> StateConstPtr;
 #define FIELD_HEIGHT 2.38
 #define ROBOT_RADIUS 0.10
 
-// struct State
-// {
-//     // Positions
-//     double x;
-//     double y;
-//     double theta;
-//     // Velocities
-//     double xdot;
-//     double ydot;
-//     double thetadot;
-//     // Estimated states
-//     double xhat;
-//     double yhat;
-//     double thetahat;
-// };
 
 class PathPlanner
 {
@@ -48,6 +34,8 @@ public:
    ros::NodeHandle priv_nh;
 
   Vector2d goal_;
+  double max_xy_vel_;
+  double time_step_;
 
   // Publishers and Subscribers
   ros::Publisher desired_pose_pub_;
@@ -68,6 +56,7 @@ public:
 
   void planPath();
   void publishDesiredPose();
+  State simpleCurvedPathToDestination();
 
   void stateCallback(const StateConstPtr &msg, const std::string& robot);
   void destinationCallback(const StateConstPtr &msg);

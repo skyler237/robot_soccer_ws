@@ -151,6 +151,7 @@ add_executable(AI
 target_link_libraries(AI ${catkin_LIBRARIES})
 
 add_executable(PathPlanner
+    src/Utilities/utilities.cpp
     include/PathPlanner/path_planner.h
     src/PathPlanner/path_planner.cpp)
 target_link_libraries(PathPlanner ${catkin_LIBRARIES})
@@ -165,7 +166,11 @@ target_link_libraries(Controller ${catkin_LIBRARIES})
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
-# add_dependencies(AI Skills Utilities ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(PathPlanner slash_dash_bang_hash_generate_messages_cpp soccerref_generate_messages_cpp)
+add_dependencies(Controller soccerref_generate_messages_cpp slash_dash_bang_hash_generate_messages_cpp)
+# add_dependencies(Utilities soccerref_generate_messages_cpp slash_dash_bang_hash_generate_messages_cpp)
+add_dependencies(AI soccerref_generate_messages_cpp slash_dash_bang_hash_generate_messages_cpp)
+add_dependencies(Estimator soccerref_generate_messages_cpp slash_dash_bang_hash_generate_messages_cpp)
 
 
 #############

@@ -1,5 +1,7 @@
 #include "PathPlanner/path_planner.h"
+#include "Utilities/utilities.h"
 
+typedef Eigen::Matrix<double, 2, 4> Matrix2x4d;
 
 PathPlanner::PathPlanner() :
 nh_(ros::NodeHandle()),
@@ -9,7 +11,8 @@ priv_nh("~")
   // Having the nh_ private properly namespaces it.
   ros::NodeHandle priv_nh("~");
 
-
+  max_xy_vel_ = priv_nh.param<double>("max_xy_vel_", 10.0); // m/s
+  time_step_ = priv_nh.param<double>("time_step_", 0.01); // 100 Hz
 
 
   ally1_state_sub_  = nh_.subscribe<slash_dash_bang_hash::State>("ally1_state", 1, boost::bind(&PathPlanner::stateCallback, this, _1, "ally1"));
@@ -69,8 +72,8 @@ void PathPlanner::planPath()
     // For now, just make the destination the desired pose
     desired_pose_ = destination_;
 
-    // TODO: plan the path!!
-    // Updates desired_pose_ and ally2_desired_pose_
+    // Updates desired_pose_
+    // desired_pose_ = simpleCurvedPathToDestination();
 
     publishDesiredPose();
 }
@@ -78,6 +81,48 @@ void PathPlanner::planPath()
 void PathPlanner::publishDesiredPose()
 {
     desired_pose_pub_.publish(desired_pose_);
+}
+
+// Simple spline curve - no obstacle avoidance
+State PathPlanner::simpleCurvedPathToDestination()
+{
+  // Calculate spline curve from initial/final pos & velocity
+  Matrix2x4d endpoints;
+    endpoints <<  ally1_state_.x, ally1_state_.xdot, destination_.x, cos(destination_.theta),
+                  ally1_state_.y, ally1_state_.ydot, destination_.y, sin(destination_.theta);
+
+  Eigen::Matrix4d coeff_transform;
+    coeff_transform <<  1,  0, -3,  2,
+                        0,  1, -2,  1,
+                        0,  0,  3, -2,
+                        0,  0, -1,  1;
+
+  Matrix2x4d path_coeff = endpoints*coeff_transform;
+
+  Vector2d robotToBall(ball_state_.x - ally1_state_.x, ball_state_.y - ally1_state_.y);
+  double distance = robotToBall.norm();
+
+
+  //Calculate "next point" on the path
+  double tau = saturate((max_xy_vel_*time_step_)/distance, 0, 1.0);
+
+  Vector4d Phi;
+  Phi << 1.0, tau, tau*tau, tau*tau*tau;
+  Vector2d point = path_coeff*Phi;
+
+  // Calculate rotation
+  Vector4d Phidot;
+  Phidot << 0.0, 1.0, 2*tau, 3*tau*tau;
+  Vector2d orientation = path_coeff*Phidot;
+
+  State desired_pose;
+  desired_pose.x = point(0);
+  desired_pose.y = point(1);
+  desired_pose.theta = atan2(orientation(1), orientation(0));
+
+  // Return next point
+  return desired_pose;
+
 }
 
 

@@ -19,6 +19,10 @@ Skills::Skills()
 State Skills::ballIntercept(int robotId, State robot, Vector2d ball)
 {
   // TODO: Finish this skill
+
+  // Vector2d ballToGoal;
+  // ballToGoal.x = ball_state_.x - goal_(0);
+  // ballToGoal.y = ball_state_.y - goal_(0);
 }
 
 // skill - go to point
@@ -54,7 +58,7 @@ State Skills::followBallOnLine(int robotId, State robot, State ball, double x_po
     destination.x = x_pos;
     destination.y = ball.y;
     destination.theta = theta_d;
-  
+
 
     return destination;
 }
