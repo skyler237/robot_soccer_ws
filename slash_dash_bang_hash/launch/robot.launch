@@ -24,12 +24,14 @@
     <node name="AI" pkg="slash_dash_bang_hash" type="AI" output="screen">
     </node>
     <node name="path_planner" pkg="slash_dash_bang_hash" type="PathPlanner" output="screen">
+      <remap from="destination" to="/slash_dash_bang_hash_$(arg team_side)/$(arg me)/$(arg me)_destination" />
+      <remap from="desired_pose" to="/slash_dash_bang_hash_$(arg team_side)/$(arg me)/$(arg me)_desired_pose" />
     </node>
     <node name="controller" pkg="slash_dash_bang_hash" type="Controller" output="screen">
         <!-- The controller needs to know which robot state to listen to -->
-        <remap from="vel_command" to="/$(arg team_side)$(arg robot_number)/command" />
         <remap from="robot_state" to="/slash_dash_bang_hash_$(arg team_side)/$(arg me)/$(arg me)_state" />
         <remap from="desired_pose" to="/slash_dash_bang_hash_$(arg team_side)/$(arg me)/$(arg me)_desired_pose" />
+        <remap from="vel_command" to="/$(arg team_side)$(arg robot_number)/command" />
     </node>
 
 </launch>

@@ -18,12 +18,10 @@ priv_nh("~")
   opp2_state_sub_  = nh_.subscribe<slash_dash_bang_hash::State>("opponent2_state", 1, boost::bind(&PathPlanner::stateCallback, this, _1, "opponent2"));
   ball_state_sub_  = nh_.subscribe<slash_dash_bang_hash::State>("ball_state", 1, boost::bind(&PathPlanner::stateCallback, this, _1, "ball"));
 
-  ally1_destination_sub_ = nh_.subscribe<slash_dash_bang_hash::State>("ally1_destination", 1, boost::bind(&PathPlanner::destinationCallback, this, _1, "ally1"));
-  ally2_destination_sub_ = nh_.subscribe<slash_dash_bang_hash::State>("ally2_destination", 1, boost::bind(&PathPlanner::destinationCallback, this, _1, "ally2"));
+  destination_sub_ = nh_.subscribe<slash_dash_bang_hash::State>("destination", 1, &PathPlanner::destinationCallback, this);
   game_state_sub_ = nh_.subscribe<soccerref::GameState>("/game_state", 1, &PathPlanner::gameStateCallback, this);
 
-  ally1_desired_pose_pub_ = nh_.advertise<slash_dash_bang_hash::State>("ally1_desired_pose", 5);
-  ally2_desired_pose_pub_ = nh_.advertise<slash_dash_bang_hash::State>("ally2_desired_pose", 5);
+  desired_pose_pub_ = nh_.advertise<slash_dash_bang_hash::State>("desired_pose", 5);
 
 
 }
@@ -50,22 +48,12 @@ void PathPlanner::stateCallback(const StateConstPtr &msg, const std::string& rob
 }
 
 
-void PathPlanner::destinationCallback(const StateConstPtr &msg, const std::string& robot)
+void PathPlanner::destinationCallback(const StateConstPtr &msg)
 {
   //ROS_INFO("destination");
 
-    int robotId = 0;
-    if(robot == "ally1") {
-      ally1_destination_ = (*msg);
-      robotId = 1;
-    }
-    else if(robot == "ally2") {
-      ally2_destination_ = (*msg);
-      robotId = 2;
-    }
-
-
-    planPath(robotId);
+    destination_ = (*msg);
+    planPath();
 }
 
 
@@ -76,46 +64,20 @@ void PathPlanner::gameStateCallback(const soccerref::GameState::ConstPtr &msg)
     gameState_ = *msg;
 }
 
-void PathPlanner::planPath(int robotId)
+void PathPlanner::planPath()
 {
-  //ROS_INFO("Plan path");
-  switch(robotId)
-  {
-    case 1:
-      // For now, just make the destination the desired pose
-      ally1_desired_pose_ = ally1_destination_;
-      break;
+    // For now, just make the destination the desired pose
+    desired_pose_ = destination_;
 
-    case 2:
-      ally2_desired_pose_ = ally2_destination_;
-      break;
+    // TODO: plan the path!!
+    // Updates desired_pose_ and ally2_desired_pose_
 
-    default:
-      ROS_INFO("ERROR: Invalid robot ID in planPath() function.");
-      break;
-  }
-  // TODO: plan the path!!
-  // Updates ally1_desired_pose_ and ally2_desired_pose_
-
-  publishDesiredPose(robotId);
+    publishDesiredPose();
 }
 
-void PathPlanner::publishDesiredPose(int robotId)
+void PathPlanner::publishDesiredPose()
 {
-  switch(robotId)
-  {
-    case 1:
-      ally1_desired_pose_pub_.publish(ally1_desired_pose_);
-      break;
-
-    case 2:
-      ally2_desired_pose_pub_.publish(ally2_desired_pose_);
-      break;
-
-    default:
-      ROS_INFO("ERROR: Invalid robot ID in publishDesiredPose() function.");
-      break;
-  }
+    desired_pose_pub_.publish(desired_pose_);
 }
 
 

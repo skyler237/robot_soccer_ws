@@ -50,10 +50,9 @@ public:
   Vector2d goal_;
 
   // Publishers and Subscribers
-  ros::Publisher ally1_desired_pose_pub_;
-  ros::Publisher ally2_desired_pose_pub_;
+  ros::Publisher desired_pose_pub_;
 
-  ros::Subscriber ally1_destination_sub_, ally2_destination_sub_;
+  ros::Subscriber destination_sub_;
 
   ros::Subscriber game_state_sub_;
   ros::Subscriber ally1_state_sub_, ally2_state_sub_;
@@ -61,16 +60,16 @@ public:
   ros::Subscriber ball_state_sub_;
   soccerref::GameState gameState_;
 
-  slash_dash_bang_hash::State ally1_destination_, ally2_destination_; // End goal
-  slash_dash_bang_hash::State ally1_desired_pose_, ally2_desired_pose_; // Next step to get there
+  slash_dash_bang_hash::State destination_; // End goal
+  slash_dash_bang_hash::State desired_pose_; // Next step to get there
   slash_dash_bang_hash::State ally1_state_, ally2_state_;
   slash_dash_bang_hash::State opp1_state_, opp2_state_;
   slash_dash_bang_hash::State ball_state_;
 
-  void planPath(int robotId);
-  void publishDesiredPose(int robotId);
+  void planPath();
+  void publishDesiredPose();
 
   void stateCallback(const StateConstPtr &msg, const std::string& robot);
-  void destinationCallback(const StateConstPtr &msg, const std::string& robot);
+  void destinationCallback(const StateConstPtr &msg);
   void gameStateCallback(const soccerref::GameState::ConstPtr &msg);
 };
