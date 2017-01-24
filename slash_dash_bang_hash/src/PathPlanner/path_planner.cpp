@@ -22,8 +22,8 @@ priv_nh("~")
   ally2_destination_sub_ = nh_.subscribe<slash_dash_bang_hash::State>("ally2_destination", 1, boost::bind(&PathPlanner::destinationCallback, this, _1, "ally2"));
   game_state_sub_ = nh_.subscribe<soccerref::GameState>("/game_state", 1, &PathPlanner::gameStateCallback, this);
 
-  ally1_desired_pose_pub_ = nh_.advertise<slash_dash_bang_hash::State>("ally1_desired_pose", 1);
-  ally2_desired_pose_pub_ = nh_.advertise<slash_dash_bang_hash::State>("ally2_desired_pose", 1);
+  ally1_desired_pose_pub_ = nh_.advertise<slash_dash_bang_hash::State>("ally1_desired_pose", 5);
+  ally2_desired_pose_pub_ = nh_.advertise<slash_dash_bang_hash::State>("ally2_desired_pose", 5);
 
 
 }
