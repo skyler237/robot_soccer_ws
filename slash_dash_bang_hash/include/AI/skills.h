@@ -19,9 +19,12 @@ class Skills
 public:
   Skills();
 
+  // ====================== General Skills =================================
+  static State goToPoint(int robotId, State robot, Vector2d point);
+  static void kick(int robotId);
+
   // ====================== Offensive Skills =================================
   static State ballIntercept(int robotId, State robot, Vector2d ball);
-  static State goToPoint(int robotId, State robot, Vector2d point);
 
   // ====================== Defensive Skills =================================
   static State followBallOnLine(int robotId, State robot, State ball, double x_pos);

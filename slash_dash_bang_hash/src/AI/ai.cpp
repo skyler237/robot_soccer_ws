@@ -3,6 +3,7 @@
 #include "AI/skills.h"
 
 #define AI_TIME_STEP 0.01
+#define KICKING_RANGE 0.05
 
 AI::AI() :
 nh_(ros::NodeHandle()),
@@ -54,12 +55,14 @@ void AI::computeDestination() {
 
         // robot #1 positions itself behind ball and rushes the goal.
         ally1_destination_ = play_rushGoal(1, ally1_state_, ball_state_);
+        checkForKick(1);
         //ROS_INFO("Ally1_destination: x=%f, y=%f", ally1_destination_.x, ally1_destination_.y);
 
 
 
         // robot #2 stays on line, following the ball, facing the goal
         ally2_destination_ = Skills::adaptiveRadiusGoalDefend(ally2_state_, ball_state_);
+        checkForKick(2);
 
         ///////////////////////////////////////////////////////
         ////////////////////DEBUG//////////////////////////////
@@ -88,6 +91,29 @@ void AI::computeDestination() {
     }
   }
 
+}
+
+void AI::checkForKick(int robotId)
+{
+  State robot_state;
+  switch (robotId) {
+    case 1:
+      robot_state = ally1_state_;
+      break;
+    case 2:
+      robot_state = ally2_state_;
+      break;
+  }
+
+  Vector2d robot_pose = stateToVector(robot_state);
+  Vector2d ball_pose = stateToVector(ball_state_);
+
+  // If we are close enough, attempt a kick
+  if ((robot_pose - ball_pose).norm() <= KICKING_RANGE)
+  {
+      // TODO: check for minimum re-kick time?
+      Skills::kick(robotId);
+  }
 }
 
 void AI::publishDestinations()
@@ -135,8 +161,6 @@ void AI::stateCallback(const StateConstPtr &msg, const std::string& robot)
 
     else if(robot == "ball")
         ball_state_ = *msg;
-
-    ROS_INFO("Ball velocity: x=%f, y=%f", ball_state_.xdot, ball_state_.ydot);
 
     computeDestination();
 }
