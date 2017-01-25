@@ -17,22 +17,27 @@
     <node name="ally1_estimator" pkg="slash_dash_bang_hash" type="Estimator" output="screen">
       <remap from="vision_data" to="/vision/$(arg team_side)1" />
       <remap from="state" to="/slash_dash_bang_hash_$(arg team_side)/$(arg me)/ally1_state" />
+      <param name="team_" value="$(arg team_side)" />
     </node>
     <node name="ally2_estimator" pkg="slash_dash_bang_hash" type="Estimator" output="screen">
       <remap from="vision_data" to="/vision/$(arg team_side)2" />
       <remap from="state" to="/slash_dash_bang_hash_$(arg team_side)/$(arg me)/ally2_state" />
+      <param name="team_" value="$(arg team_side)" />
     </node>
     <node name="opp1_estimator" pkg="slash_dash_bang_hash" type="Estimator" output="screen">
       <remap from="vision_data" to="/vision/$(arg other_side)1" />
       <remap from="state" to="/slash_dash_bang_hash_$(arg team_side)/$(arg me)/opp1_state" />
+      <param name="team_" value="$(arg team_side)" />
     </node>
     <node name="opp2_estimator" pkg="slash_dash_bang_hash" type="Estimator" output="screen">
       <remap from="vision_data" to="/vision/$(arg other_side)2" />
       <remap from="state" to="/slash_dash_bang_hash_$(arg team_side)/$(arg me)/opp2_state" />
+      <param name="team_" value="$(arg team_side)" />
     </node>
     <node name="ball_estimator" pkg="slash_dash_bang_hash" type="Estimator" output="screen">
       <remap from="vision_data" to="/vision/ball" />
       <remap from="state" to="/slash_dash_bang_hash_$(arg team_side)/$(arg me)/ball_state" />
+      <param name="team_" value="$(arg team_side)" />
     </node>
 
 
@@ -42,7 +47,7 @@
       <remap from="destination" to="/slash_dash_bang_hash_$(arg team_side)/$(arg me)/$(arg me)_destination" />
       <remap from="desired_pose" to="/slash_dash_bang_hash_$(arg team_side)/$(arg me)/$(arg me)_desired_pose" />
     </node>
-    <node name="controller" pkg="slash_dash_bang_hash" type="Controller" >
+    <node name="controller" pkg="slash_dash_bang_hash" type="Controller" output="screen">
         <!-- The controller needs to know which robot state to listen to -->
         <remap from="robot_state" to="/slash_dash_bang_hash_$(arg team_side)/$(arg me)/$(arg me)_state" />
         <remap from="desired_pose" to="/slash_dash_bang_hash_$(arg team_side)/$(arg me)/$(arg me)_desired_pose" />
@@ -60,7 +65,7 @@
         <param name="theta_I" value="0.0"/>
         <param name="theta_D" value="0.0"/>
 
-        <param name="max_omega" value="30.0"/>
+        <param name="max_omega" value="180.0"/>
     </node>
 
 </launch>

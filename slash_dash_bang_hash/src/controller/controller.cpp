@@ -30,7 +30,7 @@ priv_nh("~")
   theta_PID_.setGains(P, I, D, tau);
 
   max_xy_vel_ = priv_nh.param<double>("max_xy_vel", 10.0);
-  max_omega_ = priv_nh.param<double>("max_omega", 30.0);
+  max_omega_ = priv_nh.param<double>("max_omega", 180.0);
 
 
   desired_pose_sub_ = nh_.subscribe<slash_dash_bang_hash::State>("desired_pose", 1, &Controller::desiredPoseCallback, this);
@@ -78,6 +78,8 @@ void Controller::computeControl() {
     y_command = saturate(y_PID_.computePID(robot_state_.y, desired_pose_.y, dt), -1*max_xy_vel_, max_xy_vel_);
     theta_command = saturate(theta_PID_.computePID(robot_state_.theta, desired_pose_.theta, dt), -1*max_omega_, max_omega_);
 
+    //ROS_INFO("Actual theta=%f, desired theta=%f, theta command=%f", robot_state_.theta, desired_pose_.theta, theta_command);
+
     command_ << x_command, y_command, theta_command;
     // ROS_INFO("Robot 1 Control: x_vel=%f, y_vel=%f, omega=%f", x_command, y_command, theta_command);
 
@@ -96,10 +98,11 @@ void Controller::computeControl() {
     publishCommand();
   }
   else {
-
+    //
     x_command = 0;
     y_command = 0;
     theta_command = 0;
+    command_ << x_command, y_command, theta_command;
 
     publishCommand();
   }

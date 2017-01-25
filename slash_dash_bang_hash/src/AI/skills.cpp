@@ -15,7 +15,7 @@ static double max_xy_vel = 1.0;
 #define DEFENSE_FOCUS_DEPTH 1.0 // Allows for a more broad radius
 #define MAX_RADIUS (DEFENSE_FOCUS_DEPTH + FIELD_HEIGHT/2.0)
 #define MIN_RADIUS (DEFENSE_FOCUS_DEPTH + ROBOT_RADIUS)
-#define CONTROL_DELAY 0.01
+#define CONTROL_DELAY 1.0
 
 Skills::Skills()
 {
@@ -47,7 +47,9 @@ State Skills::goToPoint(int robotId, State robot, Vector2d point)
     State destination;
     destination.x = point(0);
     destination.y = point(1);
-    destination.theta = angleMod(theta_d*180.0/M_PI);
+    destination.theta = angleMod(theta_d)*180.0/M_PI;
+
+    //ROS_INFO("Go to point desired theta = %f", destination.theta);
 
     return destination;
 }
@@ -68,7 +70,7 @@ State Skills::followBallOnLine(int robotId, State robot, State ball, double x_po
     State destination;
     destination.x = x_pos;
     destination.y = ball.y;
-    destination.theta = theta_d;
+    destination.theta = angleMod(theta_d*180.0/M_PI);;
 
 
     return destination;
@@ -92,12 +94,12 @@ State Skills::adaptiveRadiusGoalDefend(State robot_state, State ball_state) {
   Vector2d d = (ball_pos - defense_origin) - current_radius*(ball_pos - defense_origin).normalized(); // distance from the ball to the current radius
   double v_ball_norm = v_ball.norm(); // Magnitude of ball velocity
   double d_norm = d.norm();
-  double theta_net = atan(ROBOT_RADIUS/3 / d_norm); // Angle from target to edge of "defense area" of robot
+  double theta_robot = atan(ROBOT_RADIUS/3 / d_norm); // Angle from target to edge of "defense area" of robot
   double theta;
   if(v_ball_norm != 0 && d_norm != 0) { // Protect against divide by zero
      // Only count theta deviations greater than the angle to the edge of the "defense area"
      // Any angle within the range of the robot body is counted as zero.
-    theta = saturate(fabs(d.dot(v_ball)/(v_ball_norm*d_norm)) - theta_net, 0.0, M_PI);
+    theta = saturate(fabs(d.dot(v_ball)/(v_ball_norm*d_norm)) - theta_robot, 0.0, M_PI);
   }
   else {
     theta = 0.0;
@@ -144,7 +146,7 @@ State Skills::adaptiveRadiusGoalDefend(State robot_state, State ball_state) {
   }
 
   double ballDistance = (ball_pos - defense_origin).norm();
-  ROS_INFO("Distance comparison: MIN_RADIUS=%f, ballDistance=%f", MIN_RADIUS, ballDistance);
+  // ROS_INFO("Distance comparison: MIN_RADIUS=%f, ballDistance=%f", MIN_RADIUS, ballDistance);
   current_radius = saturate(delta_radius + current_radius, MIN_RADIUS, min(ballDistance - ROBOT_RADIUS, MAX_RADIUS));
   // if(debug_print & ADAPTIVE_RADIUS) {
     // ROS_INFO("PHI COMPUTATIONS >>>>>>>>>>>>>>>>>>>>>>");
@@ -168,7 +170,10 @@ State Skills::adaptiveRadiusGoalDefend(State robot_state, State ball_state) {
   desired_state.y = saturate(defense_origin(1) + desired_pose(1), -(FIELD_HEIGHT/2 - ROBOT_RADIUS/2), (FIELD_HEIGHT/2 - ROBOT_RADIUS/2));
 
   // ROS_INFO("Desired state: x=%f, y=%f", desired_state.x, desired_state.y);
-  desired_state.theta = angleMod(atan((ball_state.y - defense_origin(1))/(ball_state.x - defense_origin(0)))*180.0/M_PI); // Always face ball from center of goal
+  //desired_state.theta = angleMod(atan((ball_state.y - defense_origin(1))/(ball_state.x - defense_origin(0)))*180.0/M_PI); // Always face ball from center of goal
+  desired_state.theta = angleMod(atan((ball_state.y - defense_origin(1))/(ball_state.x - defense_origin(0)))) *180.0 / M_PI; // Always face ball from center of goal
+
+  //ROS_INFO("Adaptive Radius desired theta = %f", desired_state.theta);
 
   return desired_state;
 }

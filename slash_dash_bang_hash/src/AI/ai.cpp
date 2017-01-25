@@ -136,8 +136,6 @@ void AI::stateCallback(const StateConstPtr &msg, const std::string& robot)
     else if(robot == "ball")
         ball_state_ = *msg;
 
-    ROS_INFO("Ball velocity: x=%f, y=%f", ball_state_.xdot, ball_state_.ydot);
-
     computeDestination();
 }
 
