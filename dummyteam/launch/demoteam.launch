@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<launch>
+    <!-- declare arg to be passed in -->
+    <arg name="team_side" default="home" />
+
+    <!-- Outputs to either real world or simulation -->
+    <arg name="vel_cmd_ally1" default="vel_cmds" />
+    <arg name="vel_cmd_ally2" default="vel_cmds" />
+    <arg name="kick_ally1" default="kick" />
+    <arg name="kick_ally2" default="kick" />
+
+    <!-- using which side of the field we are on, determine the appropriate -->
+    <!-- connections to the output of the vision system -->
+    <arg name="other_side" value="away" if="$(eval team_side == 'home')" />
+    <arg name="other_side" value="home" if="$(eval team_side == 'away')" />
+
+    <group ns="dummyteam_$(arg team_side)">
+        
+        <!-- start up the controller for ally1 and ally2 -->
+        <node name="controller" pkg="dummyteam" type="controller">
+            <param name="team" value="$(arg team_side)" />
+
+            <remap from="ally1_vision" to="/vision/$(arg team_side)1" />
+            <remap from="ally2_vision" to="/vision/$(arg team_side)2" />
+            <remap from="opponent1_vision" to="/vision/$(arg other_side)1" />
+            <remap from="opponent2_vision" to="/vision/$(arg other_side)2" />
+            <remap from="ball_vision" to="/vision/ball" />
+
+            <remap from="ally1/vel_cmds" to="/$(arg team_side)1/command" />
+            <remap from="ally2/vel_cmds" to="/$(arg team_side)2/command" />
+        </node>
+
+    </group>
+</launch>
