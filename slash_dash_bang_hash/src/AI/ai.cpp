@@ -59,7 +59,7 @@ void AI::computeDestination() {
 
 
         // robot #2 stays on line, following the ball, facing the goal
-        ally2_destination_ = Skills::followBallOnLine(2, ally2_state_, ball_state_, -2 * FIELD_WIDTH / 6);
+        ally2_destination_ = Skills::adaptiveRadiusGoalDefend(ally2_state_, ball_state_);
 
         ///////////////////////////////////////////////////////
         ////////////////////DEBUG//////////////////////////////

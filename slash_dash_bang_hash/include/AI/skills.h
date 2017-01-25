@@ -8,6 +8,7 @@
 #define FIELD_WIDTH 3.40  // in meters
 #define FIELD_HEIGHT 2.38
 #define ROBOT_RADIUS 0.10
+#define GOAL_BOX_WIDTH 0.619
 
 using namespace Eigen;
 using namespace std;
@@ -24,6 +25,7 @@ public:
 
   // ====================== Defensive Skills =================================
   static State followBallOnLine(int robotId, State robot, State ball, double x_pos);
+  static State adaptiveRadiusGoalDefend(State robot_state, State ball_state);
 
   // ====================== Helper Functions =================================
   static Vector2d ballPredict(State ball, double time);

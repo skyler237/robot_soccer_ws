@@ -118,7 +118,7 @@ State PathPlanner::simpleCurvedPathToDestination()
   State desired_pose;
   desired_pose.x = point(0);
   desired_pose.y = point(1);
-  desired_pose.theta = atan2(orientation(1), orientation(0));
+  desired_pose.theta = angleMod(atan2(orientation(1), orientation(0))*180.0/M_PI);
 
   // Return next point
   return desired_pose;
