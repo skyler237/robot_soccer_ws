@@ -10,39 +10,19 @@ priv_nh("~")
   // Having the nh_ private properly namespaces it.
   ros::NodeHandle priv_nh("~");
   priv_nh.param<string>("team", team_, "home");
-                                                            //topic  //queue size //callback function                 //shared pointer
-  ally1_vision_sub_  = nh_.subscribe<geometry_msgs::Pose2D>("ally1_vision", 1, boost::bind(&Estimator::visionCallback, this, _1, "ally1"));
-  ally2_vision_sub_  = nh_.subscribe<geometry_msgs::Pose2D>("ally2_vision", 1, boost::bind(&Estimator::visionCallback, this, _1, "ally2"));
-  opp1_vision_sub_  = nh_.subscribe<geometry_msgs::Pose2D>("opponent1_vision", 1, boost::bind(&Estimator::visionCallback, this, _1, "opponent1"));
-  opp2_vision_sub_  = nh_.subscribe<geometry_msgs::Pose2D>("opponent2_vision", 1, boost::bind(&Estimator::visionCallback, this, _1, "opponent2"));
-  ball_vision_sub_  = nh_.subscribe<geometry_msgs::Pose2D>("ball_vision", 1, boost::bind(&Estimator::visionCallback, this, _1, "ball"));
-
-  ally1_state_pub_ = nh_.advertise<slash_dash_bang_hash::State>("ally1_state", 5);
-  ally2_state_pub_ = nh_.advertise<slash_dash_bang_hash::State>("ally2_state", 5);
-  opp1_state_pub_ = nh_.advertise<slash_dash_bang_hash::State>("opp1_state", 5);
-  opp2_state_pub_ = nh_.advertise<slash_dash_bang_hash::State>("opp2_state", 5);
-  ball_state_pub_ = nh_.advertise<slash_dash_bang_hash::State>("ball_state", 5);
+  tau_ = priv_nh.param<double>("dirty_deriv_gain", 0.05);
 
   game_state_sub_ = nh_.subscribe<soccerref::GameState>("/game_state", 1, &Estimator::gameStateCallback, this);
+  vision_data_sub_ = nh_.subscribe<geometry_msgs::Pose2D>("vision_data", 1, &Estimator::visionCallback, this);
+
+  state_pub_ = nh_.advertise<slash_dash_bang_hash::State>("state", 5);
+
 
 }
 
-void Estimator::visionCallback(const geometry_msgs::Pose2D::ConstPtr &msg, const std::string& robot)
+void Estimator::visionCallback(const geometry_msgs::Pose2D::ConstPtr &msg)
 {
-    if(robot == "ally1")
-        ally1_vision_ = poseToState(*msg);
-
-    else if(robot == "ally2")
-        ally2_vision_ = poseToState(*msg);
-
-    else if(robot == "opponent1")
-        opp1_vision_ = poseToState(*msg);
-
-    else if(robot == "opponent2")
-        opp2_vision_ = poseToState(*msg);
-
-    else if(robot == "ball")
-        ball_vision_ = poseToState(*msg);
+    vision_data_ = poseToState(*msg);
 
     estimateStates();
 }
@@ -54,23 +34,35 @@ void Estimator::gameStateCallback(const soccerref::GameState::ConstPtr &msg)
 
 void Estimator::estimateStates()
 {
-  // TODO: Actually implement an estimator here -- currently just passes the data through
-  ally1_state_ = ally1_vision_;
-  ally2_state_ = ally2_vision_;
-  opp1_state_ = opp1_vision_;
-  opp2_state_ = opp2_vision_;
-  ball_state_ = ball_vision_;
 
+
+  // TODO: Actually implement an estimator here -- currently just passes the data through
+  state_ = vision_data_;
+
+
+  calculateVelocities();
   publishStates();
 }
 
 void Estimator::publishStates()
 {
-  ally1_state_pub_.publish(ally1_state_);
-  ally2_state_pub_.publish(ally2_state_);
-  opp1_state_pub_.publish(opp1_state_);
-  opp2_state_pub_.publish(opp2_state_);
-  ball_state_pub_.publish(ball_state_);
+  state_prev_ = state_;
+
+  state_pub_.publish(state_);
+}
+
+void Estimator::calculateVelocities()
+{
+  double now = ros::Time::now().toSec();
+  static double prev = 0;
+  double dt = now - prev;
+  prev = now;
+
+  if (dt > 0.0)
+  {
+    state_.xdot = (2.0*tau_ - dt)/(2.0*tau_ + dt)*state_.xdot + 2.0/(2.0*tau_ + dt)*(state_.x - state_prev_.x);
+    state_.ydot = (2.0*tau_ - dt)/(2.0*tau_ + dt)*state_.ydot + 2.0/(2.0*tau_ + dt)*(state_.y - state_prev_.y);
+  }
 }
 
 slash_dash_bang_hash::State Estimator::poseToState(geometry_msgs::Pose2D pose)

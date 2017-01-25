@@ -58,34 +58,26 @@ public:
   ros::NodeHandle priv_nh;
   string team_;
   Vector2d goal_;
+  double tau_; // Dirty derivative gain
 
   // Publishers and Subscribers
-  ros::Subscriber ally1_vision_sub_, ally2_vision_sub_;
-  ros::Subscriber opp1_vision_sub_, opp2_vision_sub_;
-  ros::Subscriber ball_vision_sub_;
-
-  ros::Publisher ally1_state_pub_, ally2_state_pub_;
-  ros::Publisher opp1_state_pub_, opp2_state_pub_;
-  ros::Publisher ball_state_pub_;
+  ros::Subscriber vision_data_sub_;
+  ros::Publisher state_pub_;
 
   ros::Subscriber game_state_sub_;
-  ros::Subscriber ally1_state_sub_, ally2_state_sub_;
-  ros::Subscriber opp1_state_sub_, opp2_state_sub_;
-  ros::Subscriber ball_state_sub_;
+  ros::Subscriber state_sub_;
+
+
   soccerref::GameState gameState_;
-
-  slash_dash_bang_hash::State ally1_vision_, ally2_vision_;
-  slash_dash_bang_hash::State opp1_vision_, opp2_vision_;
-  slash_dash_bang_hash::State ball_vision_;
-
-  slash_dash_bang_hash::State ally1_state_, ally2_state_;
-  slash_dash_bang_hash::State opp1_state_, opp2_state_;
-  slash_dash_bang_hash::State ball_state_;
+  slash_dash_bang_hash::State vision_data_;
+  slash_dash_bang_hash::State state_;
+  slash_dash_bang_hash::State state_prev_;
 
   void estimateStates();
+  void calculateVelocities();
   void publishStates();
 
-  void visionCallback(const geometry_msgs::Pose2D::ConstPtr &msg, const std::string& robot);
+  void visionCallback(const geometry_msgs::Pose2D::ConstPtr &msg);
   void gameStateCallback(const soccerref::GameState::ConstPtr &msg);
 
   // Helper functions
