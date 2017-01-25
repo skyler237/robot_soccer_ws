@@ -143,8 +143,9 @@ State Skills::adaptiveRadiusGoalDefend(State robot_state, State ball_state) {
     delta_radius = -1.0*max_xy_vel*dt*sin(phi);
   }
 
-  double ballDistance = (ball_state_ - defense_origin).norm();
-  current_radius = saturate(delta_radius + current_radius, min(MIN_RADIUS, ballDistance), MAX_RADIUS);
+  double ballDistance = (ball_pos - defense_origin).norm();
+  ROS_INFO("Distance comparison: MIN_RADIUS=%f, ballDistance=%f", MIN_RADIUS, ballDistance);
+  current_radius = saturate(delta_radius + current_radius, MIN_RADIUS, min(ballDistance - ROBOT_RADIUS, MAX_RADIUS));
   // if(debug_print & ADAPTIVE_RADIUS) {
     // ROS_INFO("PHI COMPUTATIONS >>>>>>>>>>>>>>>>>>>>>>");
     // ROS_INFO("d = %f", d_norm);
@@ -160,13 +161,13 @@ State Skills::adaptiveRadiusGoalDefend(State robot_state, State ball_state) {
   // Protection Radius defense position
   Vector2d desired_pose = (ball_pos - defense_origin).normalized()*current_radius;
 
-  ROS_INFO("Desired pose: x=%f, y=%f", desired_pose(0), desired_pose(1));
+  // ROS_INFO("Desired pose: x=%f, y=%f", desired_pose(0), desired_pose(1));
 
   State desired_state;
   desired_state.x = saturate(defense_origin(0) + desired_pose(0), -(FIELD_WIDTH/2 - ROBOT_RADIUS/2), (FIELD_WIDTH/2 - ROBOT_RADIUS/2)); // Never try to go past walls...
   desired_state.y = saturate(defense_origin(1) + desired_pose(1), -(FIELD_HEIGHT/2 - ROBOT_RADIUS/2), (FIELD_HEIGHT/2 - ROBOT_RADIUS/2));
 
-  ROS_INFO("Desired state: x=%f, y=%f", desired_state.x, desired_state.y);
+  // ROS_INFO("Desired state: x=%f, y=%f", desired_state.x, desired_state.y);
   desired_state.theta = angleMod(atan((ball_state.y - defense_origin(1))/(ball_state.x - defense_origin(0)))*180.0/M_PI); // Always face ball from center of goal
 
   return desired_state;
