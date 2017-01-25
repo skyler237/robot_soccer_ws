@@ -73,7 +73,8 @@ slash_dash_bang_hash::State Estimator::poseToState(geometry_msgs::Pose2D pose)
   {
       state.x = -pose.x;
       state.y = -pose.y;
-      state.theta = angleMod(pose.theta + M_PI);
+      state.theta = fmod((pose.theta + 180.0), 360.0);
+      //  state.theta = pose.theta;
   }
   else{
     state.x = pose.x;

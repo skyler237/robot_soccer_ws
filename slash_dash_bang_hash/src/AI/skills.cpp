@@ -47,7 +47,7 @@ State Skills::goToPoint(int robotId, State robot, Vector2d point)
 
 void Skills::kick(int robotId)
 {
-  ROS_INFO("Robot %d attempted a kick!.", robotId);
+  // ROS_INFO("Robot %d attempted a kick!.", robotId);
   ros::NodeHandle n;
 
   ros::ServiceClient client = n.serviceClient<std_srvs::Trigger>("kick");

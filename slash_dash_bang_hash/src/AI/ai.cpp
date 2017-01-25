@@ -3,7 +3,7 @@
 #include "AI/skills.h"
 
 #define AI_TIME_STEP 0.01
-#define KICKING_RANGE 0.05
+#define KICKING_RANGE (0.05 + ROBOT_RADIUS)
 
 AI::AI() :
 nh_(ros::NodeHandle()),
@@ -109,6 +109,7 @@ void AI::checkForKick(int robotId)
   Vector2d ball_pose = stateToVector(ball_state_);
 
   // If we are close enough, attempt a kick
+  // TODO: check if the ball is in front of us or not...
   if ((robot_pose - ball_pose).norm() <= KICKING_RANGE)
   {
       // TODO: check for minimum re-kick time?

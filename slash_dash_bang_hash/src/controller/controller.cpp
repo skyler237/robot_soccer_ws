@@ -52,6 +52,8 @@ void Controller::stateCallback(const StateConstPtr &msg)
 void Controller::desiredPoseCallback(const StateConstPtr &msg)
 {
   desired_pose_ = *msg;
+
+  // desired_pose_.theta = fmod((desired_pose_.theta + 180.0), 360.0);
 }
 
 void Controller::computeControl() {
@@ -74,11 +76,23 @@ void Controller::computeControl() {
 
     // Compute the PID values for each state variable
 
+    // Correct the "theta gap" -- choose the direction that is quickest
+    double theta_error = abs(robot_state_.theta - desired_pose_.theta);
+    if(abs(360.0 - theta_error) < theta_error) {
+      if(robot_state_.theta > desired_pose_.theta)
+      {
+        robot_state_.theta -= 360.0;
+      }
+      else{
+        desired_pose_.theta -= 360.0;
+      }
+    }
+
     x_command = saturate(x_PID_.computePID(robot_state_.x, desired_pose_.x, dt), -1*max_xy_vel_, max_xy_vel_);
     y_command = saturate(y_PID_.computePID(robot_state_.y, desired_pose_.y, dt), -1*max_xy_vel_, max_xy_vel_);
     theta_command = saturate(theta_PID_.computePID(robot_state_.theta, desired_pose_.theta, dt), -1*max_omega_, max_omega_);
 
-    //ROS_INFO("Actual theta=%f, desired theta=%f, theta command=%f", robot_state_.theta, desired_pose_.theta, theta_command);
+    
 
     command_ << x_command, y_command, theta_command;
     // ROS_INFO("Robot 1 Control: x_vel=%f, y_vel=%f, omega=%f", x_command, y_command, theta_command);
