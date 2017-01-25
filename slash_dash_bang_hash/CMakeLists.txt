@@ -10,6 +10,7 @@ find_package(catkin REQUIRED
 	message_generation
 	std_msgs
   geometry_msgs
+  std_srvs
 	)
 
 ## System dependencies are found with CMake's conventions
@@ -103,7 +104,7 @@ generate_messages(
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES slash_dash_bang_hash
- CATKIN_DEPENDS roscpp rospy std_msgs gazebo_msgs geometry_msgs eigen3 message_runtime gazebo_ros
+ CATKIN_DEPENDS roscpp rospy std_msgs std_srvs gazebo_msgs geometry_msgs eigen3 message_runtime gazebo_ros
 #  DEPENDS system_lib
 )
 

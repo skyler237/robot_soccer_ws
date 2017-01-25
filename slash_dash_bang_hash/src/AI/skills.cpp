@@ -1,5 +1,6 @@
 #include "AI/skills.h"
 #include "Utilities/utilities.h"
+#include "std_srvs/Trigger.h"
 #include <ros/ros.h>
 #include <stdio.h>
 
@@ -23,18 +24,8 @@ Skills::Skills()
 }
 
 //=============================================================================
-//                            Offensive Skills
+//                            General Skills
 //=============================================================================
-
-// Moves to the predicted position of the ball, facing the goal, along a smoothed path
-State Skills::ballIntercept(int robotId, State robot, Vector2d ball)
-{
-  // TODO: Finish this skill
-
-  // Vector2d ballToGoal;
-  // ballToGoal.x = ball_state_.x - goal_(0);
-  // ballToGoal.y = ball_state_.y - goal_(0);
-}
 
 // skill - go to point
 //   Travels towards a point. Angle always faces the goal.
@@ -53,6 +44,32 @@ State Skills::goToPoint(int robotId, State robot, Vector2d point)
 
     return destination;
 }
+
+void Skills::kick(int robotId)
+{
+  ROS_INFO("Robot %d attempted a kick!.", robotId);
+  ros::NodeHandle n;
+
+  ros::ServiceClient client = n.serviceClient<std_srvs::Trigger>("kick");
+  std_srvs::Trigger kick_srv;
+  client.call(kick_srv);
+}
+
+//=============================================================================
+//                            Offensive Skills
+//=============================================================================
+
+// Moves to the predicted position of the ball, facing the goal, along a smoothed path
+State Skills::ballIntercept(int robotId, State robot, Vector2d ball)
+{
+  // TODO: Finish this skill
+
+  // Vector2d ballToGoal;
+  // ballToGoal.x = ball_state_.x - goal_(0);
+  // ballToGoal.y = ball_state_.y - goal_(0);
+}
+
+
 
 //=============================================================================
 //                            Defensive Skills

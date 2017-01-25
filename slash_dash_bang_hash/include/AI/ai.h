@@ -74,6 +74,8 @@ public:
   void computeDestination();
   void publishDestinations();
 
+  void checkForKick(int roboId);
+
   State play_rushGoal(int robotId, State robot, State ball);
   void stateCallback(const StateConstPtr &msg, const std::string& robot);
   void gameStateCallback(const soccerref::GameState::ConstPtr &msg);
