@@ -216,8 +216,44 @@ Vector2d Skills::ballPredict(State ball, double time) {
   prediction += time*velocity;
 
   // TODO: Handle the walls
-
-
+  //Handle the Top/Bottom wall first
+  if(prediction(1) > FIELD_HEIGHT / 2|| prediction(1) < (-1*(FIELD_HEIGHT / 2)))
+  {
+      //get number of times it bounces off walls
+      int bounces = abs((int)(prediction(1) / FIELD_HEIGHT));
+      //get how far off either end it will be
+      double yAbs = (abs(prediction(1) / FIELD_HEIGHT) - (bounces - 1)) * FIELD_HEIGHT;
+      int sign = (prediction(1) > 0) ? 1 : -1;
+      if((bounces % 2) == 0)
+      {
+        //even number of times, off far wall
+        prediction(1) = ((-1 * sign) * (FIELD_HEIGHT / 2)) + (sign*yAbs);
+      }
+      else
+      {
+        //odd number of times, off close wall
+        prediction(1) = ((sign) * (FIELD_HEIGHT / 2)) + ((sign * -1)*yAbs);
+      }
+  }
+  //handle the left/right wall second
+  if(prediction(0) > FIELD_WIDTH / 2|| prediction(0) < (-1*(FIELD_WIDTH / 2)))
+  {
+      //get number of times it bounces off walls
+      int bounces = abs((int)(prediction(0) / FIELD_WIDTH));
+      //get how far off either end it will be
+      double yAbs = (abs(prediction(0) / FIELD_HEIGHT) - (bounces - 1)) * FIELD_WIDTH;
+      int sign = (prediction(0) > 0) ? 1 : -1;
+      if(bounces % 2 == 0)
+      {
+        //even number of times, off far wall
+        prediction(0) = ((-1 * sign) * (FIELD_WIDTH / 2)) + (sign*yAbs);
+      }
+      else
+      {
+        //odd number of times, off close wall
+        prediction(0) = ((sign) * (FIELD_WIDTH / 2)) + ((sign * -1)*yAbs);
+      }
+  }
   // Return the estimated position vector
   return prediction;
 }
