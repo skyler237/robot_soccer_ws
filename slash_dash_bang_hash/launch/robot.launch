@@ -46,6 +46,7 @@
     <node name="path_planner" pkg="slash_dash_bang_hash" type="PathPlanner" output="screen">
       <remap from="destination" to="/slash_dash_bang_hash_$(arg team_side)/$(arg me)/$(arg me)_destination" />
       <remap from="desired_pose" to="/slash_dash_bang_hash_$(arg team_side)/$(arg me)/$(arg me)_desired_pose" />
+      <param name="robot_number" value="$(arg robot_number)" />
     </node>
     <node name="controller" pkg="slash_dash_bang_hash" type="Controller" output="screen">
         <!-- The controller needs to know which robot state to listen to -->

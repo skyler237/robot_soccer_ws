@@ -45,12 +45,14 @@ State Skills::goToPoint(int robotId, State robot, Vector2d point)
     return destination;
 }
 
-void Skills::kick(int robotId)
+void Skills::kick(string team, int robotId)
 {
-  // ROS_INFO("Robot %d attempted a kick!.", robotId);
+  ROS_INFO("Robot %d attempted a kick!.", robotId);
   ros::NodeHandle n;
 
-  ros::ServiceClient client = n.serviceClient<std_srvs::Trigger>("kick");
+  string robot_number = ((robotId == 1) ? "1" : "2");
+
+  ros::ServiceClient client = n.serviceClient<std_srvs::Trigger>("/slash_dash_bang_hash_" + team + "/ally" + robot_number + "/kick");
   std_srvs::Trigger kick_srv;
   client.call(kick_srv);
 }

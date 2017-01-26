@@ -21,7 +21,7 @@ public:
 
   // ====================== General Skills =================================
   static State goToPoint(int robotId, State robot, Vector2d point);
-  static void kick(int robotId);
+  static void kick(string team, int robotId);
 
   // ====================== Offensive Skills =================================
   static State ballIntercept(int robotId, State robot, Vector2d ball);

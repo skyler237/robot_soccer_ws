@@ -48,6 +48,7 @@ public:
   ros::NodeHandle nh_;
   ros::NodeHandle priv_nh;
   string team_;
+  int robot_number_;
   Vector2d goal_;
 
   // Publishers and Subscribers

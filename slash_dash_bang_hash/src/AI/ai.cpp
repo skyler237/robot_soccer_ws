@@ -3,7 +3,7 @@
 #include "AI/skills.h"
 
 #define AI_TIME_STEP 0.01
-#define KICKING_RANGE (0.05 + ROBOT_RADIUS)
+#define KICKING_RANGE (0.08 + ROBOT_RADIUS)
 
 AI::AI() :
 nh_(ros::NodeHandle()),
@@ -13,6 +13,8 @@ priv_nh("~")
   // Having the nh_ private properly namespaces it.
   ros::NodeHandle priv_nh("~");
   priv_nh.param<string>("team", team_, "home");
+  priv_nh.param<int>("robot_number", robot_number_, 1);
+
 
   ally1_state_sub_ = nh_.subscribe<slash_dash_bang_hash::State>("ally1_state", 1, boost::bind(&AI::stateCallback, this, _1, "ally1"));
   ally2_state_sub_ = nh_.subscribe<slash_dash_bang_hash::State>("ally2_state", 1, boost::bind(&AI::stateCallback, this, _1, "ally2"));
@@ -113,7 +115,7 @@ void AI::checkForKick(int robotId)
   if ((robot_pose - ball_pose).norm() <= KICKING_RANGE)
   {
       // TODO: check for minimum re-kick time?
-      Skills::kick(robotId);
+      Skills::kick(team_, robotId);
   }
 }
 
