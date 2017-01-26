@@ -68,6 +68,7 @@ void Estimator::calculateVelocities()
 slash_dash_bang_hash::State Estimator::poseToState(geometry_msgs::Pose2D pose)
 {
   slash_dash_bang_hash::State state;
+
   // Flip coordinates if team is away or if we've swapped sides
   if((team_ == "away") ^ gameState_.second_half)
   {

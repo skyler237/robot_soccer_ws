@@ -17,27 +17,27 @@
     <node name="ally1_estimator" pkg="slash_dash_bang_hash" type="Estimator" output="screen">
       <remap from="vision_data" to="/vision/$(arg team_side)1" />
       <remap from="state" to="/slash_dash_bang_hash_$(arg team_side)/$(arg me)/ally1_state" />
-      <param name="team_" value="$(arg team_side)" />
+      <param name="team" value="$(arg team_side)" />
     </node>
     <node name="ally2_estimator" pkg="slash_dash_bang_hash" type="Estimator" output="screen">
       <remap from="vision_data" to="/vision/$(arg team_side)2" />
       <remap from="state" to="/slash_dash_bang_hash_$(arg team_side)/$(arg me)/ally2_state" />
-      <param name="team_" value="$(arg team_side)" />
+      <param name="team" value="$(arg team_side)" />
     </node>
     <node name="opp1_estimator" pkg="slash_dash_bang_hash" type="Estimator" output="screen">
       <remap from="vision_data" to="/vision/$(arg other_side)1" />
       <remap from="state" to="/slash_dash_bang_hash_$(arg team_side)/$(arg me)/opp1_state" />
-      <param name="team_" value="$(arg team_side)" />
+      <param name="team" value="$(arg team_side)" />
     </node>
     <node name="opp2_estimator" pkg="slash_dash_bang_hash" type="Estimator" output="screen">
       <remap from="vision_data" to="/vision/$(arg other_side)2" />
       <remap from="state" to="/slash_dash_bang_hash_$(arg team_side)/$(arg me)/opp2_state" />
-      <param name="team_" value="$(arg team_side)" />
+      <param name="team" value="$(arg team_side)" />
     </node>
     <node name="ball_estimator" pkg="slash_dash_bang_hash" type="Estimator" output="screen">
       <remap from="vision_data" to="/vision/ball" />
       <remap from="state" to="/slash_dash_bang_hash_$(arg team_side)/$(arg me)/ball_state" />
-      <param name="team_" value="$(arg team_side)" />
+      <param name="team" value="$(arg team_side)" />
     </node>
 
 
