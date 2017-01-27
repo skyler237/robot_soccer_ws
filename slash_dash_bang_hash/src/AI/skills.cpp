@@ -16,6 +16,7 @@ static double max_xy_vel = 1.0;
 #define DEFENSE_FOCUS_DEPTH 1.0 // Allows for a more broad radius
 #define MAX_RADIUS (DEFENSE_FOCUS_DEPTH + FIELD_HEIGHT/2.0)
 #define MIN_RADIUS (DEFENSE_FOCUS_DEPTH + ROBOT_RADIUS)
+#define TEAM_AVOID_MARGIN 0.05
 #define CONTROL_DELAY 1.0
 
 Skills::Skills()
@@ -57,6 +58,23 @@ void Skills::kick(string team, int robotId)
   client.call(kick_srv);
 }
 
+// Get behind the ball, facing a given destination -- avoids hitting the ball backward
+State Skills::getBall(State robot_state, State ball_state, Vector2d direction_point)
+{
+  // Normalize vector between ball and destination
+  Vector2d ball_vec = stateToVector(ball_state);
+  Vector2d n = (direction_point - ball_vec).normalized();
+
+  // compute position 15cm behind ball, but aligned with goal.
+  Vector2d final_position = ball_vec - 0.15*n;
+
+  State destination;
+  destination.x = final_position(0);
+  destination.y = final_position(1);
+
+  return destination;
+}
+
 //=============================================================================
 //                            Offensive Skills
 //=============================================================================
@@ -95,7 +113,7 @@ State Skills::followBallOnLine(int robotId, State robot, State ball, double x_po
     return destination;
 }
 
-State Skills::adaptiveRadiusGoalDefend(State robot_state, State ball_state) {
+State Skills::adaptiveRadiusGoalDefend(State robot_state, State ally_state, State ball_state) {
   Vector2d defense_origin(-1.0*(goal_(0) + DEFENSE_FOCUS_DEPTH), goal_(1));
 
   double now = ros::Time::now().toSec();
@@ -165,8 +183,11 @@ State Skills::adaptiveRadiusGoalDefend(State robot_state, State ball_state) {
   }
 
   double ballDistance = (ball_pos - defense_origin).norm();
-  // ROS_INFO("Distance comparison: MIN_RADIUS=%f, ballDistance=%f", MIN_RADIUS, ballDistance);
-  current_radius = saturate(delta_radius + current_radius, MIN_RADIUS, min(ballDistance - ROBOT_RADIUS, MAX_RADIUS));
+  Vector2d ally_pos(ally_state.x, ally_state.y);
+  double allyDistance = (ally_pos - defense_origin).norm();
+  ROS_INFO("Distance comparison: MAX_RADIUS=%f, ballDistance=%f, allyDistance=%f", MAX_RADIUS, ballDistance, allyDistance);
+  // Be sure to stay behind the ball and our other team member
+  current_radius = saturate(delta_radius + current_radius, MIN_RADIUS, min(ballDistance - ROBOT_RADIUS/2.0, min(MAX_RADIUS, allyDistance - ROBOT_RADIUS - TEAM_AVOID_MARGIN)));
   // if(debug_print & ADAPTIVE_RADIUS) {
     // ROS_INFO("PHI COMPUTATIONS >>>>>>>>>>>>>>>>>>>>>>");
     // ROS_INFO("d = %f", d_norm);

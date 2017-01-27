@@ -1,6 +1,10 @@
 #include "PathPlanner/path_planner.h"
 #include "Utilities/utilities.h"
 
+
+#define BALL_RADIUS 0.022
+#define AVOIDANCE_MARGIN 0.035
+
 typedef Eigen::Matrix<double, 2, 4> Matrix2x4d;
 
 PathPlanner::PathPlanner() :
@@ -12,7 +16,8 @@ priv_nh("~")
   ros::NodeHandle priv_nh("~");
 
   max_xy_vel_ = priv_nh.param<double>("max_xy_vel_", 10.0); // m/s
-  time_step_ = priv_nh.param<double>("time_step_", 0.01); // 100 Hz
+  time_step_ = priv_nh.param<double>("time_step", 0.01); // 100 Hz
+  robot_number_ = priv_nh.param<int>("robot_number", 1);
 
 
   ally1_state_sub_  = nh_.subscribe<slash_dash_bang_hash::State>("ally1_state", 1, boost::bind(&PathPlanner::stateCallback, this, _1, "ally1"));
@@ -75,12 +80,90 @@ void PathPlanner::planPath()
     // Updates desired_pose_
     // desired_pose_ = simpleCurvedPathToDestination();
 
+    avoidBall(desired_pose_);
+
     publishDesiredPose();
 }
 
 void PathPlanner::publishDesiredPose()
 {
     desired_pose_pub_.publish(desired_pose_);
+}
+
+State PathPlanner::avoidBall(State destination)
+{
+  typedef enum {
+    AVOID_BALL, // Waypoint to side of the ball so we don't hit it backwards
+    MOVE_TO_DESTINATION // Waypoint behind the ball
+  } state_t;
+  static state_t state = AVOID_BALL;
+
+  State desired_pose;
+  State robot_state;
+
+  Vector2d robot_pose;
+  if (robot_number_ == 1) {
+    robot_state = ally1_state_;
+  }
+  else if (robot_number_ == 2) {
+    robot_state = ally2_state_;
+  }
+  else {
+    ROS_INFO("Invalid robot number in avoidBall() function!");
+  }
+  robot_pose << robot_state.x, robot_state.y;
+
+  Vector2d ball_pose(ball_state_.x, ball_state_.y);
+
+  Vector2d final_destination(destination.x, destination.y);
+
+  // ==== Check if the ball is in the path ====
+  Vector2d toDestination = final_destination - robot_pose;
+  Vector2d perp(-1.0*toDestination(1), toDestination(0));
+  perp = perp.normalized(); // Normalize the perpendicular vector
+  Vector2d toBall = ball_pose - robot_pose;
+
+  // Projection of ball onto the line perpendicular to the robot's movement
+  double ball_perp_x = (toBall.dot(perp));
+
+  // Check if we are facing the ball
+  double ballAngle = fmod(atan2(toBall(1),toBall(0))*180/M_PI + 720.0, 360.0);
+  double robotAngle = fmod(robot_state.theta + 720.0, 360.0);
+
+  Vector2d robotForwardVec(cos(robot_state.theta*M_PI/180.0),sin(robot_state.theta*M_PI/180.0));
+
+  double ballForwardDistance = robotForwardVec.dot(ball_pose)/robotForwardVec.norm();
+
+  bool ballOnDestinationPath = (ballForwardDistance > 0.0);
+  // ROS_INFO("Ball angle=%f, robot angle=%f", ballAngle, robot_state.theta);
+  ROS_INFO("ballForwardDistance=%f", ballForwardDistance);
+
+  // Assign appropriate state
+  if ((abs(ball_perp_x) <= ROBOT_RADIUS + BALL_RADIUS)  && (toDestination.norm() > toBall.norm()) && !ballOnDestinationPath)
+  {
+    state = AVOID_BALL;
+  }
+  else {
+    state = MOVE_TO_DESTINATION;
+  }
+
+  Vector2d avoidance_point;
+  switch (state) {
+    case AVOID_BALL:
+      // Add intermediate destination to the side of the ball
+      avoidance_point = ball_pose - (sgn(ball_perp_x)*(ROBOT_RADIUS + BALL_RADIUS + AVOIDANCE_MARGIN)*perp);
+      desired_pose_.x = avoidance_point(0);
+      desired_pose_.y = avoidance_point(1);
+      break;
+
+    case MOVE_TO_DESTINATION:
+      desired_pose_= destination;
+      break;
+
+    default:
+      ROS_INFO("Invalid state in avoidBall() function!");
+  }
+
 }
 
 // Simple spline curve - no obstacle avoidance

@@ -20,6 +20,7 @@ typedef boost::shared_ptr< ::slash_dash_bang_hash::State const> StateConstPtr;
 #define FIELD_WIDTH 3.40  // in meters
 #define FIELD_HEIGHT 2.38
 #define ROBOT_RADIUS 0.10
+#define BALL_RADIUS 0.022
 
 // struct State
 // {

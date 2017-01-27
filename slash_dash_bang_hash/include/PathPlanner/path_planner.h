@@ -36,6 +36,7 @@ public:
   Vector2d goal_;
   double max_xy_vel_;
   double time_step_;
+  int robot_number_;
 
   // Publishers and Subscribers
   ros::Publisher desired_pose_pub_;
@@ -57,6 +58,7 @@ public:
   void planPath();
   void publishDesiredPose();
   State simpleCurvedPathToDestination();
+  State avoidBall(State destination);
 
   void stateCallback(const StateConstPtr &msg, const std::string& robot);
   void destinationCallback(const StateConstPtr &msg);

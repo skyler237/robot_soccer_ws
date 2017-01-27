@@ -22,13 +22,14 @@ public:
   // ====================== General Skills =================================
   static State goToPoint(int robotId, State robot, Vector2d point);
   static void kick(string team, int robotId);
+  static State getBall(State robot_state, State ball_state, Vector2d direction_point);
 
   // ====================== Offensive Skills =================================
   static State ballIntercept(int robotId, State robot, Vector2d ball);
 
   // ====================== Defensive Skills =================================
   static State followBallOnLine(int robotId, State robot, State ball, double x_pos);
-  static State adaptiveRadiusGoalDefend(State robot_state, State ball_state);
+  static State adaptiveRadiusGoalDefend(State robot_state, State ally_state, State ball_state);
 
   // ====================== Helper Functions =================================
   static Vector2d ballPredict(State ball, double time);
