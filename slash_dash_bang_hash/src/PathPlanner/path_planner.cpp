@@ -132,7 +132,7 @@ State PathPlanner::avoidBall(State destination)
 
   Vector2d robotForwardVec(cos(robot_state.theta*M_PI/180.0),sin(robot_state.theta*M_PI/180.0));
 
-  double ballForwardDistance = robotForwardVec.dot(ball_pose)/robotForwardVec.norm();
+  double ballForwardDistance = robotForwardVec.dot(toBall)/robotForwardVec.norm();
 
   bool ballOnDestinationPath = (ballForwardDistance > 0.0);
   // ROS_INFO("Ball angle=%f, robot angle=%f", ballAngle, robot_state.theta);
