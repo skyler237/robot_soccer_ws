@@ -62,8 +62,8 @@ void AI::computeDestination() {
 
 
 
-        // robot #2 stays on line, following the ball, facing the goal
-        ally2_destination_ = Skills::adaptiveRadiusGoalDefend(ally2_state_, ally1_state_, ball_state_);
+        // robot #2 defend the goal
+        ally2_destination_ = play_basicDefense(2, ally2_state_, ball_state_);
         checkForKick(2);
 
         ///////////////////////////////////////////////////////
@@ -147,6 +147,23 @@ State AI::play_rushGoal(int robotId, State robot, State ball)
     else
         return Skills::goToPoint(robotId, robot, position);
 }
+
+State AI::play_basicDefense(int robotId, State robot, State ball)
+{
+
+  // normal vector from ball to goal
+  Vector2d ball_vec = stateToVector(ball);
+  Vector2d robot_vec = stateToVector(robot);
+
+  //if the ball is close enough to the defender go to ball, and we are behind it && we are close to our goal
+  if((robot_vec(0) - ball_vec(0)) < 1 && (robot_vec(0) > ball_vec(0)))
+  {
+    return Skills::goToPoint(robotId, robot, ball_vec);
+  }
+  //default defense is adaptiveRadiusGoalDefend
+  return Skills::adaptiveRadiusGoalDefend(ally2_state_, ball_state_);
+}
+
 
 void AI::stateCallback(const StateConstPtr &msg, const std::string& robot)
 {
