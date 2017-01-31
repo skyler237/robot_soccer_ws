@@ -19,6 +19,13 @@ static double max_xy_vel = 1.0;
 #define TEAM_AVOID_MARGIN 0.2
 #define CONTROL_DELAY 1.0
 
+// For mirror state
+#define LEFT 1
+#define RIGHT -1
+
+
+
+
 Skills::Skills()
 {
   // goal_ << FIELD_WIDTH/2, 0;
@@ -48,7 +55,7 @@ State Skills::goToPoint(int robotId, State robot, Vector2d point)
 
 void Skills::kick(string team, int robotId)
 {
-  ROS_INFO("Robot %d attempted a kick!.", robotId);
+  // ROS_INFO("Robot %d attempted a kick!.", robotId);
   ros::NodeHandle n;
 
   string robot_number = ((robotId == 1) ? "1" : "2");
@@ -71,6 +78,7 @@ State Skills::getBall(State robot_state, State ball_state, Vector2d direction_po
   State destination;
   destination.x = final_position(0);
   destination.y = final_position(1);
+  destination.theta = atan2(direction_point(1) - robot_state.y, direction_point(0) - robot_state.x)*180.0/M_PI;
 
   return destination;
 }
@@ -87,6 +95,135 @@ State Skills::ballIntercept(int robotId, State robot, Vector2d ball)
   // Vector2d ballToGoal;
   // ballToGoal.x = ball_state_.x - goal_(0);
   // ballToGoal.y = ball_state_.y - goal_(0);
+}
+
+// Returns the ideal shot angle when the ball is in the given position -- includes wall shots
+double Skills::findBestShot(State ball_state, State ally_state, State opp1_state, State opp2_state)
+{
+
+  State ally_state_left, ally_state_right;
+  State opp1_state_left, opp1_state_right;
+  State opp2_state_left, opp2_state_right;
+
+  // Keep track of the areas along the wall blocked by each robot
+  Zone_t ally_blocked_left, ally_blocked_center, ally_blocked_right;
+  Zone_t opp1_blocked_left, opp1_blocked_center, opp1_blocked_right;
+  Zone_t opp2_blocked_left, opp2_blocked_center, opp2_blocked_right;
+
+  // Keep track of open spots for each of the goals (actual and mirrored)
+  Zone_t goal_open_left, goal_open_center, goal_open_right;
+  goal_open_center.max = goal_(1) + GOAL_BOX_WIDTH/2;
+  goal_open_center.min = goal_(1) - GOAL_BOX_WIDTH/2;
+  goal_open_left.max =   goal_(1) + FIELD_HEIGHT + GOAL_BOX_WIDTH/2;
+  goal_open_left.min =   goal_(1) + FIELD_HEIGHT - GOAL_BOX_WIDTH/2;
+  goal_open_right.max =  goal_(1) - FIELD_HEIGHT + GOAL_BOX_WIDTH/2;
+  goal_open_right.min =  goal_(1) - FIELD_HEIGHT - GOAL_BOX_WIDTH/2;
+  Zone_t largest_opening;
+
+
+  bool considerAlly = false;
+  bool considerOpp1 = false;
+  bool considerOpp2 = false;
+
+  // Mirror the states of the robots if they are further in x than the ball
+  if(ally_state.x > ball_state.x) {
+    considerAlly = true;
+  }
+  if(opp1_state.x > ball_state.x) {
+    considerOpp1 = true;
+  }
+  if(opp2_state.x > ball_state.x) {
+    considerOpp2 = true;
+  }
+
+  if(considerAlly) {
+    ally_state_left = mirrorState(ally_state, LEFT);
+    ally_state_right = mirrorState(ally_state, RIGHT);
+
+    ally_blocked_left = findBlockedZone(ball_state, ally_state_left);
+    ally_blocked_center = findBlockedZone(ball_state, ally_state);
+    ally_blocked_right = findBlockedZone(ball_state, ally_state_right);
+
+    // Update goal open zones
+    goal_open_left = updateOpenZone(goal_open_left, ally_blocked_left);
+    goal_open_left = updateOpenZone(goal_open_left, ally_blocked_center);
+
+    goal_open_center = updateOpenZone(goal_open_center, ally_blocked_center);
+
+    goal_open_right = updateOpenZone(goal_open_right, ally_blocked_right);
+    goal_open_right = updateOpenZone(goal_open_right, ally_blocked_center);
+  }
+  if(considerOpp1) {
+    opp1_state_left = mirrorState(opp1_state, LEFT);
+    opp1_state_right = mirrorState(opp1_state, RIGHT);
+
+    opp1_blocked_left = findBlockedZone(ball_state, opp1_state_left);
+    opp1_blocked_center = findBlockedZone(ball_state, opp1_state);
+    opp1_blocked_right = findBlockedZone(ball_state, opp1_state_right);
+
+    // Update goal open zones
+    goal_open_left = updateOpenZone(goal_open_left, opp1_blocked_left);
+    goal_open_left = updateOpenZone(goal_open_left, opp1_blocked_center);
+
+    goal_open_center = updateOpenZone(goal_open_center, opp1_blocked_center);
+
+    goal_open_right = updateOpenZone(goal_open_right, opp1_blocked_right);
+    goal_open_right = updateOpenZone(goal_open_right, opp1_blocked_center);
+  }
+  if(considerOpp2) {
+    opp2_state_left = mirrorState(opp2_state, LEFT);
+    opp2_state_right = mirrorState(opp2_state, RIGHT);
+
+    opp2_blocked_left = findBlockedZone(ball_state, opp2_state_left);
+    opp2_blocked_center = findBlockedZone(ball_state, opp2_state);
+    opp2_blocked_right = findBlockedZone(ball_state, opp2_state_right);
+
+    // Update goal open zones
+    goal_open_left = updateOpenZone(goal_open_left, opp2_blocked_left);
+    goal_open_left = updateOpenZone(goal_open_left, opp2_blocked_center);
+
+    goal_open_center = updateOpenZone(goal_open_center, opp2_blocked_center);
+
+    goal_open_right = updateOpenZone(goal_open_right, opp2_blocked_right);
+    goal_open_right = updateOpenZone(goal_open_right, opp2_blocked_center);
+  }
+
+  // Find the largest open zone
+  double largest_right_opening = goal_open_right.max - goal_open_right.min;
+  double largest_center_opening = goal_open_center.max - goal_open_center.min;
+  double largest_left_opening = goal_open_left.max - goal_open_left.min;
+
+  // Compare the three gaps -- gives preference to wall shots
+  if(largest_left_opening >= largest_center_opening)
+  {
+    if(largest_left_opening > largest_right_opening)
+    {
+      largest_opening = goal_open_left;
+    }
+    else
+    {
+      largest_opening = goal_open_right;
+    }
+  }
+  else
+  {
+    if(largest_center_opening > largest_right_opening)
+    {
+      largest_opening = goal_open_center;
+    }
+    else
+    {
+      largest_opening = goal_open_right;
+    }
+  }
+
+double midpoint = (largest_opening.max + largest_opening.min)/2.0;
+
+// double desired_theta = atan(midpoint/(FIELD_WIDTH/2 - ball_state.x));
+// return desired_theta;
+
+return midpoint;
+
 }
 
 
@@ -185,7 +322,7 @@ State Skills::adaptiveRadiusGoalDefend(State robot_state, State ally_state, Stat
   double ballDistance = (ball_pos - defense_origin).norm();
   Vector2d ally_pos(ally_state.x, ally_state.y);
   double allyDistance = (ally_pos - defense_origin).norm();
-  ROS_INFO("Distance comparison: MAX_RADIUS=%f, ballDistance=%f, allyDistance=%f", MAX_RADIUS, ballDistance, allyDistance);
+  // ROS_INFO("Distance comparison: MAX_RADIUS=%f, ballDistance=%f, allyDistance=%f", MAX_RADIUS, ballDistance, allyDistance);
   // Be sure to stay behind the ball and our other team member
   double max_radius = min(ballDistance - ROBOT_RADIUS/2.0, min(MAX_RADIUS, allyDistance - ROBOT_RADIUS - TEAM_AVOID_MARGIN));
   current_radius = saturate(delta_radius + current_radius, MIN_RADIUS, max_radius);
@@ -238,44 +375,101 @@ Vector2d Skills::ballPredict(State ball, double time) {
   prediction += time*velocity;
 
   // TODO: Handle the walls
-  //Handle the Top/Bottom wall first
-  if(prediction(1) > FIELD_HEIGHT / 2|| prediction(1) < (-1*(FIELD_HEIGHT / 2)))
-  {
-      //get number of times it bounces off walls
-      int bounces = abs((int)(prediction(1) / FIELD_HEIGHT));
-      //get how far off either end it will be
-      double yAbs = (abs(prediction(1) / FIELD_HEIGHT) - (bounces - 1)) * FIELD_HEIGHT;
-      int sign = (prediction(1) > 0) ? 1 : -1;
-      if((bounces % 2) == 0)
-      {
-        //even number of times, off far wall
-        prediction(1) = ((-1 * sign) * (FIELD_HEIGHT / 2)) + (sign*yAbs);
-      }
-      else
-      {
-        //odd number of times, off close wall
-        prediction(1) = ((sign) * (FIELD_HEIGHT / 2)) + ((sign * -1)*yAbs);
-      }
-  }
-  //handle the left/right wall second
-  if(prediction(0) > FIELD_WIDTH / 2|| prediction(0) < (-1*(FIELD_WIDTH / 2)))
-  {
-      //get number of times it bounces off walls
-      int bounces = abs((int)(prediction(0) / FIELD_WIDTH));
-      //get how far off either end it will be
-      double yAbs = (abs(prediction(0) / FIELD_HEIGHT) - (bounces - 1)) * FIELD_WIDTH;
-      int sign = (prediction(0) > 0) ? 1 : -1;
-      if(bounces % 2 == 0)
-      {
-        //even number of times, off far wall
-        prediction(0) = ((-1 * sign) * (FIELD_WIDTH / 2)) + (sign*yAbs);
-      }
-      else
-      {
-        //odd number of times, off close wall
-        prediction(0) = ((sign) * (FIELD_WIDTH / 2)) + ((sign * -1)*yAbs);
-      }
-  }
+
+
   // Return the estimated position vector
   return prediction;
+}
+
+State Skills::mirrorState(State robot_state, int direction)
+{
+  State mirrored_state;
+  if (direction == LEFT)
+  {
+    double y_distance = FIELD_HEIGHT/2 - robot_state.y;
+
+    mirrored_state.y = FIELD_HEIGHT/2 + y_distance;
+    mirrored_state.x = robot_state.x;
+  }
+  else if (direction == RIGHT)
+  {
+    double y_distance = FIELD_HEIGHT/2 + robot_state.y;
+
+    mirrored_state.y = -FIELD_HEIGHT/2 - y_distance;
+    mirrored_state.x = robot_state.x;
+  }
+  else {
+    ROS_INFO("Invalid mirror direction in mirrorState() function");
+  }
+  mirrored_state.theta = -robot_state.theta;
+
+  return mirrored_state;
+}
+
+Zone_t Skills::findBlockedZone(State ball_state, State blocker_state)
+{
+  Zone_t blocked_zone;
+  Vector2d ball_pose(ball_state.x , ball_state.y);
+  Vector2d blocker_pose(blocker_state.x, blocker_state.y);
+  // Vector2d robot_pose(robot_state.x, robot_state.y);
+
+  double ball_dist_from_wall = FIELD_WIDTH/2 - ball_pose(0);
+
+  Vector2d ballToBlocker = blocker_pose - ball_pose;
+
+  double ball_evade_radius = ROBOT_RADIUS + BALL_RADIUS*2;
+  Vector2d blocker_left_edge, blocker_right_edge;
+
+  // TODO: keep working here
+  double theta_edge = atan(ball_evade_radius/ballToBlocker.norm());
+  double theta_blocker = atan(ballToBlocker(1)/ballToBlocker(0));
+  double theta_evade_left = theta_blocker + theta_edge;
+  double theta_evade_right = theta_blocker - theta_edge;
+
+  double dy_left = ball_dist_from_wall*tan(theta_evade_left);
+  double dy_right = ball_dist_from_wall*tan(theta_evade_right);
+
+  blocked_zone.max = ball_pose(1) + dy_left;
+  blocked_zone.min = ball_pose(1) + dy_right;
+
+  return blocked_zone;
+}
+
+Zone_t Skills::updateOpenZone(Zone_t open_zone, Zone_t blocked_zone)
+{
+  // For comments let "O" represent open zone boundary and "B" reresent blocked zone boundary
+  Zone_t updated_open_zone = open_zone;
+  if(blocked_zone.max > open_zone.min && blocked_zone.max < open_zone.max) // Check if the blocked max is in the open region
+  {
+    // O----B--0---B = blocked zone straddles right edge
+    if(blocked_zone.min < open_zone.min) // Does it straddle?
+    {
+      updated_open_zone.min = blocked_zone.max;
+    }
+    else
+    {
+      // O----B---B-O = blocked zone inside, but bigger opening on the left
+      if(open_zone.max - blocked_zone.max > blocked_zone.min - open_zone.min)
+      {
+        updated_open_zone.min = blocked_zone.max;
+      }
+      // O-B---B-----O = = blocked zone inside, but bigger opening on the right
+      else
+      {
+        updated_open_zone.max = blocked_zone.min;
+      }
+    }
+  }
+  else if(blocked_zone.min > open_zone.min && blocked_zone.min < open_zone.max) // Check if the blocked min is in the open region
+  {
+    // B--O---B--O = blocked zone straddles the left edge
+    updated_open_zone.max = blocked_zone.min;
+  }
+  else if(blocked_zone.min < open_zone.min && blocked_zone.max > open_zone.max) // Check if the blocked area completely covers the open area
+  {
+    // B--O-----O--B = blocked zone completely covers the open zone
+    updated_open_zone.max = updated_open_zone.min;
+  }
+
+  return updated_open_zone;
 }

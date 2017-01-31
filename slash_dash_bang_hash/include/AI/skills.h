@@ -8,11 +8,17 @@
 #define FIELD_WIDTH 3.40  // in meters
 #define FIELD_HEIGHT 2.38
 #define ROBOT_RADIUS 0.10
+#define BALL_RADIUS 0.022
 #define GOAL_BOX_WIDTH 0.619
 
 using namespace Eigen;
 using namespace std;
 using namespace slash_dash_bang_hash;
+
+struct Zone_t {
+  double min;
+  double max;
+};
 
 class Skills
 {
@@ -26,6 +32,7 @@ public:
 
   // ====================== Offensive Skills =================================
   static State ballIntercept(int robotId, State robot, Vector2d ball);
+  static double findBestShot(State ball_state, State ally_state, State opp1_state, State opp2_state);
 
   // ====================== Defensive Skills =================================
   static State followBallOnLine(int robotId, State robot, State ball, double x_pos);
@@ -33,6 +40,9 @@ public:
 
   // ====================== Helper Functions =================================
   static Vector2d ballPredict(State ball, double time);
+  static State mirrorState(State robot_state, int direction);
+  static Zone_t updateOpenZone(Zone_t open_zone, Zone_t blocked_zone);
+  static Zone_t findBlockedZone(State ball_state, State blocker_state);
 
   // static Vector2d goal_;
 

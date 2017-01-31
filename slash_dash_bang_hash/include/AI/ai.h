@@ -80,6 +80,7 @@ public:
 
   State play_basicDefense(int robotId, State robot, State ball);
   State play_rushGoal(int robotId, State robot, State ball);
+  State play_findBestShot(int robotId, State robot, State ball);
   void stateCallback(const StateConstPtr &msg, const std::string& robot);
   void gameStateCallback(const soccerref::GameState::ConstPtr &msg);
 };

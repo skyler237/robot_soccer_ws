@@ -136,7 +136,7 @@ State PathPlanner::avoidBall(State destination)
 
   bool ballOnDestinationPath = (ballForwardDistance > 0.0);
   // ROS_INFO("Ball angle=%f, robot angle=%f", ballAngle, robot_state.theta);
-  ROS_INFO("ballForwardDistance=%f", ballForwardDistance);
+  // ROS_INFO("ballForwardDistance=%f", ballForwardDistance);
 
   // Assign appropriate state
   if ((abs(ball_perp_x) <= ROBOT_RADIUS + BALL_RADIUS)  && (toDestination.norm() > toBall.norm()) && !ballOnDestinationPath)

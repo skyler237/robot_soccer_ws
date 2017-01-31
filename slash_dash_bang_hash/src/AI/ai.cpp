@@ -148,6 +148,18 @@ State AI::play_rushGoal(int robotId, State robot, State ball)
         return Skills::goToPoint(robotId, robot, position);
 }
 
+State AI::play_findBestShot(int robotId, State robot, State ball)
+{
+  // normal vector from ball to goal
+  Vector2d ball_vec = stateToVector(ball);
+  double open_zone_midpoint = Skills::findBestShot(ball, ally1_state_, opp1_state_, opp2_state_);
+  ROS_INFO("Shot midpoint: y=%f", open_zone_midpoint);
+  Vector2d direction_point(FIELD_WIDTH/2.0, open_zone_midpoint);
+
+  // TODO: Does not dribble the ball...
+  return Skills::getBall(robot, ball, direction_point);
+}
+
 State AI::play_basicDefense(int robotId, State robot, State ball)
 {
 
@@ -161,7 +173,7 @@ State AI::play_basicDefense(int robotId, State robot, State ball)
     return Skills::goToPoint(robotId, robot, ball_vec);
   }
   //default defense is adaptiveRadiusGoalDefend
-  return Skills::adaptiveRadiusGoalDefend(ally2_state_, ball_state_);
+  return Skills::adaptiveRadiusGoalDefend(ally2_state_, ally1_state_, ball_state_);
 }
 
 
