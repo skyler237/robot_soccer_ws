@@ -7,6 +7,7 @@
 #define FIELD_WIDTH 3.40  // in meters
 #define FIELD_HEIGHT 2.38
 #define ROBOT_RADIUS 0.10
+#define KICKING_RANGE (0.03 + ROBOT_RADIUS)
 
 static Vector2d goal_(FIELD_WIDTH/2.0, 0);
 
@@ -120,20 +121,41 @@ double Skills::findBestShot(State ball_state, State ally_state, State opp1_state
   goal_open_right.min =  goal_(1) - FIELD_HEIGHT - GOAL_BOX_WIDTH/2;
   Zone_t largest_opening;
 
+  ROS_INFO("============ Initial openings =============");
+  ROS_INFO("Left opening: min=%f, max=%f", goal_open_left.min, goal_open_left.max);
+  ROS_INFO("Center opening: min=%f, max=%f", goal_open_center.min, goal_open_center.max);
+  ROS_INFO("Right opening: min=%f, max=%f", goal_open_right.min, goal_open_right.max);
+
 
   bool considerAlly = false;
   bool considerOpp1 = false;
   bool considerOpp2 = false;
 
   // Mirror the states of the robots if they are further in x than the ball
+  ROS_INFO("Ball state: x=%f, y=%f", ball_state.x, ball_state.y);
   if(ally_state.x > ball_state.x) {
     considerAlly = true;
+    ROS_INFO("Considering ally in finding best shot.");
+  }
+  else{
+    ROS_INFO("NOT Considering ally in finding best shot.");
+    ROS_INFO("Ally state: x=%f, y=%f", ally_state.x, ally_state.y);
   }
   if(opp1_state.x > ball_state.x) {
     considerOpp1 = true;
+    ROS_INFO("Considering opp1 in finding best shot.");
+  }
+  else{
+    ROS_INFO("NOT Considering opp1 in finding best shot.");
+    ROS_INFO("opp1_state: x=%f, y=%f", opp1_state.x, opp1_state.y);
   }
   if(opp2_state.x > ball_state.x) {
     considerOpp2 = true;
+    ROS_INFO("Considering opp2 in finding best shot.");
+  }
+  else{
+    ROS_INFO("NOT Considering opp2 in finding best shot.");
+    ROS_INFO("opp2_state: x=%f, y=%f", opp2_state.x, opp2_state.y);
   }
 
   if(considerAlly) {
@@ -159,6 +181,7 @@ double Skills::findBestShot(State ball_state, State ally_state, State opp1_state
 
     opp1_blocked_left = findBlockedZone(ball_state, opp1_state_left);
     opp1_blocked_center = findBlockedZone(ball_state, opp1_state);
+    ROS_INFO("Opp1 blocked center: min=%f, max=%f", opp1_blocked_center.min, opp1_blocked_center.max);
     opp1_blocked_right = findBlockedZone(ball_state, opp1_state_right);
 
     // Update goal open zones
@@ -166,6 +189,7 @@ double Skills::findBestShot(State ball_state, State ally_state, State opp1_state
     goal_open_left = updateOpenZone(goal_open_left, opp1_blocked_center);
 
     goal_open_center = updateOpenZone(goal_open_center, opp1_blocked_center);
+    ROS_INFO("Goal center updated (opp1): min=%f, max=%f", goal_open_center.min, goal_open_center.max);
 
     goal_open_right = updateOpenZone(goal_open_right, opp1_blocked_right);
     goal_open_right = updateOpenZone(goal_open_right, opp1_blocked_center);
@@ -193,6 +217,11 @@ double Skills::findBestShot(State ball_state, State ally_state, State opp1_state
   double largest_center_opening = goal_open_center.max - goal_open_center.min;
   double largest_left_opening = goal_open_left.max - goal_open_left.min;
 
+  ROS_INFO("============ Final openings =============");
+  ROS_INFO("Left opening: min=%f, max=%f", goal_open_left.min, goal_open_left.max);
+  ROS_INFO("Center opening: min=%f, max=%f", goal_open_center.min, goal_open_center.max);
+  ROS_INFO("Right opening: min=%f, max=%f", goal_open_right.min, goal_open_right.max);
+
   // Compare the three gaps -- gives preference to wall shots
   if(largest_left_opening >= largest_center_opening)
   {
@@ -217,15 +246,42 @@ double Skills::findBestShot(State ball_state, State ally_state, State opp1_state
     }
   }
 
-double midpoint = (largest_opening.max + largest_opening.min)/2.0;
+  double midpoint = (largest_opening.max + largest_opening.min)/2.0;
 
-// double desired_theta = atan(midpoint/(FIELD_WIDTH/2 - ball_state.x));
-// return desired_theta;
+  // double desired_theta = atan(midpoint/(FIELD_WIDTH/2 - ball_state.x));
+  // return desired_theta;
 
-return midpoint;
+  return midpoint;
 
 }
 
+
+State Skills::makeShot(string team, int robotId, State robot_state, State ball_state, Vector2d ball_destination)
+{
+  State destination;
+  Vector2d robot_pose(robot_state.x, robot_state.y);
+  Vector2d ball_pose(ball_state.x, ball_state.y);
+  Vector2d robotToGoal = ball_destination - robot_pose;
+
+  Vector2d toBall = ball_pose - robot_pose;
+  Vector2d robotForwardVec(cos(robot_state.theta*M_PI/180.0),sin(robot_state.theta*M_PI/180.0));
+  double ballForwardDistance = robotForwardVec.dot(toBall)/robotForwardVec.norm();
+  // If the robot is close enough to the ball, kick it!
+  if (ballForwardDistance < KICKING_RANGE)
+  {
+    kick(team, robotId);
+    destination = robot_state;
+  }
+  // If not, move towards the ball
+  else
+  {
+    Vector2d desired_pose = ball_pose + 0.05*(toBall.normalized());
+    destination = vectorToState(desired_pose);
+    destination.theta = atan2(robotToGoal(1),robotToGoal(0))*180.0/M_PI;
+  }
+
+  return destination;
+}
 
 
 //=============================================================================
@@ -439,6 +495,11 @@ Zone_t Skills::updateOpenZone(Zone_t open_zone, Zone_t blocked_zone)
 {
   // For comments let "O" represent open zone boundary and "B" reresent blocked zone boundary
   Zone_t updated_open_zone = open_zone;
+  if(open_zone.min == open_zone.max) // There is no open area left, just return
+  {
+    return updated_open_zone;
+  }
+
   if(blocked_zone.max > open_zone.min && blocked_zone.max < open_zone.max) // Check if the blocked max is in the open region
   {
     // O----B--0---B = blocked zone straddles right edge

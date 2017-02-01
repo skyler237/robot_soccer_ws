@@ -21,6 +21,7 @@ using namespace Eigen;
   double angleMod(double angle);
   static slash_dash_bang_hash::State poseToState(geometry_msgs::Pose2D robot);
   slash_dash_bang_hash::State vectorToState(Vector2d vec);
+  slash_dash_bang_hash::State vectorToState(Vector2d vec);
   Vector2d stateToVector(slash_dash_bang_hash::State robot);
 
 #endif /* end of include guard:  */

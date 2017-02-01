@@ -18,8 +18,8 @@ priv_nh("~")
 
   ally1_state_sub_ = nh_.subscribe<slash_dash_bang_hash::State>("ally1_state", 1, boost::bind(&AI::stateCallback, this, _1, "ally1"));
   ally2_state_sub_ = nh_.subscribe<slash_dash_bang_hash::State>("ally2_state", 1, boost::bind(&AI::stateCallback, this, _1, "ally2"));
-  opp1_state_sub_ = nh_.subscribe<slash_dash_bang_hash::State>("opponent1_state", 1, boost::bind(&AI::stateCallback, this, _1, "opponent1"));
-  opp2_state_sub_ = nh_.subscribe<slash_dash_bang_hash::State>("opponent2_state", 1, boost::bind(&AI::stateCallback, this, _1, "opponent2"));
+  opp1_state_sub_ = nh_.subscribe<slash_dash_bang_hash::State>("opp1_state", 1, boost::bind(&AI::stateCallback, this, _1, "opponent1"));
+  opp2_state_sub_ = nh_.subscribe<slash_dash_bang_hash::State>("opp2_state", 1, boost::bind(&AI::stateCallback, this, _1, "opponent2"));
   ball_state_sub_ = nh_.subscribe<slash_dash_bang_hash::State>("ball_state", 1, boost::bind(&AI::stateCallback, this, _1, "ball"));
   game_state_sub_ = nh_.subscribe<soccerref::GameState>("/game_state", 1, &AI::gameStateCallback, this);
 
@@ -56,7 +56,9 @@ void AI::computeDestination() {
         // Choose strategies and update ally1/ally2_destination_ variables
 
         // robot #1 positions itself behind ball and rushes the goal.
+        // ally1_destination_ = play_findBestShot(1, ally1_state_, ball_state_);
         ally1_destination_ = play_rushGoal(1, ally1_state_, ball_state_);
+
         checkForKick(1);
         //ROS_INFO("Ally1_destination: x=%f, y=%f", ally1_destination_.x, ally1_destination_.y);
 
@@ -154,10 +156,13 @@ State AI::play_findBestShot(int robotId, State robot, State ball)
   Vector2d ball_vec = stateToVector(ball);
   double open_zone_midpoint = Skills::findBestShot(ball, ally1_state_, opp1_state_, opp2_state_);
   ROS_INFO("Shot midpoint: y=%f", open_zone_midpoint);
-  Vector2d direction_point(FIELD_WIDTH/2.0, open_zone_midpoint);
+  Vector2d shot_destination(FIELD_WIDTH/2.0, open_zone_midpoint);
 
   // TODO: Does not dribble the ball...
-  return Skills::getBall(robot, ball, direction_point);
+  if((ball_vec - stateToVector(robot)).norm() < 0.21)
+      return Skills::makeShot(team_, robot_number_, robot, ball, shot_destination);
+  else
+      return Skills::getBall(robot, ball, shot_destination);
 }
 
 State AI::play_basicDefense(int robotId, State robot, State ball)

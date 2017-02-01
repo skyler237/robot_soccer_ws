@@ -63,6 +63,15 @@ slash_dash_bang_hash::State vectorToState(Vector3d vec)
   return state;
 }
 
+slash_dash_bang_hash::State vectorToState(Vector2d vec)
+{
+  slash_dash_bang_hash::State state;
+  state.x = vec(0);
+  state.y = vec(1);
+
+  return state;
+}
+
  Vector2d stateToVector(slash_dash_bang_hash::State robot)
 {
   Vector2d vec(robot.x, robot.y);

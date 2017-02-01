@@ -33,6 +33,7 @@ public:
   // ====================== Offensive Skills =================================
   static State ballIntercept(int robotId, State robot, Vector2d ball);
   static double findBestShot(State ball_state, State ally_state, State opp1_state, State opp2_state);
+  static State makeShot(string team, int robotId, State robot_state, State ball_state, Vector2d ball_destination);
 
   // ====================== Defensive Skills =================================
   static State followBallOnLine(int robotId, State robot, State ball, double x_pos);
