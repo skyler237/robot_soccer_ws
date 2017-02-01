@@ -173,7 +173,7 @@ State AI::play_basicDefense(int robotId, State robot, State ball)
   Vector2d robot_vec = stateToVector(robot);
 
   //if the ball is close enough to the defender go to ball, and we are behind it && we are close to our goal
-  if((robot_vec(0) - ball_vec(0)) < 1 && (robot_vec(0) > ball_vec(0)))
+  if((abs(robot_vec(0) - ball_vec(0)) < 1) && (robot_vec(0) > ball_vec(0)))
   {
     return Skills::goToPoint(robotId, robot, ball_vec);
   }
