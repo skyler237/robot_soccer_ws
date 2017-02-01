@@ -59,6 +59,7 @@ public:
   void publishDesiredPose();
   State simpleCurvedPathToDestination();
   State avoidBall(State destination);
+  State avoidRobot(bool isAlly, State other_robot_state, State destination);
 
   void stateCallback(const StateConstPtr &msg, const std::string& robot);
   void destinationCallback(const StateConstPtr &msg);

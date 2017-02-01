@@ -1,5 +1,6 @@
 #include "PathPlanner/path_planner.h"
 #include "Utilities/utilities.h"
+#include "AI/skills.h"
 
 
 #define BALL_RADIUS 0.022
@@ -82,6 +83,18 @@ void PathPlanner::planPath()
 
     avoidBall(desired_pose_);
 
+    bool isAlly = true;
+    avoidRobot(!isAlly, opp1_state_, destination_);
+    avoidRobot(!isAlly, opp2_state_, destination_);
+    if(robot_number_ == 1)
+    {
+      avoidRobot(isAlly, ally2_state_, destination_);
+    }
+    else if(robot_number_ == 2)
+    {
+      avoidRobot(isAlly, ally1_state_, destination_);
+    }
+
     publishDesiredPose();
 }
 
@@ -113,7 +126,8 @@ State PathPlanner::avoidBall(State destination)
   }
   robot_pose << robot_state.x, robot_state.y;
 
-  Vector2d ball_pose(ball_state_.x, ball_state_.y);
+  // Vector2d ball_pose(ball_state_.x, ball_state_.y);
+  Vector2d ball_pose = Skills::ballIntercept(robot_state, ball_state_);
 
   Vector2d final_destination(destination.x, destination.y);
 
@@ -139,7 +153,7 @@ State PathPlanner::avoidBall(State destination)
   // ROS_INFO("ballForwardDistance=%f", ballForwardDistance);
 
   // Assign appropriate state
-  if ((abs(ball_perp_x) <= ROBOT_RADIUS + BALL_RADIUS)  && (toDestination.norm() > toBall.norm()) && !ballOnDestinationPath)
+  if ((fabs(ball_perp_x) <= ROBOT_RADIUS + BALL_RADIUS)  && (toDestination.norm() > toBall.norm()) && !ballOnDestinationPath)
   {
     state = AVOID_BALL;
   }
@@ -162,6 +176,95 @@ State PathPlanner::avoidBall(State destination)
 
     default:
       ROS_INFO("Invalid state in avoidBall() function!");
+  }
+
+}
+
+State PathPlanner::avoidRobot(bool isAlly, State other_robot_state, State destination)
+{
+  typedef enum {
+    AVOID_ROBOT, // Waypoint to side of the ball so we don't hit it backwards
+    MOVE_TO_DESTINATION // Waypoint behind the ball
+  } state_t;
+  static state_t state = AVOID_ROBOT;
+
+  State desired_pose;
+  State robot_state;
+
+  Vector2d robot_pose;
+  if (robot_number_ == 1) {
+    robot_state = ally1_state_;
+  }
+  else if (robot_number_ == 2) {
+    robot_state = ally2_state_;
+  }
+  else {
+    ROS_INFO("Invalid robot number in avoidRobot() function!");
+  }
+  robot_pose << robot_state.x, robot_state.y;
+  Vector2d ball_pose(ball_state_.x, ball_state_.y);
+
+  Vector2d other_robot_pose(other_robot_state.x, other_robot_state.y);
+
+  Vector2d toOtherRobot = other_robot_pose - robot_pose;
+  Vector2d perp(-1.0*toOtherRobot(1), toOtherRobot(0));
+  perp = perp.normalized(); // Normalize the perpendicular vector
+
+
+  Vector2d final_destination(destination.x, destination.y);
+  Vector2d toDestination = final_destination - robot_pose;
+  // Projection of other robot onto destination path
+  double other_robot_towards_dest = toOtherRobot.dot(toDestination)/toDestination.norm();
+
+  if(!isAlly)
+  {
+    // Check if the ball is between us and the opponent
+    Vector2d toBall = ball_pose - robot_pose;
+
+    // Projection of ball onto the line perpendicular to the robot's movement
+    double ball_perp_x = (toBall.dot(perp));
+
+    double ball_forward_distance = toBall.dot(toOtherRobot)/toOtherRobot.norm();
+
+    if(fabs(ball_perp_x) <= ROBOT_RADIUS && ball_forward_distance > 0.0 && ball_forward_distance < toOtherRobot.norm())
+    {
+      // don't avoid opponent if the ball is between us and them
+      state = MOVE_TO_DESTINATION;
+    }
+    else
+    {
+      // Avoid opponent when the ball is not between us
+      state = AVOID_ROBOT;
+    }
+  }
+  else // Always avoid our ally
+  {
+    state = AVOID_ROBOT;
+  }
+
+  if(other_robot_towards_dest < 0.0)
+  {
+    state = MOVE_TO_DESTINATION;
+  }
+
+  // Projection of other robot onto the line perpendicular to the robot's movement
+  double robot_perp_x = (toOtherRobot.dot(perp));
+
+  Vector2d avoidance_point;
+  switch (state) {
+    case AVOID_ROBOT:
+      // Add intermediate destination to the side of the ball
+      avoidance_point = other_robot_pose - (sgn(robot_perp_x)*(ROBOT_RADIUS*2 + AVOIDANCE_MARGIN)*perp);
+      desired_pose_.x = avoidance_point(0);
+      desired_pose_.y = avoidance_point(1);
+      break;
+
+    case MOVE_TO_DESTINATION:
+      desired_pose_= destination;
+      break;
+
+    default:
+      ROS_INFO("Invalid state in avoidRobot() function!");
   }
 
 }
