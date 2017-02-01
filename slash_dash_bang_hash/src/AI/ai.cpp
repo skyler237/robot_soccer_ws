@@ -139,6 +139,7 @@ State AI::play_rushGoal(int robotId, State robot, State ball)
 {
     // normal vector from ball to goal
     Vector2d ball_vec = stateToVector(ball);
+    // Vector2d ball_vec = Skills::ballIntercept(robot, ball);
     Vector2d n = (goal_ - ball_vec).normalized();
 
     // compute position 10cm behind ball, but aligned with goal.

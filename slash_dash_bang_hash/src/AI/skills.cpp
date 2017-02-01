@@ -7,7 +7,7 @@
 #define FIELD_WIDTH 3.40  // in meters
 #define FIELD_HEIGHT 2.38
 #define ROBOT_RADIUS 0.10
-#define KICKING_RANGE (0.01 + ROBOT_RADIUS)
+#define KICKING_RANGE (0.03 + ROBOT_RADIUS)
 
 static Vector2d goal_(FIELD_WIDTH/2.0, 0);
 
@@ -24,6 +24,10 @@ static double max_xy_vel = 1.0;
 #define LEFT 1
 #define RIGHT -1
 
+// Ball intercept
+#define PATH_AVOIDANCE_MARGIN 0.1
+#define NOMINAL_VEL 0.5
+#define EPSILON 0.01
 
 
 
@@ -222,8 +226,8 @@ double Skills::findBestShot(State ball_state, State ally_state, State opp1_state
   ROS_INFO("Center opening: min=%f, max=%f", goal_open_center.min, goal_open_center.max);
   ROS_INFO("Right opening: min=%f, max=%f", goal_open_right.min, goal_open_right.max);
 
-  // Compare the three gaps -- gives preference to center shots
-  if(largest_left_opening > largest_center_opening)
+  // Compare the three gaps -- gives preference to wall shots
+  if(largest_left_opening >= largest_center_opening)
   {
     if(largest_left_opening > largest_right_opening)
     {
@@ -236,7 +240,7 @@ double Skills::findBestShot(State ball_state, State ally_state, State opp1_state
   }
   else
   {
-    if(largest_center_opening >= largest_right_opening)
+    if(largest_center_opening > largest_right_opening)
     {
       largest_opening = goal_open_center;
     }
@@ -266,13 +270,8 @@ State Skills::makeShot(string team, int robotId, State robot_state, State ball_s
   Vector2d toBall = ball_pose - robot_pose;
   Vector2d robotForwardVec(cos(robot_state.theta*M_PI/180.0),sin(robot_state.theta*M_PI/180.0));
   double ballForwardDistance = robotForwardVec.dot(toBall)/robotForwardVec.norm();
-
-  Vector2d perp(-1.0*robotForwardVec(1), robotForwardVec(0));
-  // Projection of ball onto the line perpendicular to the robot's movement
-  double ball_perp_x = (toBall.dot(perp))/perp.norm();
   // If the robot is close enough to the ball, kick it!
-  // TODO: pull this out as an "isBallKickable" functions
-  if (ballForwardDistance < KICKING_RANGE && ballForwardDistance > 0 && ball_perp_x > -ROBOT_RADIUS && ball_perp_x < ROBOT_RADIUS)
+  if (ballForwardDistance < KICKING_RANGE)
   {
     kick(team, robotId);
     destination = robot_state;
@@ -477,6 +476,45 @@ State Skills::adaptiveRadiusGoalDefend(State robot_state, State ally_state, Stat
    // Return the estimated position vector
    return prediction;
  }
+
+Vector2d Skills::ballIntercept(State robot_state, State ball_state)
+{
+
+  double time1 = 0;
+  double time2 = 0;
+  double difference = getInterceptDifference(robot_state, ball_state, time2);
+
+  while (difference <= 0)
+  {
+    time2 += 0.5;
+    difference = getInterceptDifference(robot_state, ball_state, time2);
+  }
+
+  difference = getInterceptDifference(robot_state, ball_state, (time1 + time2)/2.0);
+  while(difference > EPSILON)
+  {
+    if(difference > 0)
+    {
+      time2 = (time1 + time2)/2.0;
+    }
+    else
+    {
+      time1 = (time1 + time2)/2.0;
+    }
+  }
+
+  double optimal_time = (time1 + time2)/2.0;
+
+  return ballPredict(ball_state, optimal_time);
+}
+
+double Skills::getInterceptDifference(State robot_state, State ball_state, double time)
+{
+  Vector2d robot_pose = stateToVector(robot_state);
+
+  return NOMINAL_VEL*time - ((ballPredict(ball_state, time) - robot_pose).norm() + PATH_AVOIDANCE_MARGIN);
+}
+
 State Skills::mirrorState(State robot_state, int direction)
 {
   State mirrored_state;

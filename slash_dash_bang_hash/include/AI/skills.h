@@ -41,6 +41,8 @@ public:
 
   // ====================== Helper Functions =================================
   static Vector2d ballPredict(State ball, double time);
+  static Vector2d ballIntercept(State robot_state, State ball_state);
+  static double getInterceptDifference(State robot_state, State ball_state, double time);
   static State mirrorState(State robot_state, int direction);
   static Zone_t updateOpenZone(Zone_t open_zone, Zone_t blocked_zone);
   static Zone_t findBlockedZone(State ball_state, State blocker_state);
