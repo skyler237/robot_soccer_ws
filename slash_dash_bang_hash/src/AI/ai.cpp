@@ -138,8 +138,10 @@ void AI::publishDestinations()
 State AI::play_rushGoal(int robotId, State robot, State ball)
 {
     // normal vector from ball to goal
-    Vector2d ball_vec = stateToVector(ball);
-    // Vector2d ball_vec = Skills::ballIntercept(robot, ball);
+    // Vector2d ball_vec = stateToVector(ball);
+    Vector2d ball_vec = Skills::ballIntercept(robot, ball);
+    ROS_INFO("ball_vel: xdot=%f, ydot=%f", ball.xdot, ball.ydot);
+    printVector(ball_vec, "ball_vec");
     Vector2d n = (goal_ - ball_vec).normalized();
 
     // compute position 10cm behind ball, but aligned with goal.
@@ -197,8 +199,9 @@ void AI::stateCallback(const StateConstPtr &msg, const std::string& robot)
     else if(robot == "opponent2")
         opp2_state_ = *msg;
 
-    else if(robot == "ball")
-        ball_state_ = *msg;
+    else if(robot == "ball") {
+      ball_state_ = *msg;
+    }
 
     computeDestination();
 }

@@ -77,3 +77,8 @@ slash_dash_bang_hash::State vectorToState(Vector2d vec)
   Vector2d vec(robot.x, robot.y);
   return vec;
 }
+
+void printVector(Vector2d vector, string name)
+{
+  ROS_INFO("%s: x=%f, y=%f", name.c_str(), vector(0), vector(1));
+}

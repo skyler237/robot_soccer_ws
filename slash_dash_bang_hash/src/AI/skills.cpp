@@ -25,7 +25,7 @@ static double max_xy_vel = 1.0;
 #define RIGHT -1
 
 // Ball intercept
-#define PATH_AVOIDANCE_MARGIN 0.1
+#define PATH_AVOIDANCE_MARGIN 0.0
 #define NOMINAL_VEL 0.5
 #define EPSILON 0.01
 
@@ -433,46 +433,58 @@ State Skills::adaptiveRadiusGoalDefend(State robot_state, State ally_state, Stat
 
    // Extrapolate the ball position
    prediction += time*velocity;
+   printVector(prediction, "initial prediction");
 
    // TODO: Handle the walls
    //Handle the Top/Bottom wall first
-   if(prediction(1) > FIELD_HEIGHT / 2|| prediction(1) < (-1*(FIELD_HEIGHT / 2)))
+   if(prediction(1) > FIELD_HEIGHT/2 || prediction(1) < (-1*(FIELD_HEIGHT / 2)))
    {
+       int bounces = 1;
+
        //get number of times it bounces off walls
-       int bounces = abs((int)(prediction(1) / FIELD_HEIGHT));
+       bounces += (int)(((fabs(prediction(1)) - FIELD_HEIGHT/2) / FIELD_HEIGHT));
+
        //get how far off either end it will be
-       double yAbs = (abs(prediction(1) / FIELD_HEIGHT) - (bounces - 1)) * FIELD_HEIGHT;
-       int sign = (prediction(1) > 0) ? 1 : -1;
+       double distance_from_wall = fabs(prediction(1)) - FIELD_HEIGHT/2 - FIELD_HEIGHT*(bounces - 1);
+       int sign = (prediction(1) > 0) ? 1 : -1; // Positive means top wall first, negative means bottom wall first
+
+       // Map back into field
        if((bounces % 2) == 0)
        {
          //even number of times, off far wall
-         prediction(1) = ((-1 * sign) * (FIELD_HEIGHT / 2)) + (sign*yAbs);
+         prediction(1) = ((-1 * sign) * (FIELD_HEIGHT / 2)) + (sign*distance_from_wall);
        }
        else
        {
          //odd number of times, off close wall
-         prediction(1) = ((sign) * (FIELD_HEIGHT / 2)) + ((sign * -1)*yAbs);
+         prediction(1) = ((sign) * (FIELD_HEIGHT / 2)) + ((sign * -1)*distance_from_wall);
        }
    }
+   printVector(prediction, "prediction after top/bottom");
    //handle the left/right wall second
-   if(prediction(0) > FIELD_WIDTH / 2|| prediction(0) < (-1*(FIELD_WIDTH / 2)))
+   if(prediction(0) > FIELD_WIDTH/2 || prediction(0) < (-1*(FIELD_WIDTH / 2)))
    {
+       int bounces = 1;
+
        //get number of times it bounces off walls
-       int bounces = abs((int)(prediction(0) / FIELD_WIDTH));
+       bounces += (int)(((fabs(prediction(0)) - FIELD_WIDTH/2) / FIELD_WIDTH));
+
        //get how far off either end it will be
-       double yAbs = (abs(prediction(0) / FIELD_HEIGHT) - (bounces - 1)) * FIELD_WIDTH;
+       double distance_from_wall = fabs(prediction(0)) - FIELD_WIDTH/2 - FIELD_WIDTH*(bounces - 1);
        int sign = (prediction(0) > 0) ? 1 : -1;
+
        if(bounces % 2 == 0)
        {
          //even number of times, off far wall
-         prediction(0) = ((-1 * sign) * (FIELD_WIDTH / 2)) + (sign*yAbs);
+         prediction(0) = ((-1 * sign) * (FIELD_WIDTH / 2)) + (sign*distance_from_wall);
        }
        else
        {
          //odd number of times, off close wall
-         prediction(0) = ((sign) * (FIELD_WIDTH / 2)) + ((sign * -1)*yAbs);
+         prediction(0) = ((sign) * (FIELD_WIDTH / 2)) + ((sign * -1)*distance_from_wall);
        }
    }
+   printVector(prediction, "prediction after right/left");
    // Return the estimated position vector
    return prediction;
  }
@@ -491,6 +503,7 @@ Vector2d Skills::ballIntercept(State robot_state, State ball_state)
   }
 
   difference = getInterceptDifference(robot_state, ball_state, (time1 + time2)/2.0);
+  int timeout_counter = 100;
   while(difference > EPSILON)
   {
     if(difference > 0)
@@ -500,6 +513,12 @@ Vector2d Skills::ballIntercept(State robot_state, State ball_state)
     else
     {
       time1 = (time1 + time2)/2.0;
+    }
+
+    timeout_counter--;
+    if(timeout_counter == 0) {
+      ROS_INFO("Ball intercept timed out...");
+      break;
     }
   }
 

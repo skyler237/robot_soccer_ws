@@ -153,6 +153,7 @@ target_link_libraries(AI ${catkin_LIBRARIES})
 
 add_executable(PathPlanner
     src/Utilities/utilities.cpp
+    src/AI/skills.cpp
     include/PathPlanner/path_planner.h
     src/PathPlanner/path_planner.cpp)
 target_link_libraries(PathPlanner ${catkin_LIBRARIES})
