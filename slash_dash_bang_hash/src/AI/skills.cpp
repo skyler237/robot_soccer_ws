@@ -26,7 +26,7 @@ static double max_xy_vel = 1.0;
 
 // Ball intercept
 #define PATH_AVOIDANCE_MARGIN 0.0
-#define NOMINAL_VEL 0.5
+#define NOMINAL_VEL 1.5
 #define EPSILON 0.01
 
 
@@ -42,7 +42,7 @@ Skills::Skills()
 
 // skill - go to point
 //   Travels towards a point. Angle always faces the goal.
-State Skills::goToPoint(int robotId, State robot, Vector2d point)
+State Skills::goToPoint(State robot, Vector2d point)
 {
     // control angle to face the goal
     Vector2d dirGoal = goal_ - stateToVector(robot);
@@ -92,15 +92,7 @@ State Skills::getBall(State robot_state, State ball_state, Vector2d direction_po
 //                            Offensive Skills
 //=============================================================================
 
-// Moves to the predicted position of the ball, facing the goal, along a smoothed path
-State Skills::ballIntercept(int robotId, State robot, Vector2d ball)
-{
-  // TODO: Finish this skill
 
-  // Vector2d ballToGoal;
-  // ballToGoal.x = ball_state_.x - goal_(0);
-  // ballToGoal.y = ball_state_.y - goal_(0);
-}
 
 // Returns the ideal shot angle when the ball is in the given position -- includes wall shots
 double Skills::findBestShot(State ball_state, State ally_state, State opp1_state, State opp2_state)
@@ -526,6 +518,8 @@ Vector2d Skills::ballIntercept(State robot_state, State ball_state)
 
   double optimal_time = (time1 + time2)/2.0;
 
+  ROS_INFO("Optimal time = %f", optimal_time);
+
   return ballPredict(ball_state, optimal_time);
 }
 
@@ -632,4 +626,34 @@ Zone_t Skills::updateOpenZone(Zone_t open_zone, Zone_t blocked_zone)
   }
 
   return updated_open_zone;
+}
+
+// This is just for testing
+// 1 = back left, 2 = goal left, 3 = goal right, 4 = back right
+State Skills::hideInCorner(int corner_number)
+{
+    State desired_state;
+    switch (corner_number) {
+      case 1: // Back left (own side)
+        desired_state.x = -FIELD_WIDTH/2;
+        desired_state.y = FIELD_HEIGHT/2;
+        break;
+
+      case 2: // Goal left (own side)
+        desired_state.x = -FIELD_WIDTH/2 - ROBOT_RADIUS;
+        desired_state.y = GOAL_BOX_WIDTH/2 - ROBOT_RADIUS;
+        break;
+
+      case 3: // Goal right (own side)
+        desired_state.x = -FIELD_WIDTH/2 - ROBOT_RADIUS;
+        desired_state.y = -(GOAL_BOX_WIDTH/2 - ROBOT_RADIUS);
+        break;
+
+      case 4: // Back right (own side)
+        desired_state.x = -FIELD_WIDTH/2;
+        desired_state.y = -FIELD_HEIGHT/2;
+        break;
+    }
+
+    return desired_state;
 }

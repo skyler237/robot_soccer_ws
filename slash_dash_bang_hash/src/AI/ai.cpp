@@ -2,8 +2,8 @@
 #include "Utilities/utilities.h"
 #include "AI/skills.h"
 
-#define AI_TIME_STEP 0.01
-#define KICKING_RANGE (0.08 + ROBOT_RADIUS)
+#define AI_TIME_STEP 0.00
+#define POSITION_BEHIND_BALL 0.20
 
 AI::AI() :
 nh_(ros::NodeHandle()),
@@ -65,7 +65,8 @@ void AI::computeDestination() {
 
 
         // robot #2 defend the goal
-        ally2_destination_ = play_basicDefense(2, ally2_state_, ball_state_);
+        // ally2_destination_ = play_basicDefense(2, ally2_state_, ball_state_);
+        ally2_destination_ = Skills::hideInCorner(1); // Hide in back left corner -- for debugging
         checkForKick(2);
 
         ///////////////////////////////////////////////////////
@@ -114,7 +115,7 @@ void AI::checkForKick(int robotId)
 
   // If we are close enough, attempt a kick
   // TODO: check if the ball is in front of us or not...
-  if ((robot_pose - ball_pose).norm() <= KICKING_RANGE)
+  if(isInFront(robot_state, ball_state_, KICKER_WIDTH/2, KICKING_RANGE))
   {
       // TODO: check for minimum re-kick time?
       Skills::kick(team_, robotId);
@@ -135,7 +136,7 @@ void AI::publishDestinations()
 // commands.  Skills are built on control commands.  A strategy would employ
 // plays at a lower level.  For example, switching between offense and
 // defense would be a strategy.
-State AI::play_rushGoal(int robotId, State robot, State ball)
+State AI::play_rushGoal(State robot, State ball)
 {
     // normal vector from ball to goal
     // Vector2d ball_vec = stateToVector(ball);
@@ -145,12 +146,13 @@ State AI::play_rushGoal(int robotId, State robot, State ball)
     Vector2d n = (goal_ - ball_vec).normalized();
 
     // compute position 10cm behind ball, but aligned with goal.
-    Vector2d position = ball_vec - 0.2*n;
+    Vector2d position = ball_vec - POSITION_BEHIND_BALL*n;
 
-    if((position - stateToVector(robot)).norm() < 0.21)
-        return Skills::goToPoint(robotId, robot, goal_);
+    // if((position - stateToVector(robot)).norm() < 0.21)
+    if(isInFront(robot, ball, KICKER_WIDTH/2, POSITION_BEHIND_BALL + 0.05))
+        return Skills::goToPoint(robot, goal_);
     else
-        return Skills::goToPoint(robotId, robot, position);
+        return Skills::goToPoint(robot, position);
 }
 
 State AI::play_findBestShot(int robotId, State robot, State ball)
@@ -168,7 +170,7 @@ State AI::play_findBestShot(int robotId, State robot, State ball)
       return Skills::getBall(robot, ball, shot_destination);
 }
 
-State AI::play_basicDefense(int robotId, State robot, State ball)
+State AI::play_basicDefense(State robot, State ball)
 {
 
   // normal vector from ball to goal
@@ -178,11 +180,13 @@ State AI::play_basicDefense(int robotId, State robot, State ball)
   //if the ball is close enough to the defender go to ball, and we are behind it && we are close to our goal
   if((abs(robot_vec(0) - ball_vec(0)) < 1) && (robot_vec(0) > ball_vec(0)))
   {
-    return Skills::goToPoint(robotId, robot, ball_vec);
+    return Skills::goToPoint(robot, ball_vec);
   }
   //default defense is adaptiveRadiusGoalDefend
   return Skills::adaptiveRadiusGoalDefend(ally2_state_, ally1_state_, ball_state_);
 }
+
+State AI::play_standardOffense()
 
 
 void AI::stateCallback(const StateConstPtr &msg, const std::string& robot)

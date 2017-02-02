@@ -15,12 +15,7 @@ using namespace Eigen;
 
 typedef boost::shared_ptr< ::slash_dash_bang_hash::State const> StateConstPtr;
 
-#define CONTROL_K_XY 5
-#define CONTROL_K_OMEGA 2
-#define FIELD_WIDTH 3.40  // in meters
-#define FIELD_HEIGHT 2.38
-#define ROBOT_RADIUS 0.10
-#define BALL_RADIUS 0.022
+
 
 // struct State
 // {
@@ -78,8 +73,8 @@ public:
 
   void checkForKick(int roboId);
 
-  State play_basicDefense(int robotId, State robot, State ball);
-  State play_rushGoal(int robotId, State robot, State ball);
+  State play_basicDefense(State robot, State ball);
+  State play_rushGoal(State robot, State ball);
   State play_findBestShot(int robotId, State robot, State ball);
   void stateCallback(const StateConstPtr &msg, const std::string& robot);
   void gameStateCallback(const soccerref::GameState::ConstPtr &msg);

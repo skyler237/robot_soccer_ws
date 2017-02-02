@@ -232,6 +232,9 @@ int main(int argc, char **argv)
     ally1_startingPos << -0.5, 0;
     ally2_startingPos << -1.0, 0;
 
+    Vector2d left_corner(-FIELD_WIDTH/2, FIELD_HEIGHT/2);
+    Vector2d right_corner(-FIELD_WIDTH/2, -FIELD_HEIGHT/2);
+
     ros::Rate loop_rate(30);
     while(ros::ok())
     {
@@ -242,9 +245,11 @@ int main(int argc, char **argv)
             // Choose strategies
 
             // robot #1 positions itself behind ball and rushes the goal.
+            skill_goToPoint(ally1, left_corner, 1);
             // play_rushGoal(ally1, ball, 1);
 
             // robot #2 stays on line, following the ball, facing the goal
+            skill_goToPoint(ally2, left_corner, 2);
             // skill_followBallOnLine(ally2, ball, -2 * FIELD_WIDTH / 6, 2);
 
             /*********************************************************************/

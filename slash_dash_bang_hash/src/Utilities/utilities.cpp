@@ -82,3 +82,51 @@ void printVector(Vector2d vector, string name)
 {
   ROS_INFO("%s: x=%f, y=%f", name.c_str(), vector(0), vector(1));
 }
+
+Vector2d getVecPerpendicularTo(Vector2d vec)
+{
+  Vector2d perp(-1.0*vec(1), vec(0));
+  return perp;
+}
+
+double vectorProjectedDistance(Vector2d vec, Vector2d reference)
+{
+  double proj_dist = vec.dot(reference)/reference.norm();
+  return proj_dist;
+}
+
+bool isInFront(State robot, State object, double box_radius, double box_length)
+{
+  Vector2d robot_pose = stateToVector(robot);
+  Vector2d object_pose = stateToVector(object);
+  Vector2d robotForwardVec(cos(robot.theta*M_PI/180.0),sin(robot.theta*M_PI/180.0));
+  Vector2d forwardPerp = getVecPerpendicularTo(robotForwardVec);
+
+  Vector2d toObject = object_pose - robot_pose;
+
+  double object_forward_dist = vectorProjectedDistance(toObject, robotForwardVec);
+  double object_perp_dist = vectorProjectedDistance(toObject, forwardPerp);
+
+  return (object_forward_dist <= box_length) && (fabs(object_perp_dist) <= box_radius);
+}
+
+bool isObjectBetween(State object, State robot1, State robot2)
+{
+  Vector2d robot1_pose = stateToVector(robot1);
+  Vector2d robot2_pose = stateToVector(robot2);
+  Vector2d object_pose = stateToVector(object);
+  Vector2d betweenRobots(robot2_pose - robot1_pose);
+  Vector2d perp = getVecPerpendicularTo(betweenRobots);
+
+  Vector2d toObject = object_pose - robot1_pose;
+
+  double object_forward_dist = vectorProjectedDistance(toObject, betweenRobots);
+  double object_perp_dist = vectorProjectedDistance(toObject, perp);
+
+  return (object_forward_dist <= betweenRobots.norm() && object_forward_dist > 0.0) && (fabs(object_perp_dist) <= ROBOT_RADIUS);
+}
+
+bool ballIsInPossessionOf(State robot, State ball)
+{
+  return isInFront(robot, ball, KICKER_WIDTH/2, POSSESSION_RANGE);
+}

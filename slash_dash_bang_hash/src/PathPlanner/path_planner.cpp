@@ -131,19 +131,15 @@ State PathPlanner::avoidBall(State destination)
 
   Vector2d final_destination(destination.x, destination.y);
 
-  // ==== Check if the ball is in the path ====
+  // ==== Check if the ball is in the path ====  
   Vector2d toDestination = final_destination - robot_pose;
-  Vector2d perp(-1.0*toDestination(1), toDestination(0));
-  perp = perp.normalized(); // Normalize the perpendicular vector
+  Vector2d perp = getVecPerpendicularTo(toDestination);
   Vector2d toBall = ball_pose - robot_pose;
 
   // Projection of ball onto the line perpendicular to the robot's movement
-  double ball_perp_x = (toBall.dot(perp));
+  double ball_perp_x = vectorProjectedDistance(toBall, perp);
 
   // Check if we are facing the ball
-  double ballAngle = fmod(atan2(toBall(1),toBall(0))*180/M_PI + 720.0, 360.0);
-  double robotAngle = fmod(robot_state.theta + 720.0, 360.0);
-
   Vector2d robotForwardVec(cos(robot_state.theta*M_PI/180.0),sin(robot_state.theta*M_PI/180.0));
 
   double ballForwardDistance = robotForwardVec.dot(toBall)/robotForwardVec.norm();
@@ -165,7 +161,7 @@ State PathPlanner::avoidBall(State destination)
   switch (state) {
     case AVOID_BALL:
       // Add intermediate destination to the side of the ball
-      avoidance_point = ball_pose - (sgn(ball_perp_x)*(ROBOT_RADIUS + BALL_RADIUS + AVOIDANCE_MARGIN)*perp);
+      avoidance_point = ball_pose - (sgn(ball_perp_x)*(ROBOT_RADIUS + BALL_RADIUS + AVOIDANCE_MARGIN)*perp.normalized());
       desired_pose_.x = avoidance_point(0);
       desired_pose_.y = avoidance_point(1);
       break;
