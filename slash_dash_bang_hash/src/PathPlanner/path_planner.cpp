@@ -83,17 +83,17 @@ void PathPlanner::planPath()
 
     avoidBall(desired_pose_);
 
-    bool isAlly = true;
-    avoidRobot(!isAlly, opp1_state_, destination_);
-    avoidRobot(!isAlly, opp2_state_, destination_);
-    if(robot_number_ == 1)
-    {
-      avoidRobot(isAlly, ally2_state_, destination_);
-    }
-    else if(robot_number_ == 2)
-    {
-      avoidRobot(isAlly, ally1_state_, destination_);
-    }
+    // bool isAlly = true;
+    // avoidRobot(!isAlly, opp1_state_, destination_);
+    // avoidRobot(!isAlly, opp2_state_, destination_);
+    // if(robot_number_ == 1)
+    // {
+    //   avoidRobot(isAlly, ally2_state_, destination_);
+    // }
+    // else if(robot_number_ == 2)
+    // {
+    //   avoidRobot(isAlly, ally1_state_, destination_);
+    // }
 
     publishDesiredPose();
 }
