@@ -187,6 +187,40 @@ State AI::play_basicDefense(State robot, State ball)
 }
 
 State AI::play_standardOffense()
+{
+  typedef enum {
+    GET_BALL_CONTROL, // Try to get control of the ball
+    FIND_SHOT_SPOT, // Get away from opponents and close enough to shoot
+    MAKE_SHOT // Take the shot on goal
+  } state_t;
+  static state_t play_state = GET_BALL_CONTROL;
+
+  State robot_state;
+  switch (robot_number_) {
+    case 1:
+      robot_state = ally1_state_;
+      break;
+    case 2:
+      robot_state = ally2_state_;
+      break;
+    default:
+      ROS_INFO("Invalid robot number in standardOffense() functions");
+  }
+
+  // State transitions
+  if (!ballIsInPossessionOf(robot_state, ball_state_)) {
+    play_state = GET_BALL_CONTROL;
+  }
+  else { // We have possession of the ball
+    if (ballIsInPossessionOf(opp1_state_, ball_state_) || ballIsInPossessionOf(opp2_state_)) {
+      // They also have possession, find a better spot.
+      play_state = FIND_SHOT_SPOT;
+    }
+    // TODO: continue state transitions here
+  }
+
+
+}
 
 
 void AI::stateCallback(const StateConstPtr &msg, const std::string& robot)
