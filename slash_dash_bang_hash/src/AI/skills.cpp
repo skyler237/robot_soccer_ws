@@ -504,7 +504,7 @@ Vector2d Skills::ballIntercept(State robot_state, State ball_state)
 
   difference = getInterceptDifference(robot_state, ball_state, (time1 + time2)/2.0);
   int timeout_counter = 100;
-  while(difference > EPSILON)
+  while(fabs(difference) > EPSILON)
   {
     if(difference > 0)
     {
@@ -514,6 +514,8 @@ Vector2d Skills::ballIntercept(State robot_state, State ball_state)
     {
       time1 = (time1 + time2)/2.0;
     }
+
+    difference = getInterceptDifference(robot_state, ball_state, (time1 + time2)/2.0);
 
     timeout_counter--;
     if(timeout_counter == 0) {
