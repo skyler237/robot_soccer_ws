@@ -1,4 +1,5 @@
 #include "Utilities/utilities.h"
+#include "AI/skills.h"
 
 
 int sgn(double val)
@@ -128,5 +129,42 @@ bool isObjectBetween(State object, State robot1, State robot2)
 
 bool ballIsInPossessionOf(State robot, State ball)
 {
-  return isInFront(robot, ball, KICKER_WIDTH/2, POSSESSION_RANGE);
+  return isInFront(robot, ball, ROBOT_RADIUS + BALL_RADIUS, POSSESSION_RANGE);
+}
+
+// Returns true if the robot is close enough and is aligned with the ball (within a small margin) to make the best shot availabe
+bool readyForGoalShot(double shot_destination_y, State robot_state, State ally_state, State opp1_state, State opp2_state, State ball_state)
+{
+  Vector2d shot_destination(GOAL_X, shot_destination_y);
+  Vector2d ball_pose = stateToVector(ball_state);
+  Vector2d robot_pose = stateToVector(robot_state);
+
+  Vector2d ballToGoal = shot_destination - ball_pose;
+  Vector2d robotToBall = ball_pose - robot_pose;
+
+  // Check if we are close enough to make the shot
+  if(ballToGoal.norm() > MINIMUN_SHOT_ON_GOAL_DISTANCE) {
+    return false;
+  }
+  else {
+    double projected_y = (robotToBall(1)/robotToBall(0))*shot_destination(0);
+
+    // Check if we are aligned with the ball to make the shot
+    if(fabs(projected_y - shot_destination(1)) <= SHOT_Y_MARGIN) {
+      State shot_destination_state = vectorToState(shot_destination);
+
+      // Check if the ball has an open path to the shot destination
+      if(isObjectBetween(opp1_state, ball_state, shot_destination_state) ||
+          isObjectBetween(opp2_state, ball_state, shot_destination_state) ||
+          isObjectBetween(ally_state, ball_state, shot_destination_state) ) {
+        return false;
+      }
+      else {
+        return true;
+      }
+    }
+    else {
+      return false;
+    }
+  }
 }

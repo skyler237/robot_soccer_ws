@@ -28,6 +28,7 @@ public:
   // ====================== General Skills =================================
   static State goToPoint(State robot, Vector2d point);
   static void kick(string team, int robotId);
+  // Position behind ball facing towards "direction_point"
   static State getBall(State robot_state, State ball_state, Vector2d direction_point);
 
   // ====================== Offensive Skills =================================

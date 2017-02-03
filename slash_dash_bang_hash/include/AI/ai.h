@@ -74,6 +74,7 @@ public:
   void checkForKick(int roboId);
 
   State play_basicDefense(State robot, State ball);
+  State play_standardOffense();
   State play_rushGoal(State robot, State ball);
   State play_findBestShot(int robotId, State robot, State ball);
   void stateCallback(const StateConstPtr &msg, const std::string& robot);

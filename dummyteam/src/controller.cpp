@@ -249,7 +249,7 @@ int main(int argc, char **argv)
             // play_rushGoal(ally1, ball, 1);
 
             // robot #2 stays on line, following the ball, facing the goal
-            skill_goToPoint(ally2, left_corner, 2);
+            skill_goToPoint(ally2, right_corner, 2);
             // skill_followBallOnLine(ally2, ball, -2 * FIELD_WIDTH / 6, 2);
 
             /*********************************************************************/

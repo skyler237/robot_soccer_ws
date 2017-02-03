@@ -15,9 +15,9 @@
     <arg name="other_side" value="home" if="$(eval team_side == 'away')" />
 
     <group ns="dummyteam_$(arg team_side)">
-        
+
         <!-- start up the controller for ally1 and ally2 -->
-        <node name="controller" pkg="dummyteam" type="controller">
+        <node name="dummy_controller" pkg="dummyteam" type="dummy_controller">
             <param name="team" value="$(arg team_side)" />
 
             <remap from="ally1_vision" to="/vision/$(arg team_side)1" />

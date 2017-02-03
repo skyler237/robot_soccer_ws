@@ -88,13 +88,14 @@ State Skills::getBall(State robot_state, State ball_state, Vector2d direction_po
   return destination;
 }
 
+
 //=============================================================================
 //                            Offensive Skills
 //=============================================================================
 
 
 
-// Returns the ideal shot angle when the ball is in the given position -- includes wall shots
+// Returns the y value of the best shot when the ball is in the given position -- includes wall shots
 double Skills::findBestShot(State ball_state, State ally_state, State opp1_state, State opp2_state)
 {
 
@@ -117,10 +118,10 @@ double Skills::findBestShot(State ball_state, State ally_state, State opp1_state
   goal_open_right.min =  goal_(1) - FIELD_HEIGHT - GOAL_BOX_WIDTH/2;
   Zone_t largest_opening;
 
-  ROS_INFO("============ Initial openings =============");
-  ROS_INFO("Left opening: min=%f, max=%f", goal_open_left.min, goal_open_left.max);
-  ROS_INFO("Center opening: min=%f, max=%f", goal_open_center.min, goal_open_center.max);
-  ROS_INFO("Right opening: min=%f, max=%f", goal_open_right.min, goal_open_right.max);
+  // ROS_INFO("============ Initial openings =============");
+  // ROS_INFO("Left opening: min=%f, max=%f", goal_open_left.min, goal_open_left.max);
+  // ROS_INFO("Center opening: min=%f, max=%f", goal_open_center.min, goal_open_center.max);
+  // ROS_INFO("Right opening: min=%f, max=%f", goal_open_right.min, goal_open_right.max);
 
 
   bool considerAlly = false;
@@ -128,30 +129,30 @@ double Skills::findBestShot(State ball_state, State ally_state, State opp1_state
   bool considerOpp2 = false;
 
   // Mirror the states of the robots if they are further in x than the ball
-  ROS_INFO("Ball state: x=%f, y=%f", ball_state.x, ball_state.y);
+  // ROS_INFO("Ball state: x=%f, y=%f", ball_state.x, ball_state.y);
   if(ally_state.x > ball_state.x) {
     considerAlly = true;
-    ROS_INFO("Considering ally in finding best shot.");
+    // ROS_INFO("Considering ally in finding best shot.");
   }
   else{
-    ROS_INFO("NOT Considering ally in finding best shot.");
-    ROS_INFO("Ally state: x=%f, y=%f", ally_state.x, ally_state.y);
+    // ROS_INFO("NOT Considering ally in finding best shot.");
+    // ROS_INFO("Ally state: x=%f, y=%f", ally_state.x, ally_state.y);
   }
   if(opp1_state.x > ball_state.x) {
     considerOpp1 = true;
-    ROS_INFO("Considering opp1 in finding best shot.");
+    // ROS_INFO("Considering opp1 in finding best shot.");
   }
   else{
-    ROS_INFO("NOT Considering opp1 in finding best shot.");
-    ROS_INFO("opp1_state: x=%f, y=%f", opp1_state.x, opp1_state.y);
+    // ROS_INFO("NOT Considering opp1 in finding best shot.");
+    // ROS_INFO("opp1_state: x=%f, y=%f", opp1_state.x, opp1_state.y);
   }
   if(opp2_state.x > ball_state.x) {
     considerOpp2 = true;
-    ROS_INFO("Considering opp2 in finding best shot.");
+    // ROS_INFO("Considering opp2 in finding best shot.");
   }
   else{
-    ROS_INFO("NOT Considering opp2 in finding best shot.");
-    ROS_INFO("opp2_state: x=%f, y=%f", opp2_state.x, opp2_state.y);
+    // ROS_INFO("NOT Considering opp2 in finding best shot.");
+    // ROS_INFO("opp2_state: x=%f, y=%f", opp2_state.x, opp2_state.y);
   }
 
   if(considerAlly) {
@@ -177,7 +178,7 @@ double Skills::findBestShot(State ball_state, State ally_state, State opp1_state
 
     opp1_blocked_left = findBlockedZone(ball_state, opp1_state_left);
     opp1_blocked_center = findBlockedZone(ball_state, opp1_state);
-    ROS_INFO("Opp1 blocked center: min=%f, max=%f", opp1_blocked_center.min, opp1_blocked_center.max);
+    // ROS_INFO("Opp1 blocked center: min=%f, max=%f", opp1_blocked_center.min, opp1_blocked_center.max);
     opp1_blocked_right = findBlockedZone(ball_state, opp1_state_right);
 
     // Update goal open zones
@@ -185,7 +186,7 @@ double Skills::findBestShot(State ball_state, State ally_state, State opp1_state
     goal_open_left = updateOpenZone(goal_open_left, opp1_blocked_center);
 
     goal_open_center = updateOpenZone(goal_open_center, opp1_blocked_center);
-    ROS_INFO("Goal center updated (opp1): min=%f, max=%f", goal_open_center.min, goal_open_center.max);
+    // ROS_INFO("Goal center updated (opp1): min=%f, max=%f", goal_open_center.min, goal_open_center.max);
 
     goal_open_right = updateOpenZone(goal_open_right, opp1_blocked_right);
     goal_open_right = updateOpenZone(goal_open_right, opp1_blocked_center);
@@ -213,12 +214,9 @@ double Skills::findBestShot(State ball_state, State ally_state, State opp1_state
   double largest_center_opening = goal_open_center.max - goal_open_center.min;
   double largest_left_opening = goal_open_left.max - goal_open_left.min;
 
-  ROS_INFO("============ Final openings =============");
-  ROS_INFO("Left opening: min=%f, max=%f", goal_open_left.min, goal_open_left.max);
-  ROS_INFO("Center opening: min=%f, max=%f", goal_open_center.min, goal_open_center.max);
-  ROS_INFO("Right opening: min=%f, max=%f", goal_open_right.min, goal_open_right.max);
+  // ROS_INFO("============ Final openings =============");
 
-  // Compare the three gaps -- gives preference to wall shots
+  // Compare the three gaps -- gives preference to center shots
   if(largest_left_opening >= largest_center_opening)
   {
     if(largest_left_opening > largest_right_opening)
@@ -518,7 +516,8 @@ Vector2d Skills::ballIntercept(State robot_state, State ball_state)
 
   double optimal_time = (time1 + time2)/2.0;
 
-  ROS_INFO("Optimal time = %f", optimal_time);
+  // ROS_INFO("Optimal time = %f", optimal_time);
+
 
   return ballPredict(ball_state, optimal_time);
 }
