@@ -51,6 +51,11 @@ public:
   // Debug function
   static State hideInCorner(int corner_number);
 
+  // ====================== Skills Tournament Functions =================================
+  static State spinInPlace(State robot_state);
+  static State goToCenterFacingGoal();
+  static State moveInBoxFacingGoal(State robot_state);
+
   // static Vector2d goal_;
 
 };

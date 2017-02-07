@@ -58,7 +58,8 @@ void AI::computeDestination() {
         // robot #1 positions itself behind ball and rushes the goal.
         // ally1_destination_ = play_findBestShot(1, ally1_state_, ball_state_);
         // ally1_destination_ = play_rushGoal(1, ally1_state_, ball_state_);
-        ally1_destination_ = play_standardOffense();
+        // ally1_destination_ = play_standardOffense();
+        ally1_destination_ = play_skillsTournament(ally1_state_);
 
         // checkForKick(1);
         //ROS_INFO("Ally1_destination: x=%f, y=%f", ally1_destination_.x, ally1_destination_.y);
@@ -214,6 +215,8 @@ State AI::play_standardOffense()
   }
 
   // State transitions
+
+  // THESE ARE JUST TURNED OFF FOR TESTING! TODO: TURN BACK ON WHEN NEEDED!
   // if (!ballIsInPossessionOf(robot_state, ball_state_)) {
   //   play_state = GET_BALL;
   // }
@@ -234,7 +237,6 @@ State AI::play_standardOffense()
     case GET_BALL:
       // Move towards the ball, aligning with path to shot spot
       destination = Skills::getBall(robot_state, ball_state_, shot_spot_test);
-      ROS_INFO("Get ball destination: x=%f, y=%f", destination.x, destination.y);
 
 
 
@@ -261,6 +263,21 @@ State AI::play_standardOffense()
   }
 
   return destination;
+}
+
+State AI::play_skillsTournament(State robot_state) {
+  int play_state = gameState_.home_score % 3;
+
+  switch (play_state) {
+    case 0:
+      return Skills::spinInPlace(robot_state);
+
+    case 1:
+      return Skills::goToCenterFacingGoal();
+
+    case 2:
+      return Skills::moveInBoxFacingGoal(robot_state);
+  }
 }
 
 

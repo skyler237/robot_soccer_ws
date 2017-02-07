@@ -423,9 +423,7 @@ State Skills::adaptiveRadiusGoalDefend(State robot_state, State ally_state, Stat
 
    // Extrapolate the ball position
    prediction += time*velocity;
-   printVector(prediction, "initial prediction");
 
-   // TODO: Handle the walls
    //Handle the Top/Bottom wall first
    if(prediction(1) > FIELD_HEIGHT/2 || prediction(1) < (-1*(FIELD_HEIGHT / 2)))
    {
@@ -450,7 +448,6 @@ State Skills::adaptiveRadiusGoalDefend(State robot_state, State ally_state, Stat
          prediction(1) = ((sign) * (FIELD_HEIGHT / 2)) + ((sign * -1)*distance_from_wall);
        }
    }
-   printVector(prediction, "prediction after top/bottom");
    //handle the left/right wall second
    if(prediction(0) > FIELD_WIDTH/2 || prediction(0) < (-1*(FIELD_WIDTH / 2)))
    {
@@ -474,7 +471,6 @@ State Skills::adaptiveRadiusGoalDefend(State robot_state, State ally_state, Stat
          prediction(0) = ((sign) * (FIELD_WIDTH / 2)) + ((sign * -1)*distance_from_wall);
        }
    }
-   printVector(prediction, "prediction after right/left");
    // Return the estimated position vector
    return prediction;
  }
@@ -568,7 +564,6 @@ Zone_t Skills::findBlockedZone(State ball_state, State blocker_state)
   double ball_evade_radius = ROBOT_RADIUS + BALL_RADIUS*2;
   Vector2d blocker_left_edge, blocker_right_edge;
 
-  // TODO: keep working here
   double theta_edge = atan(ball_evade_radius/ballToBlocker.norm());
   double theta_blocker = atan(ballToBlocker(1)/ballToBlocker(0));
   double theta_evade_left = theta_blocker + theta_edge;
@@ -655,4 +650,215 @@ State Skills::hideInCorner(int corner_number)
     }
 
     return desired_state;
+}
+
+
+//=============================================================================
+//                            Skills Competition Functions
+//=============================================================================
+
+// Spins clockwise for 3 seconds then counter-clockwise for 3 seconds (repeatedly)
+State Skills::spinInPlace(State robot_state)
+{
+  typedef enum {
+    RESET,
+    SPIN_CW,
+    SPIN_CCW
+  } state_t;
+  const double delta_theta = 90.0; // Degrees
+  const double state_switch_max_value = 3.0; // seconds
+  const double timeout_max_value = 3.0; // seconds
+
+  static state_t skill_state = SPIN_CW;
+
+  double now = ros::Time::now().toSec();
+  static double prev_time = 0;
+  double dt = now - prev_time;
+  prev_time = now;
+
+  static double state_switch_timer = 0;
+
+  State destination;
+  destination = robot_state;
+  double desired_theta = 0;
+
+  switch (skill_state) {
+    case RESET:
+      skill_state = SPIN_CW;
+      state_switch_timer = 0.0;
+      break;
+
+    case SPIN_CW:
+      // State transition
+      if(state_switch_timer > state_switch_max_value) {
+        skill_state = SPIN_CCW;
+        state_switch_timer = 0.0;
+      }
+      else if(dt > timeout_max_value) {
+        skill_state = RESET;
+      }
+      else {
+        skill_state = SPIN_CW;
+        state_switch_timer += dt;
+      }
+
+      // State actions
+      desired_theta = fmod(robot_state.theta + delta_theta, 360.0);
+      destination.theta = desired_theta;
+      break;
+
+    case SPIN_CCW:
+      // State transition
+      if(state_switch_timer > state_switch_max_value) {
+        skill_state = SPIN_CW;
+        state_switch_timer = 0.0;
+      }
+      else if(dt > timeout_max_value) {
+        skill_state = RESET;
+      }
+      else {
+        skill_state = SPIN_CCW;
+        state_switch_timer += dt;
+      }
+
+      // State actions
+      desired_theta = fmod(robot_state.theta - delta_theta + 360.0, 360.0);
+      destination.theta = desired_theta;
+      break;
+
+    default:
+      ROS_INFO("Error: invalid state in spinInPlace() skill function");
+  }
+
+  return destination;
+}
+
+State Skills::goToCenterFacingGoal()
+{
+  State destination;
+  destination.x = 0.0;
+  destination.y = 0.0;
+  destination.theta = 0.0;
+
+  return destination;
+}
+
+// ------- GOAL --------
+//  1  4         4  1  |
+//  2  3         3  2  |
+//         OR          |
+//  2  3         3  2  |
+//  1  4         4  1  |
+//-----------------------
+State Skills::moveInBoxFacingGoal(State robot_state)
+{
+  State destination;
+  typedef enum {
+    RESET,
+    GO_TO_CORNER1,
+    GO_TO_CORNER2,
+    GO_TO_CORNER3,
+    GO_TO_CORNER4
+  } state_t;
+  const double timeout_max_value = 2.0; // seconds
+  const double waypoint_epsilon = 0.1;
+
+  static state_t skill_state = RESET;
+
+  double now = ros::Time::now().toSec();
+  static double prev_time = 0;
+  double dt = now - prev_time;
+  prev_time = now;
+
+  Vector2d robot_pose = stateToVector(robot_state);
+
+  const Vector2d dx(0.3, 0.0);
+  const Vector2d dy(0.0, 0.3);
+
+  static Vector2d corner1 = robot_pose;
+  static Vector2d corner2 = corner1 - sgn(robot_state.x)*dx;
+  static Vector2d corner3 = corner2 - sgn(robot_state.y)*dy;
+  static Vector2d corner4 = corner3 + sgn(robot_state.x)*dx;
+
+  switch (skill_state) {
+    case RESET:
+      skill_state = GO_TO_CORNER2;
+
+      // Reassign the corners
+      corner1 = stateToVector(robot_state);
+      corner2 = corner1 - sgn(robot_state.x)*dx;
+      corner3 = corner2 - sgn(robot_state.y)*dy;
+      corner4 = corner3 + sgn(robot_state.x)*dx;
+      break;
+
+    case GO_TO_CORNER1:
+      // State transition
+      if((corner1 - robot_pose).norm() < waypoint_epsilon) {
+        skill_state = GO_TO_CORNER2;
+      }
+      else if(dt > timeout_max_value) {
+        skill_state = RESET;
+      }
+      else {
+        skill_state = GO_TO_CORNER1;
+      }
+
+      // State actions
+      destination = vectorToState(corner1);
+      break;
+
+    case GO_TO_CORNER2:
+      // State transition
+      if((corner2 - robot_pose).norm() < waypoint_epsilon) {
+        skill_state = GO_TO_CORNER3;
+      }
+      else if(dt > timeout_max_value) {
+        skill_state = RESET;
+      }
+      else {
+        skill_state = GO_TO_CORNER2;
+      }
+
+      // State actions
+      destination = vectorToState(corner2);
+      break;
+
+    case GO_TO_CORNER3:
+      // State transition
+      if((corner3 - robot_pose).norm() < waypoint_epsilon) {
+        skill_state = GO_TO_CORNER4;
+      }
+      else if(dt > timeout_max_value) {
+        skill_state = RESET;
+      }
+      else {
+        skill_state = GO_TO_CORNER3;
+      }
+
+      // State actions
+      destination = vectorToState(corner3);
+      break;
+
+    case GO_TO_CORNER4:
+      // State transition
+      if((corner4 - robot_pose).norm() < waypoint_epsilon) {
+        skill_state = GO_TO_CORNER1;
+      }
+      else if(dt > timeout_max_value) {
+        skill_state = RESET;
+      }
+      else {
+        skill_state = GO_TO_CORNER4;
+      }
+
+      // State actions
+      destination = vectorToState(corner4);
+      break;
+
+    default:
+      ROS_INFO("Error: invalid state in spinInPlace() skill function");
+  }
+
+  destination.theta = 0.0;
+  return destination;
 }
