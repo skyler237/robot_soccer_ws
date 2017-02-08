@@ -75,6 +75,23 @@ void PathPlanner::gameStateCallback(const soccerref::GameState::ConstPtr &msg)
 
 void PathPlanner::planPath()
 {
+    State robot_state;
+    State ally_state;
+    switch(robot_number_)
+    {
+      case 1:
+        robot_state = ally1_state_;
+        ally_state = ally2_state_;
+        break;
+
+      case 2:
+        robot_state = ally2_state_;
+        ally_state = ally1_state_;
+        break;
+
+      default:
+        ROS_INFO("Invalid robot number in planPath() function.");
+    }
     // For now, just make the destination the desired pose
     desired_pose_ = destination_;
 
@@ -83,17 +100,14 @@ void PathPlanner::planPath()
 
     avoidBall(desired_pose_);
 
+    if(ballIsInPossessionOf(robot_state)) {
+      desired_pose_ = dribbleBallToDestination(desired_pose_);
+    }
+
     // bool isAlly = true;
     // avoidRobot(!isAlly, opp1_state_, destination_);
     // avoidRobot(!isAlly, opp2_state_, destination_);
-    // if(robot_number_ == 1)
-    // {
-    //   avoidRobot(isAlly, ally2_state_, destination_);
-    // }
-    // else if(robot_number_ == 2)
-    // {
-    //   avoidRobot(isAlly, ally1_state_, destination_);
-    // }
+    // avoidRobot(isAlly, ally_state, destination_);
 
     publishDesiredPose();
 }
@@ -101,6 +115,17 @@ void PathPlanner::planPath()
 void PathPlanner::publishDesiredPose()
 {
     desired_pose_pub_.publish(desired_pose_);
+}
+
+State PathPlanner::dribbleBallToDestination(State destination) {
+  State desired_pose;
+
+  // Plan a smoothed waypoint path to the destination
+
+
+  // Control the rotation to keep the ball centered
+
+  return desired_pose;
 }
 
 State PathPlanner::avoidBall(State destination)
