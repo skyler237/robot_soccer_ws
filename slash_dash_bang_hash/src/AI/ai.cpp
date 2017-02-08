@@ -58,8 +58,8 @@ void AI::computeDestination() {
         // robot #1 positions itself behind ball and rushes the goal.
         // ally1_destination_ = play_findBestShot(1, ally1_state_, ball_state_);
         // ally1_destination_ = play_rushGoal(1, ally1_state_, ball_state_);
-        // ally1_destination_ = play_standardOffense();
-        ally1_destination_ = play_skillsTournament(ally1_state_);
+        ally1_destination_ = play_standardOffense();
+        // ally1_destination_ = play_skillsTournament(ally1_state_);
 
         // checkForKick(1);
         //ROS_INFO("Ally1_destination: x=%f, y=%f", ally1_destination_.x, ally1_destination_.y);

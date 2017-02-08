@@ -4,7 +4,7 @@
 
 
 #define BALL_RADIUS 0.022
-#define AVOIDANCE_MARGIN 0.035
+#define AVOIDANCE_MARGIN 0.045
 
 typedef Eigen::Matrix<double, 2, 4> Matrix2x4d;
 
@@ -131,7 +131,7 @@ State PathPlanner::avoidBall(State destination)
 
   Vector2d final_destination(destination.x, destination.y);
 
-  // ==== Check if the ball is in the path ====  
+  // ==== Check if the ball is in the path ====
   Vector2d toDestination = final_destination - robot_pose;
   Vector2d perp = getVecPerpendicularTo(toDestination);
   Vector2d toBall = ball_pose - robot_pose;
@@ -144,12 +144,12 @@ State PathPlanner::avoidBall(State destination)
 
   double ballForwardDistance = robotForwardVec.dot(toBall)/robotForwardVec.norm();
 
-  bool ballOnDestinationPath = (ballForwardDistance > 0.0);
+  bool ballOnDestinationPath = (ballForwardDistance > 0.18);
   // ROS_INFO("Ball angle=%f, robot angle=%f", ballAngle, robot_state.theta);
   // ROS_INFO("ballForwardDistance=%f", ballForwardDistance);
 
   // Assign appropriate state
-  if ((fabs(ball_perp_x) <= ROBOT_RADIUS + BALL_RADIUS)  && (toDestination.norm() > toBall.norm()) && !ballOnDestinationPath)
+  if ((fabs(ball_perp_x) <= ROBOT_RADIUS + BALL_RADIUS + AVOIDANCE_MARGIN)  && (toDestination.norm() > toBall.norm()) && !ballOnDestinationPath)
   {
     state = AVOID_BALL;
   }

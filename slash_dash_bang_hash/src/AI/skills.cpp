@@ -78,7 +78,7 @@ State Skills::getBall(State robot_state, State ball_state, Vector2d direction_po
   Vector2d n = (direction_point - ball_vec).normalized();
 
   // compute position 15cm behind ball, but aligned with goal.
-  Vector2d final_position = ball_vec - 0.15*n;
+  Vector2d final_position = ball_vec - 0.2*n;
 
   State destination;
   destination.x = final_position(0);
