@@ -57,9 +57,11 @@ public:
 
   void planPath();
   void publishDesiredPose();
-  State simpleCurvedPathToDestination();
+  State simpleCurvedPathToDestination(State robot_state, State destination);
+  State dribbleBallToDestination(State robot_state, State ally_state, State destination);
   State avoidBall(State destination);
   State avoidRobot(bool isAlly, State other_robot_state, State destination);
+  State avoidObject(State destination, State robot_state, State object_state, double object_radius, double avoidance_margin);
 
   void stateCallback(const StateConstPtr &msg, const std::string& robot);
   void destinationCallback(const StateConstPtr &msg);

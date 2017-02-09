@@ -26,8 +26,11 @@ static double max_xy_vel = 1.0;
 
 // Ball intercept
 #define PATH_AVOIDANCE_MARGIN 0.0
-#define NOMINAL_VEL 1.5
 #define EPSILON 0.01
+
+// Get ball
+#define POSITION_BEHIND_BALL 0.20
+#define DRIBBLE_POSITION_BEHIND_BALL (BALL_RADIUS + 0.01)
 
 
 
@@ -78,12 +81,21 @@ State Skills::getBall(State robot_state, State ball_state, Vector2d direction_po
   Vector2d n = (direction_point - ball_vec).normalized();
 
   // compute position 15cm behind ball, but aligned with goal.
-  Vector2d final_position = ball_vec - 0.2*n;
+  Vector2d position_behind = ball_vec - POSITION_BEHIND_BALL*n;
+  Vector2d dribble_position = ball_vec - DRIBBLE_POSITION_BEHIND_BALL*n;
 
   State destination;
-  destination.x = final_position(0);
-  destination.y = final_position(1);
+  if(isInFront(robot_state, ball_state, KICKER_WIDTH, POSITION_BEHIND_BALL + 0.05)) {
+    destination.x = dribble_position(0);
+    destination.y = dribble_position(1);
+  }
+  else {
+    destination.x = position_behind(0);
+    destination.y = position_behind(1);
+  }
   destination.theta = atan2(direction_point(1) - robot_state.y, direction_point(0) - robot_state.x)*180.0/M_PI;
+
+
 
   return destination;
 }

@@ -92,8 +92,23 @@ Vector2d getVecPerpendicularTo(Vector2d vec)
 
 double vectorProjectedDistance(Vector2d vec, Vector2d reference)
 {
-  double proj_dist = vec.dot(reference)/reference.norm();
-  return proj_dist;
+  return vec.dot(reference)/reference.norm();
+}
+
+Vector2d vectorProjection(Vector2d vec, Vector2d reference)
+{
+  return vec.dot(reference)/reference.squaredNorm()*reference;
+}
+
+Vector2d rotateVector(Vector2d vec, double theta) {
+  double ct = cos(theta);
+  double st = sin(theta);
+
+  Matrix2d rotation;
+  rotation << ct, -st,
+              st,  ct;
+
+  return rotation*vec;
 }
 
 bool isInFront(State robot, State object, double box_radius, double box_length)
@@ -111,7 +126,7 @@ bool isInFront(State robot, State object, double box_radius, double box_length)
   return (object_forward_dist <= box_length) && (fabs(object_perp_dist) <= box_radius);
 }
 
-bool isObjectBetween(State object, State robot1, State robot2)
+bool isObjectBetween(State object, double object_radius, State robot1, State robot2)
 {
   Vector2d robot1_pose = stateToVector(robot1);
   Vector2d robot2_pose = stateToVector(robot2);
@@ -124,7 +139,7 @@ bool isObjectBetween(State object, State robot1, State robot2)
   double object_forward_dist = vectorProjectedDistance(toObject, betweenRobots);
   double object_perp_dist = vectorProjectedDistance(toObject, perp);
 
-  return (object_forward_dist <= betweenRobots.norm() && object_forward_dist > 0.0) && (fabs(object_perp_dist) <= ROBOT_RADIUS);
+  return (object_forward_dist <= betweenRobots.norm() && object_forward_dist > 0.0) && (fabs(object_perp_dist) <= ROBOT_RADIUS + object_radius + AVOIDANCE_MARGIN);
 }
 
 bool ballIsInPossessionOf(State robot, State ball)
@@ -154,9 +169,9 @@ bool readyForGoalShot(double shot_destination_y, State robot_state, State ally_s
       State shot_destination_state = vectorToState(shot_destination);
 
       // Check if the ball has an open path to the shot destination
-      if(isObjectBetween(opp1_state, ball_state, shot_destination_state) ||
-          isObjectBetween(opp2_state, ball_state, shot_destination_state) ||
-          isObjectBetween(ally_state, ball_state, shot_destination_state) ) {
+      if(isObjectBetween(opp1_state, ROBOT_RADIUS, ball_state, shot_destination_state) ||
+          isObjectBetween(opp2_state, ROBOT_RADIUS, ball_state, shot_destination_state) ||
+          isObjectBetween(ally_state, ROBOT_RADIUS, ball_state, shot_destination_state) ) {
         return false;
       }
       else {

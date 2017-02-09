@@ -245,11 +245,11 @@ int main(int argc, char **argv)
             // Choose strategies
 
             // robot #1 positions itself behind ball and rushes the goal.
-            skill_goToPoint(ally1, left_corner, 1);
+            // skill_goToPoint(ally1, left_corner, 1);
             // play_rushGoal(ally1, ball, 1);
 
             // robot #2 stays on line, following the ball, facing the goal
-            skill_goToPoint(ally2, right_corner, 2);
+            // skill_goToPoint(ally2, right_corner, 2);
             // skill_followBallOnLine(ally2, ball, -2 * FIELD_WIDTH / 6, 2);
 
             /*********************************************************************/

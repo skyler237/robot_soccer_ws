@@ -22,10 +22,15 @@ using namespace slash_dash_bang_hash;
 #define ROBOT_RADIUS 0.10
 #define KICKER_WIDTH 0.04
 
+
+#define NOMINAL_VEL 1.5
+
 #define KICKING_RANGE (0.03 + ROBOT_RADIUS)
-#define POSSESSION_RANGE (0.05 + ROBOT_RADIUS)
+#define POSSESSION_RANGE (0.1 + ROBOT_RADIUS)
 
 #define BALL_RADIUS 0.022
+#define AVOIDANCE_MARGIN 0.045
+#define ROBOT_AVOIDANCE_MARGIN 0.07
 
 #define MINIMUN_SHOT_ON_GOAL_DISTANCE 1.5
 #define GOAL_X (FIELD_WIDTH/2)
@@ -49,10 +54,12 @@ using namespace slash_dash_bang_hash;
   Vector2d getVecPerpendicularTo(Vector2d vec);
 
   double vectorProjectedDistance(Vector2d vec, Vector2d reference);
+  Vector2d vectorProjection(Vector2d vec, Vector2d reference);
+  Vector2d rotateVector(Vector2d vec, double theta); // Performs right-handed rotation on a 2D vector
 
   bool isInFront(State robot, State object, double box_width, double box_length);
 
-  bool isObjectBetween(State object, State robot1, State robot2);
+  bool isObjectBetween(State object, double object_radius, State robot1, State robot2);
 
   bool ballIsInPossessionOf(State robot, State ball);
 

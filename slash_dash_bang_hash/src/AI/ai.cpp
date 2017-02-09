@@ -232,13 +232,13 @@ State AI::play_standardOffense()
 
   // Simple spot to test shooting
   Vector2d shot_spot_test(GOAL_X - 1.0, GOAL_Y + 0.5);
+  State shot_spot_test_state = vectorToState(shot_spot_test);
+  shot_spot_test_state.theta = atan2(GOAL_Y - shot_spot_test(1), GOAL_X - shot_spot_test(0));
 
   switch (play_state) {
     case GET_BALL:
       // Move towards the ball, aligning with path to shot spot
       destination = Skills::getBall(robot_state, ball_state_, shot_spot_test);
-
-
 
       break;
 
@@ -247,6 +247,7 @@ State AI::play_standardOffense()
 
       // Dribble ball towards shot spot and align with ball and goal
       // TODO: find the right angle to align with the best shot
+      destination = shot_spot_test_state;
 
       break;
 
