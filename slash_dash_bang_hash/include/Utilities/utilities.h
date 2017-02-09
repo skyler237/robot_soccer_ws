@@ -30,7 +30,7 @@ using namespace slash_dash_bang_hash;
 
 #define BALL_RADIUS 0.022
 #define AVOIDANCE_MARGIN 0.045
-#define ROBOT_AVOIDANCE_MARGIN 0.07
+#define ROBOT_AVOIDANCE_MARGIN 0.1
 
 #define MINIMUN_SHOT_ON_GOAL_DISTANCE 1.5
 #define GOAL_X (FIELD_WIDTH/2)
@@ -57,7 +57,7 @@ using namespace slash_dash_bang_hash;
   Vector2d vectorProjection(Vector2d vec, Vector2d reference);
   Vector2d rotateVector(Vector2d vec, double theta); // Performs right-handed rotation on a 2D vector
 
-  bool isInFront(State robot, State object, double box_width, double box_length);
+  bool isInFront(State robot, State object, double box_radius, double box_length);
 
   bool isObjectBetween(State object, double object_radius, State robot1, State robot2);
 

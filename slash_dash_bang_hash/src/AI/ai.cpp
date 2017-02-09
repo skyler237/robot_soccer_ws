@@ -57,7 +57,7 @@ void AI::computeDestination() {
 
         // robot #1 positions itself behind ball and rushes the goal.
         // ally1_destination_ = play_findBestShot(1, ally1_state_, ball_state_);
-        // ally1_destination_ = play_rushGoal(1, ally1_state_, ball_state_);
+        // ally1_destination_ = play_rushGoal(ally1_state_, ball_state_);
         ally1_destination_ = play_standardOffense();
         // ally1_destination_ = play_skillsTournament(ally1_state_);
 
@@ -67,7 +67,7 @@ void AI::computeDestination() {
 
 
         // robot #2 defend the goal
-        // ally2_destination_ = play_basicDefense(2, ally2_state_, ball_state_);
+        // ally2_destination_ = play_basicDefense(ally2_state_, ball_state_);
         ally2_destination_ = Skills::hideInCorner(1); // Hide in back left corner -- for debugging
         checkForKick(2);
 

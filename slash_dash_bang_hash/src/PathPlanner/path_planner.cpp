@@ -96,16 +96,11 @@ void PathPlanner::planPath()
     desired_pose_ = destination_;
     avoidBall(desired_pose_);
 
-    // Updates desired_pose_
-    if(robot_number_ == 1) {
-    //   desired_pose_ = simpleCurvedPathToDestination(robot_state, destination_);
-          const bool isAlly = true;
-          desired_pose_ = avoidObject(desired_pose_, robot_state, opp1_state_, ROBOT_RADIUS, ROBOT_AVOIDANCE_MARGIN);
-          desired_pose_ = avoidObject(desired_pose_, robot_state, opp2_state_, ROBOT_RADIUS, ROBOT_AVOIDANCE_MARGIN);
-          // desired_pose_ = avoidRobot(!isAlly, opp1_state_, desired_pose_);
-          // desired_pose_ = avoidRobot(!isAlly, opp2_state_, desired_pose_);
-          // desired_pose_ = avoidRobot(isAlly, ally_state, desired_pose_);
-    }
+
+
+    desired_pose_ = avoidOpponent(desired_pose_, robot_state, opp1_state_);
+    desired_pose_ = avoidOpponent(desired_pose_, robot_state, opp2_state_);
+    desired_pose_ = avoidAlly(desired_pose_, robot_state, ally_state);
 
 
     // if(ballIsInPossessionOf(robot_state, ball_state_)) {
@@ -145,7 +140,7 @@ State PathPlanner::avoidBall(State destination)
   } state_t;
   static state_t state = AVOID_BALL;
 
-  State desired_pose;
+  State desired_pose = destination;
   State robot_state;
 
   Vector2d robot_pose;
@@ -161,29 +156,31 @@ State PathPlanner::avoidBall(State destination)
   robot_pose << robot_state.x, robot_state.y;
 
   // Vector2d ball_pose(ball_state_.x, ball_state_.y);
-  Vector2d ball_pose = Skills::ballIntercept(robot_state, ball_state_);
+  Vector2d ball_predicted_pose = Skills::ballIntercept(robot_state, ball_state_);
 
   Vector2d final_destination(destination.x, destination.y);
-
-  // ==== Check if the ball is in the path ====
-  Vector2d toDestination = final_destination - robot_pose;
-  Vector2d perp = getVecPerpendicularTo(toDestination);
-  Vector2d toBall = ball_pose - robot_pose;
-
-  // Projection of ball onto the line perpendicular to the robot's movement
-  double ball_perp_x = vectorProjectedDistance(toBall, perp);
+  //
+  // // ==== Check if the ball is in the path ====
+  // Vector2d toDestination = final_destination - robot_pose;
+  // Vector2d perp = getVecPerpendicularTo(toDestination);
+  Vector2d toBall = ball_predicted_pose - robot_pose;
+  //
+  // // Projection of ball onto the line perpendicular to the robot's movement
+  // double ball_perp_x = vectorProjectedDistance(toBall, perp);
 
   // Check if we are facing the ball
-  Vector2d robotForwardVec(cos(robot_state.theta*M_PI/180.0),sin(robot_state.theta*M_PI/180.0));
+  // Vector2d robotForwardVec(cos(robot_state.theta*M_PI/180.0),sin(robot_state.theta*M_PI/180.0));
+  Vector2d robotForwardVec(cos(destination.theta*M_PI/180.0),sin(destination.theta*M_PI/180.0));
 
-  double ballForwardDistance = robotForwardVec.dot(toBall)/robotForwardVec.norm();
+  double ballForwardDistance = vectorProjectedDistance(toBall, robotForwardVec);
 
-  bool ballOnDestinationPath = (ballForwardDistance > 0.18);
+  bool ballOnDestinationPath = (ballForwardDistance > 0.0);
   // ROS_INFO("Ball angle=%f, robot angle=%f", ballAngle, robot_state.theta);
   // ROS_INFO("ballForwardDistance=%f", ballForwardDistance);
 
   // Assign appropriate state
-  if ((fabs(ball_perp_x) <= ROBOT_RADIUS + BALL_RADIUS + AVOIDANCE_MARGIN)  && (toDestination.norm() > toBall.norm()) && !ballOnDestinationPath)
+  // if ((fabs(ball_perp_x) <= ROBOT_RADIUS + BALL_RADIUS + AVOIDANCE_MARGIN)  && (toDestination.norm() > toBall.norm()) && !ballOnDestinationPath)
+  if (!ballOnDestinationPath)
   {
     state = AVOID_BALL;
   }
@@ -195,9 +192,10 @@ State PathPlanner::avoidBall(State destination)
   switch (state) {
     case AVOID_BALL:
       // Add intermediate destination to the side of the ball
-      avoidance_point = ball_pose - (sgn(ball_perp_x)*(ROBOT_RADIUS + BALL_RADIUS + AVOIDANCE_MARGIN)*perp.normalized());
-      desired_pose_.x = avoidance_point(0);
-      desired_pose_.y = avoidance_point(1);
+      // avoidance_point = ball_predicted_pose - (sgn(ball_perp_x)*(ROBOT_RADIUS + BALL_RADIUS + AVOIDANCE_MARGIN)*perp.normalized());
+      // desired_pose_.x = avoidance_point(0);
+      // desired_pose_.y = avoidance_point(1);
+      desired_pose_ = avoidObject(destination, robot_state, vectorToState(ball_predicted_pose), BALL_RADIUS, AVOIDANCE_MARGIN);
       break;
 
     case MOVE_TO_DESTINATION:
@@ -207,6 +205,9 @@ State PathPlanner::avoidBall(State destination)
     default:
       ROS_INFO("Invalid state in avoidBall() function!");
   }
+
+  desired_pose_.theta = destination.theta;
+  return desired_pose_;
 
 }
 
@@ -312,6 +313,28 @@ State PathPlanner::avoidRobot(bool isAlly, State other_robot_state, State destin
 
 }
 
+State PathPlanner::avoidAlly(State destination, State robot_state, State ally_state) {
+  // For now, always avoid ally
+  return avoidObject(destination, robot_state, ally_state, ROBOT_RADIUS, ROBOT_AVOIDANCE_MARGIN);
+}
+
+State PathPlanner::avoidOpponent(State destination, State robot_state, State opponent_state) {
+  bool avoid_opponent = true;
+
+  // If they have posession of the ball and the ball is between us, don't avoid them
+  if(isInFront(opponent_state, ball_state_, 2.0*ROBOT_RADIUS, 2.0*ROBOT_RADIUS) && isObjectBetween(ball_state_, BALL_RADIUS, robot_state, opponent_state)) {
+    avoid_opponent = false;
+  }
+
+  // Return the appropriate destination
+  if(avoid_opponent) {
+    return avoidObject(destination, robot_state, opponent_state, ROBOT_RADIUS, ROBOT_AVOIDANCE_MARGIN);
+  }
+  else {
+    return destination;
+  }
+}
+
 State PathPlanner::avoidObject(State destination, State robot_state, State object_state, double object_radius, double avoidance_margin) {
   State desired_pose;
   Vector2d robot_pose = stateToVector(robot_state);
@@ -334,6 +357,7 @@ State PathPlanner::avoidObject(State destination, State robot_state, State objec
     desired_pose = destination;
   }
 
+  desired_pose.theta = destination.theta;
   return desired_pose;
 }
 

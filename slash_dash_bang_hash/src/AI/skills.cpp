@@ -411,7 +411,7 @@ State Skills::adaptiveRadiusGoalDefend(State robot_state, State ally_state, Stat
 
   // ROS_INFO("Desired state: x=%f, y=%f", desired_state.x, desired_state.y);
   //desired_state.theta = angleMod(atan((ball_state.y - defense_origin(1))/(ball_state.x - defense_origin(0)))*180.0/M_PI); // Always face ball from center of goal
-  desired_state.theta = angleMod(atan((ball_state.y - defense_origin(1))/(ball_state.x - defense_origin(0)))) *180.0 / M_PI; // Always face ball from center of goal
+  desired_state.theta = angleMod(atan((ball_state.y - goal_(1))/(ball_state.x - goal_(0)))) *180.0 / M_PI; // Always face ball 
 
   //ROS_INFO("Adaptive Radius desired theta = %f", desired_state.theta);
 

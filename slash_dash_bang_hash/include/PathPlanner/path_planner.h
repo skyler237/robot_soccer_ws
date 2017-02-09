@@ -61,6 +61,8 @@ public:
   State dribbleBallToDestination(State robot_state, State ally_state, State destination);
   State avoidBall(State destination);
   State avoidRobot(bool isAlly, State other_robot_state, State destination);
+  State avoidAlly(State destination, State robot_state, State ally_state);
+  State avoidOpponent(State destination, State robot_state, State opponent_state);
   State avoidObject(State destination, State robot_state, State object_state, double object_radius, double avoidance_margin);
 
   void stateCallback(const StateConstPtr &msg, const std::string& robot);
