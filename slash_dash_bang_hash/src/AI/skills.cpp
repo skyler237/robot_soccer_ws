@@ -95,9 +95,53 @@ State Skills::getBall(State robot_state, State ball_state, Vector2d direction_po
   }
   destination.theta = atan2(direction_point(1) - robot_state.y, direction_point(0) - robot_state.x)*180.0/M_PI;
 
-
-
   return destination;
+}
+
+State Skills::hitBallAway(State robot_state, State opp1_state, State opp2_state, State ball_state) {
+  // If the opponent is very close, spin the ball away
+  const double very_close_to_ball = ROBOT_RADIUS + 2.0*BALL_RADIUS;
+
+  State desired_state = robot_state;
+
+  State close_opponent;
+  State other_opponent;
+  bool opponent_is_close = false;
+  // Check for a close opponent
+  if(isInFront(opp1_state, ball_state, ROBOT_RADIUS, very_close_to_ball)) {
+    close_opponent = opp1_state;
+    other_opponent = opp2_state;
+    opponent_is_close = true;
+  }
+  if(isInFront(opp1_state, ball_state, ROBOT_RADIUS, very_close_to_ball)) {
+    close_opponent = opp2_state;
+    other_opponent = opp1_state;
+    opponent_is_close = true;
+  }
+
+  if(opponent_is_close) {
+    // Spin the ball away from the side the other oppenent is on
+    Vector2d robotToCloseOpponent = stateToVector(close_opponent) - stateToVector(robot_state);
+    Vector2d robotToOtherOpponent = stateToVector(other_opponent) - stateToVector(robot_state);
+
+    double other_opponent_perp = vectorProjectedDistance(robotToOtherOpponent, getVecPerpendicularTo(robotToCloseOpponent));
+
+    desire_state = spinRobot(-1.0*sign(other_opponent_perp));
+  }
+  // If the opponent is not as close, kick the ball into an open spot
+  else {
+    // Find a spot just past the robot to kick to off the wall
+  }
+
+  return desired_state;
+}
+
+State Skills::spinRobot(State robot_state, int direction) {
+  const double DELTA_THETA = 45.0;
+
+  State rotated_state = robot_state;
+  rotated_state.theta = robot_state.theta + DELTA_THETA*sign(direction);
+  return rotated_state;
 }
 
 
@@ -411,7 +455,7 @@ State Skills::adaptiveRadiusGoalDefend(State robot_state, State ally_state, Stat
 
   // ROS_INFO("Desired state: x=%f, y=%f", desired_state.x, desired_state.y);
   //desired_state.theta = angleMod(atan((ball_state.y - defense_origin(1))/(ball_state.x - defense_origin(0)))*180.0/M_PI); // Always face ball from center of goal
-  desired_state.theta = angleMod(atan((ball_state.y - goal_(1))/(ball_state.x - goal_(0)))) *180.0 / M_PI; // Always face ball 
+  desired_state.theta = angleMod(atan((ball_state.y - goal_(1))/(ball_state.x - goal_(0)))) *180.0 / M_PI; // Always face ball
 
   //ROS_INFO("Adaptive Radius desired theta = %f", desired_state.theta);
 

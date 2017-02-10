@@ -349,9 +349,10 @@ State PathPlanner::avoidObject(State destination, State robot_state, State objec
 
     double theta_evade = asin(saturate((ROBOT_RADIUS + object_radius + avoidance_margin)/robotToObject.norm(), -1.0, 1.0));
 
-    Vector2d evade_vec = rotateVector(robotToObject, -1.0*sgn(object_perp_dist)*theta_evade);
+    Vector2d evade_vec = rotateVector(robotToObject, -1.0*sgn(object_perp_dist)*theta_evade).normalized();
 
-    desired_pose = vectorToState(vectorProjection(robotToDestination, evade_vec) + robot_pose);
+    Vector2d projected_destination = robotToDestination.norm()*evade_vec; // Same length of the original vector, but in the evade direction.
+    desired_pose = vectorToState(projected_destination + robot_pose);
   }
   else { // The object is not in the way, just go to the destination
     desired_pose = destination;
