@@ -4,7 +4,7 @@
     <arg name="me" default="ally1" />
     <arg name="ally" default="ally2" />
     <arg name="robot_number" default="1" />
-    <!-- <arg name="sim_mode" default="false" /> -->
+    <arg name="sim_mode" default="true" />
     <arg name="team_side" default="home" />
     <arg name="vel_cmds_remap" default="vel_cmds" />
 
@@ -53,7 +53,7 @@
         <!-- The controller needs to know which robot state to listen to -->
         <remap from="robot_state" to="/slash_dash_bang_hash_$(arg team_side)/$(arg me)/$(arg me)_state" />
         <remap from="desired_pose" to="/slash_dash_bang_hash_$(arg team_side)/$(arg me)/$(arg me)_desired_pose" />
-        <remap from="vel_command" to="/$(arg team_side)$(arg robot_number)/command" />
+        <remap if="$(arg sim_mode)" from="vel_command" to="/$(arg team_side)$(arg robot_number)/command" />
 
         <param name="x_P" value="6.0"/>
         <param name="x_I" value="0.0"/>
@@ -69,5 +69,13 @@
 
         <param name="max_omega" value="180.0"/>
     </node>
+
+    <!-- Hardware dependent code  -->
+    <group unless="$(arg sim_mode)">
+        <!-- Only if not running on simulation -->
+        <node name="MotorControl" pkg="slash_dash_bang_hash" type="motion_control_node.py" output="screen">
+          <remap from="robot_state" to="/slash_dash_bang_hash_$(arg team_side)/$(arg me)/$(arg me)_state" />
+        </node>
+    </group>
 
 </launch>

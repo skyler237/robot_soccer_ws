@@ -1,0 +1,3 @@
+float64 motor1_speed
+float64 motor2_speed
+float64 motor3_speed

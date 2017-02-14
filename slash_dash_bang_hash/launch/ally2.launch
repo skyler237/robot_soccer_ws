@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <launch>
     <!-- declare arg to be passed in -->
-    <!-- <arg name="sim_mode" default="false" /> -->
+    <arg name="sim_mode" default="true" />
     <arg name="team_side" default="home" />
     <arg name="vel_cmds_remap" default="vel_cmds" />
     <arg name="robot_number" default="2" />
@@ -18,7 +18,7 @@
         <include file="$(find slash_dash_bang_hash)/launch/robot.launch">
             <arg name="me" value="ally2" />
             <arg name="ally" value="ally1" />
-            <!-- <arg name="sim_mode" value="$(arg sim_mode)" /> -->
+            <arg name="sim_mode" value="$(arg sim_mode)" />
             <arg name="team_side" value="$(arg team_side)" />
             <arg name="robot_number" value="$(arg robot_number)" />
             <arg name="vel_cmds_remap" value="$(arg vel_cmds_remap)" />
