@@ -11,6 +11,9 @@ find_package(catkin REQUIRED
 	std_msgs
   geometry_msgs
   std_srvs
+  cv_bridge
+  image_transport 
+  OpenCV
 	)
 
 ## System dependencies are found with CMake's conventions
@@ -50,6 +53,7 @@ find_package(catkin REQUIRED
 add_message_files(
   FILES
 	State.msg
+  MotorSpeeds.msg
 )
 
 ## Generate services in the 'srv' folder
@@ -165,6 +169,19 @@ add_executable(Controller
   src/controller/PID.cpp)
 target_link_libraries(Controller ${catkin_LIBRARIES})
 
+add_executable(MotionControl
+    src/Utilities/utilities.cpp
+    include/Motion/motion_control.h
+    src/Motion/motion_control.cpp)
+target_link_libraries(MotionControl ${catkin_LIBRARIES})
+
+add_executable(Vision
+    src/Utilities/utilities.cpp
+    src/Vision/vision.cpp
+    include/Vision/vision.h)
+target_link_libraries(Vision ${OpenCV_LIBS})
+target_link_libraries(Vision ${catkin_LIBRARIES})
+
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
@@ -173,6 +190,7 @@ add_dependencies(Controller soccerref_generate_messages_cpp slash_dash_bang_hash
 # add_dependencies(Utilities soccerref_generate_messages_cpp slash_dash_bang_hash_generate_messages_cpp)
 add_dependencies(AI soccerref_generate_messages_cpp slash_dash_bang_hash_generate_messages_cpp)
 add_dependencies(Estimator soccerref_generate_messages_cpp slash_dash_bang_hash_generate_messages_cpp)
+add_dependencies(MotionControl soccerref_generate_messages_cpp slash_dash_bang_hash_generate_messages_cpp)
 
 
 #############

@@ -4,14 +4,19 @@
 #include "geometry_msgs/Pose2D.h"
 #include "geometry_msgs/Vector3.h"
 #include <image_transport/image_transport.h>
+#include <stdio.h>
+
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <cv_bridge/cv_bridge.h>
+#include "slash_dash_bang_hash/State.h"
+
 
 #include <cmath>
 #include <iostream>
 #include <cv.h>
 #include <highgui.h>
+#include <eigen3/Eigen/Eigen>
 
 using namespace std;
 using namespace geometry_msgs;
@@ -48,7 +53,6 @@ public:
   Vector2d goal_;
   double tau_; // Dirty derivative gain
 
-  image_transport::ImageTransport it(nh_);
   image_transport::Subscriber image_sub;
 
   // Handlers for vision position publishers
@@ -67,6 +71,7 @@ public:
   geometry_msgs::Pose2D poseAway2;
   geometry_msgs::Pose2D poseBall;
 
+  //void visionCallback(const sensor_msgs::ImageConstPtr& msg);
   // void estimateStates();
   // void calculateVelocities();
   // void publishStates();
