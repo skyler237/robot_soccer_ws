@@ -26,7 +26,7 @@ using namespace slash_dash_bang_hash;
 #define NOMINAL_VEL 1.5
 
 #define KICKING_RANGE (0.03 + ROBOT_RADIUS)
-#define POSSESSION_RANGE (0.1 + ROBOT_RADIUS)
+#define POSSESSION_RANGE (0.2 + ROBOT_RADIUS)
 
 #define BALL_RADIUS 0.022
 #define AVOIDANCE_MARGIN 0.045

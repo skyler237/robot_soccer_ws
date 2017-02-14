@@ -126,7 +126,7 @@ State Skills::hitBallAway(State robot_state, State opp1_state, State opp2_state,
 
     double other_opponent_perp = vectorProjectedDistance(robotToOtherOpponent, getVecPerpendicularTo(robotToCloseOpponent));
 
-    desire_state = spinRobot(-1.0*sign(other_opponent_perp));
+    desired_state = spinRobot(robot_state, -1.0*sgn(other_opponent_perp));
   }
   // If the opponent is not as close, kick the ball into an open spot
   else {
@@ -140,7 +140,7 @@ State Skills::spinRobot(State robot_state, int direction) {
   const double DELTA_THETA = 45.0;
 
   State rotated_state = robot_state;
-  rotated_state.theta = robot_state.theta + DELTA_THETA*sign(direction);
+  rotated_state.theta = robot_state.theta + DELTA_THETA*sgn(direction);
   return rotated_state;
 }
 

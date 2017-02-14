@@ -57,8 +57,8 @@ void AI::computeDestination() {
 
         // robot #1 positions itself behind ball and rushes the goal.
         // ally1_destination_ = play_findBestShot(1, ally1_state_, ball_state_);
-        // ally1_destination_ = play_rushGoal(ally1_state_, ball_state_);
-        ally1_destination_ = play_standardOffense();
+        ally1_destination_ = play_rushGoal(ally1_state_, ball_state_);
+        // ally1_destination_ = play_standardOffense();
         // ally1_destination_ = play_skillsTournament(ally1_state_);
 
         // checkForKick(1);
@@ -140,21 +140,26 @@ void AI::publishDestinations()
 // defense would be a strategy.
 State AI::play_rushGoal(State robot, State ball)
 {
+    State destination;
     // normal vector from ball to goal
     // Vector2d ball_vec = stateToVector(ball);
     Vector2d ball_vec = Skills::ballIntercept(robot, ball);
-    ROS_INFO("ball_vel: xdot=%f, ydot=%f", ball.xdot, ball.ydot);
-    printVector(ball_vec, "ball_vec");
+    // ROS_INFO("ball_vel: xdot=%f, ydot=%f", ball.xdot, ball.ydot);
+    // printVector(ball_vec, "ball_vec");
     Vector2d n = (goal_ - ball_vec).normalized();
 
     // compute position 10cm behind ball, but aligned with goal.
     Vector2d position = ball_vec - POSITION_BEHIND_BALL*n;
 
     // if((position - stateToVector(robot)).norm() < 0.21)
-    if(isInFront(robot, ball, KICKER_WIDTH/2, POSITION_BEHIND_BALL + 0.05))
-        return Skills::goToPoint(robot, goal_);
-    else
-        return Skills::goToPoint(robot, position);
+    if(isInFront(robot, ball, KICKER_WIDTH, POSITION_BEHIND_BALL + 0.05)) {
+      destination = Skills::goToPoint(robot, goal_);
+    }
+    else {
+      destination = Skills::goToPoint(robot, position);
+    }
+
+    return destination;
 }
 
 State AI::play_findBestShot(int robotId, State robot, State ball)
@@ -217,23 +222,29 @@ State AI::play_standardOffense()
   // State transitions
 
   // THESE ARE JUST TURNED OFF FOR TESTING! TODO: TURN BACK ON WHEN NEEDED!
-  // if (!ballIsInPossessionOf(robot_state, ball_state_)) {
-  //   play_state = GET_BALL;
-  // }
-  // else { // We have possession of the ball
-  //   double shot_destination_y = Skills::findBestShot(ball_state_, ally_state, opp1_state_, opp2_state_);
-  //   if(readyForGoalShot(shot_destination_y, robot_state, ally_state, opp1_state_, opp2_state_, ball_state_)){
-  //     play_state = MAKE_SHOT;
-  //   }
-  //   else { // Not ready to shoot, keep moving/aligning
-  //     play_state = FIND_SHOT_SPOT;
-  //   }
-  // }
+  if (!ballIsInPossessionOf(robot_state, ball_state_)) {
+    play_state = GET_BALL;
+  }
+  else { // We have possession of the ball
+    double shot_destination_y = Skills::findBestShot(ball_state_, ally_state, opp1_state_, opp2_state_);
+    if(readyForGoalShot(shot_destination_y, robot_state, ally_state, opp1_state_, opp2_state_, ball_state_)){
+      play_state = MAKE_SHOT;
+    }
+    else { // Not ready to shoot, keep moving/aligning
+      play_state = FIND_SHOT_SPOT;
+    }
+  }
+
+  ROS_INFO("play_state=%d", play_state);
 
   // Simple spot to test shooting
   Vector2d shot_spot_test(GOAL_X - 1.0, GOAL_Y + 0.5);
   State shot_spot_test_state = vectorToState(shot_spot_test);
   shot_spot_test_state.theta = atan2(GOAL_Y - shot_spot_test(1), GOAL_X - shot_spot_test(0));
+
+  // Calculate "shot spot"
+
+  // Calculate kicking target position
 
   switch (play_state) {
     case GET_BALL:
@@ -255,6 +266,7 @@ State AI::play_standardOffense()
       // Move forward towards ball until we are close enough to kick hard
 
       // Make a shot!
+      Skills::kick(team_, robot_number_);
 
       break;
 

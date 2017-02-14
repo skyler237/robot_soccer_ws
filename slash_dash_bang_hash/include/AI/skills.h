@@ -30,6 +30,8 @@ public:
   static void kick(string team, int robotId);
   // Position behind ball facing towards "direction_point"
   static State getBall(State robot_state, State ball_state, Vector2d direction_point);
+  static State hitBallAway(State robot_state, State opp1_state, State opp2_state, State ball_state);
+  static State spinRobot(State robot_state, int direction);
 
   // ====================== Offensive Skills =================================
   static double findBestShot(State ball_state, State ally_state, State opp1_state, State opp2_state);
