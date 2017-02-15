@@ -73,7 +73,7 @@
     <!-- Hardware dependent code  -->
     <group unless="$(arg sim_mode)">
         <!-- Only if not running on simulation -->
-        <node name="MotorControl" pkg="slash_dash_bang_hash" type="motion_control_node.py" output="screen">
+        <node name="MotorControl" pkg="slash_dash_bang_hash" type="motion_control_node.py">
           <remap from="robot_state" to="/slash_dash_bang_hash_$(arg team_side)/$(arg me)/$(arg me)_state" />
         </node>
     </group>
