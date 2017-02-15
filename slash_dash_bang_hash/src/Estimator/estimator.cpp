@@ -98,6 +98,8 @@ int main(int argc, char **argv)
 
     Estimator estimator_node;
 
+    ROS_INFO("Main for estimator");
+
     ros::spin();
     // ros::Rate loop_rate(30);
     // while(ros::ok())
