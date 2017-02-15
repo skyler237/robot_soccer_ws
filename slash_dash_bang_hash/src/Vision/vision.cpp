@@ -427,7 +427,7 @@ Vector3d Vision::findCenterRobot(Mat img)
       ln_2 += Distance(v[2], v[3], v2[2], v2[3]);
     }
     Vector2d frontPoint(v[0], v[1]);
-    if(ln_1 < ln_2)
+    if(ln_1 > ln_2)
     {
       //count one is the front
       frontPoint[0] = v[2];
@@ -556,9 +556,9 @@ Rect Vision::findYellowRobot(Mat img)
   int x = 0;
   int y = 0;
   // search through the image to find yellow
-  for (int i = 50; i < imgHSV.cols; i++)
+  for (int i = 0; i < imgHSV.cols; i++)
   {
-      for (int j = 50; j < imgHSV.rows; j++)
+      for (int j = 0; j < imgHSV.rows; j++)
       {
         int hue = channels[0].at<uchar>(j,i);
         int sat = channels[1].at<uchar>(j,i);

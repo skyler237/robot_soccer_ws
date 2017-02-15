@@ -18,12 +18,13 @@ from math import cos, sin, pi
 
 # Kinematic constants
 RHO = 0.02875 # Wheel radius [m]
-SX1 = -1.0 # Wheel spin vectors - body frame (unit vectors)
-SY1 = 0.0
-SX2 = 0.5
-SY2 = 0.866
-SX3 = 0.5
-SY3 = -0.866
+S_SCALE = 0.1
+SX1 = S_SCALE*-1.0 # Wheel spin vectors - body frame (unit vectors)
+SY1 = S_SCALE*0.0
+SX2 = S_SCALE*0.5
+SY2 = S_SCALE*0.866
+SX3 = S_SCALE*0.5
+SY3 = S_SCALE*-0.866
 RX1 = 0.0 # Wheel position vectors - body frame (in meters)
 RY1 = -0.075
 RX2 = -0.06495
