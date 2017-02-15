@@ -114,11 +114,7 @@ def sendVelocityCommands():
     pulsePerRotation = 4955 #Old motors
     # pulsePerRotation = 116.2 #New motors
 
-    # Set the PIDQ values for all motors
-    setPID(0, 1, 0.3, 30000)
 
-    # Set tick period (triggers PID control) and velocity filter corner frequency
-    setT(20, 50)
 
     setSpeed(speedM1*pulsePerRotation, speedM2*pulsePerRotation, speedM3*pulsePerRotation)
 
@@ -133,6 +129,12 @@ def main():
     rospy.Subscriber('vel_command', Twist, _handle_velocity_command)
     motor_speed_pub_ = rospy.Publisher('motor_speeds', MotorSpeeds, queue_size=10)
 
+
+    # Set the PIDQ values for all motors
+    setPID(0, 1, 0.3, 30000)
+
+    # Set tick period (triggers PID control) and velocity filter corner frequency
+    setT(20, 50)
 
     # spin() simply keeps python from exiting until this node is stopped
     rospy.spin()
