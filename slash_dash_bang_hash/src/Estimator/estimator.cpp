@@ -23,6 +23,7 @@ priv_nh("~")
 void Estimator::visionCallback(const geometry_msgs::Pose2D::ConstPtr &msg)
 {
     vision_data_ = poseToState(*msg);
+    ROS_INFO("Estimator callback");
 
     estimateStates();
 }
@@ -37,6 +38,7 @@ void Estimator::estimateStates()
 
 
   // TODO: Actually implement an estimator here -- currently just passes the data through
+  ROS_INFO("Estimator estimateStates");
   state_ = vision_data_;
 
 
@@ -47,7 +49,7 @@ void Estimator::estimateStates()
 void Estimator::publishStates()
 {
   state_prev_ = state_;
-
+  ROS_INFO("Estimator publishStates");
   state_pub_.publish(state_);
 }
 
