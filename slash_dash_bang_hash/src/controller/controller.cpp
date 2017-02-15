@@ -57,7 +57,7 @@ void Controller::desiredPoseCallback(const StateConstPtr &msg)
 }
 
 void Controller::computeControl() {
-  //ROS_INFO("C computeControl");
+  ROS_INFO("C computeControl");
 
   double now = ros::Time::now().toSec();
   static double prev = 0;
@@ -72,6 +72,8 @@ void Controller::computeControl() {
   // if (dt > CONTROL_TIME_STEP && (gameState_.play || gameState_.reset_field))
   if ((gameState_.play || gameState_.reset_field))
   {
+
+    ROS_INFO("C computeControl inside");
     // Update ally_command_ and ally2_command_ variables
 
     // Compute the PID values for each state variable
@@ -146,7 +148,7 @@ void Controller::computeControl() {
 
 void Controller::publishCommand()
 {
-  //ROS_INFO("C publishCommand");
+  ROS_INFO("C publishCommand");
 
   geometry_msgs::Twist vel;
   vel.linear.x = command_(0);
