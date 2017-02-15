@@ -50,8 +50,8 @@ void AI::computeDestination() {
   double dt = now - prev;
   prev = now;
 
-  if (dt > AI_TIME_STEP)
-  {
+  // if (dt > AI_TIME_STEP)
+  // {
     if (gameState_.play)
     {
         ROS_INFO("Computing destination");
@@ -99,7 +99,7 @@ void AI::computeDestination() {
 
         publishDestinations();
     }
-  }
+  // }
 
 }
 
