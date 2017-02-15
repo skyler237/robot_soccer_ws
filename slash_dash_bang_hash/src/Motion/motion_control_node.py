@@ -115,7 +115,7 @@ def sendVelocityCommands():
     # pulsePerRotation = 116.2 #New motors
 
     # Set the PIDQ values for all motors
-    setPID(0, 1, 1, 40000)
+    setPID(0, 1, 0.3, 30000)
 
     # Set tick period (triggers PID control) and velocity filter corner frequency
     setT(20, 50)

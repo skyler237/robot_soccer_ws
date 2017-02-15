@@ -71,13 +71,20 @@ public:
   geometry_msgs::Pose2D poseAway2;
   geometry_msgs::Pose2D poseBall;
 
-  //void visionCallback(const sensor_msgs::ImageConstPtr& msg);
-  // void estimateStates();
-  // void calculateVelocities();
-  // void publishStates();
-  //
-  // void visionCallback(const geometry_msgs::Pose2D::ConstPtr &msg);
-  // void gameStateCallback(const soccerref::GameState::ConstPtr &msg);
+  //Vision functions
+  //find a box with our yellow robot
+  static Rect findYellowRobot(Mat img);
+  static bool isInYellowRange(int hue, int sat);
+  static void getRobotPose(Mat img);
+  static Vector2d findCenterRobot(Mat img);
+  static void visionCallback(const sensor_msgs::ImageConstPtr& msg);
+  static Mat crop(Mat img);
+
+
+
+
+
+
   //
   // Helper functions
 };
