@@ -35,6 +35,8 @@ priv_nh("~")
 
   goal_ << FIELD_WIDTH/2, 0;
 
+  ROS_INFO("Initializing AI");
+
 }
 
 void AI::param_init()
