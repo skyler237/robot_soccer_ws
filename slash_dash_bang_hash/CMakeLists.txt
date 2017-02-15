@@ -11,9 +11,9 @@ find_package(catkin REQUIRED
 	std_msgs
   geometry_msgs
   std_srvs
-  cv_bridge
-  image_transport 
-  OpenCV
+#  cv_bridge
+#  image_transport 
+#  OpenCV
 	)
 
 ## System dependencies are found with CMake's conventions
@@ -108,7 +108,7 @@ generate_messages(
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES slash_dash_bang_hash
- CATKIN_DEPENDS roscpp rospy std_msgs std_srvs gazebo_msgs geometry_msgs eigen3 message_runtime gazebo_ros
+ CATKIN_DEPENDS roscpp rospy std_msgs std_srvs geometry_msgs eigen3 message_runtime 
 #  DEPENDS system_lib
 )
 
@@ -175,12 +175,12 @@ add_executable(MotionControl
     src/Motion/motion_control.cpp)
 target_link_libraries(MotionControl ${catkin_LIBRARIES})
 
-add_executable(Vision
-    src/Utilities/utilities.cpp
-    src/Vision/vision.cpp
-    include/Vision/vision.h)
-target_link_libraries(Vision ${OpenCV_LIBS})
-target_link_libraries(Vision ${catkin_LIBRARIES})
+#add_executable(Vision
+#    src/Utilities/utilities.cpp
+#    src/Vision/vision.cpp
+#    include/Vision/vision.h)
+#target_link_libraries(Vision ${OpenCV_LIBS})
+#target_link_libraries(Vision ${catkin_LIBRARIES})
 
 
 ## Add cmake target dependencies of the executable
