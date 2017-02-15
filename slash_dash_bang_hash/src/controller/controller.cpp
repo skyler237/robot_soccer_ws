@@ -97,7 +97,7 @@ void Controller::computeControl() {
 
 
     command_ << x_command, y_command, theta_command;
-    // ROS_INFO("Robot 1 Control: x_vel=%f, y_vel=%f, omega=%f", x_command, y_command, theta_command);
+     ROS_INFO("Robot 1 Control: x_vel=%f, y_vel=%f, omega=%f", x_command, y_command, theta_command);
 
     // --- OR ---
 
