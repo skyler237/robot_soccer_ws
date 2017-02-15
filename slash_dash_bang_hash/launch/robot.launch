@@ -4,7 +4,7 @@
     <arg name="me" default="ally1" />
     <arg name="ally" default="ally2" />
     <arg name="robot_number" default="1" />
-    <arg name="sim_mode" default="true" />
+    <arg name="sim_mode" default="false" />
     <arg name="team_side" default="home" />
     <arg name="vel_cmds_remap" default="vel_cmds" />
 

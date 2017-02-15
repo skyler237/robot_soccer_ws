@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <launch>
     <!-- declare arg to be passed in -->
-    <arg name="sim_mode" default="true" />
+    <arg name="sim_mode" default="false" />
     <arg name="team_side" default="home" />
     <arg name="vel_cmds_remap" default="vel_cmds" />
     <arg name="robot_number" default="1" />
