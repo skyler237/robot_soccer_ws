@@ -52,6 +52,7 @@ void AI::computeDestination() {
   {
     if (gameState_.play)
     {
+        ROS_INFO("Computing destination");
         /*********************************************************************/
         // Choose strategies and update ally1/ally2_destination_ variables
 
@@ -296,8 +297,10 @@ State AI::play_skillsTournament(State robot_state) {
 
 void AI::stateCallback(const StateConstPtr &msg, const std::string& robot)
 {
-    if(robot == "ally1")
-        ally1_state_ = *msg;
+    if(robot == "ally1") {
+      ally1_state_ = *msg;
+      ROS_INFO("Getting ally1 state");
+    }
 
     else if(robot == "ally2")
         ally2_state_ = *msg;
