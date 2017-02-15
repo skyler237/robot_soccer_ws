@@ -17,6 +17,8 @@ priv_nh("~")
 
   state_pub_ = nh_.advertise<slash_dash_bang_hash::State>("state", 5);
 
+  ROS_INFO("Initializing estimator");
+
 
 }
 
