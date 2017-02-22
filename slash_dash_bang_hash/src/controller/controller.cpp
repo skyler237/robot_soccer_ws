@@ -93,7 +93,7 @@ void Controller::computeControl() {
     // x_command = saturate(x_PID_.computePID(robot_state_.x, desired_pose_.x, dt), -1*max_xy_vel_, max_xy_vel_);
     // y_command = saturate(y_PID_.computePID(robot_state_.y, desired_pose_.y, dt), -1*max_xy_vel_, max_xy_vel_);
     // theta_command = saturate(theta_PID_.computePID(robot_state_.theta, desired_pose_.theta, dt), -1*max_omega_, max_omega_);
-    
+
     // HACK!
     x_command = saturate(x_PID_.computePID(robot_state_.x, desired_pose_.x, 0.01), -1*max_xy_vel_, max_xy_vel_);
     y_command = saturate(y_PID_.computePID(robot_state_.y, desired_pose_.y, 0.01), -1*max_xy_vel_, max_xy_vel_);
@@ -156,7 +156,8 @@ void Controller::publishCommand()
   geometry_msgs::Twist vel;
   vel.linear.x = command_(0);
   vel.linear.y = command_(1);
-  vel.angular.z = command_(2);
+  // vel.angular.z = command_(2);
+  vel.angular.z = 0.0;
 
   motor_pub_.publish(vel);
 
