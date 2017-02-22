@@ -84,6 +84,7 @@ public:
   Vector3d findCenterRobot(Mat img);
   void visionCallback(const sensor_msgs::ImageConstPtr& msg);
   Rect crop(Mat img);
+  Mat smoothing(Mat img, int radius);
 
 
 

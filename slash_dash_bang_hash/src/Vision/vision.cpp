@@ -33,14 +33,14 @@ int averageVal = 0;
 
 
 
-Mat smoothing(Mat img)
+Mat Vision::smoothing(Mat img, int radius)
 {
-    // Mat blurredImage;
-    // for(int i = 1; i < 10; i = i+2)
-    // {
-    //     GaussianBlur(img, blurredImage, Size(i, i), 0, 0);
-    // }
-    //
+    Mat blurredImage;
+    for(int i = 1; i < 10; i = i+2)
+    {
+        GaussianBlur(img, blurredImage, Size(i, i), 0, 0);
+    }
+
      return img;
 }
 
@@ -389,28 +389,7 @@ Vector3d Vision::findCenterRobot(Mat img)
     split(imgHSV, channels);
 
 
-    // int count_1 = 0;
-    // for(int i = v[0] -2 ; i < v[0] + 2; i++)
-    // {
-    //   for(int j = v[1] -2 ; j < v[1] + 2; j++)
-    //   {
-    //     int sat = channels[0].at<uchar>(j,i);
-    //     int val = channels[1].at<uchar>(j,i);
-    //     if(isInYellowRange(sat, val))
-    //       count_1++;
-    //   }
-    // }
-    // int count_2 = 0;
-    // for(int i = v[2] -2 ; i < v[2] + 2; i++)
-    // {
-    //   for(int j = v[3] -2 ; j < v[3] + 2; j++)
-    //   {
-    //     int sat = channels[0].at<uchar>(j,i);
-    //     int val = channels[1].at<uchar>(j,i);
-    //     if(isInYellowRange(sat, val))
-    //       count_1++;
-    //   }
-    // }
+
     int ln_1 = 0;
     int ln_2 = 0;
     for(int i = 0 ; i < N; i++)
@@ -547,7 +526,7 @@ Vector3d Vision::findCenterRobot(Mat img)
 Rect Vision::findYellowRobot(Mat img)
 {
   //blur this image
-  Mat blurImg = smoothing(img);
+  Mat blurImg = smoothing(img, 5);
   Mat imgHSV;
   cvtColor(blurImg, imgHSV, COLOR_BGR2HSV); //Convert the captured frame from BGR to HSV
   vector<Mat> channels;
@@ -567,9 +546,9 @@ Rect Vision::findYellowRobot(Mat img)
             //this means we have found yellow and want to create a box from this point
             int count = 0;
             //from here we want to do a search around the immediate block
-            for(int k = max(0, i - 5); k < min(imgHSV.cols, i + 5); k++)
+            for(int k = max(0, i - 8); k < min(imgHSV.cols, i + 8); k++)
             {
-              for(int l = max(0, j - 5); l < min(imgHSV.rows, j + 5); l++)
+              for(int l = max(0, j - 8); l < min(imgHSV.rows, j + 8); l++)
               {
                 hue = channels[0].at<uchar>(l, k);
                 sat = channels[1].at<uchar>(l,k);
@@ -579,7 +558,7 @@ Rect Vision::findYellowRobot(Mat img)
                 }
               }
             }
-            if(count > 20)
+            if(count > 50)
             {
               x = i;
               y = j;
@@ -605,9 +584,43 @@ Rect Vision::findYellowRobot(Mat img)
 }
 
 
+//helper function to remove stray lines thave have no other lines nearby or are really small
+vector<Vec4f> removeStrayLines(vector<Vec4f> lines)
+{
+  int N = lines.size();
+
+  for(int i = 0; i < N; i++)
+  {
+    const Vec4f v = lines.at(i);
+    bool lineIsGood = false;
+    //now we want to check against every other point in the world
+    for(int j = 0; j < N; j++)
+    {
+      const Vec4f v2 = lines.at(j);
+      if(Distance(v[0], v[1], v2[0], v2[1]) <= 20 || Distance(v[0], v[1], v2[0], v2[1]) <= 20)
+      {
+        //it is probably a good line
+        lineIsGood = true;
+      }
+    }
+    if(Distance(v[0], v[1], v[2], v[3]) < 5)
+    {
+      lineIsGood = false;
+    }
+    if(!lineIsGood)
+    {
+      lines.erase(lines.begin()+i);
+      N = lines.size();
+      i--;
+    }
+
+  }
+  return lines;
+}
+
 Rect Vision::crop(Mat img)
 {
-  img = smoothing(img);
+  img = smoothing(img, 50);
   Rect croppedRectangle;
   Mat croppedImg;
 
@@ -662,11 +675,15 @@ Rect Vision::crop(Mat img)
   vector<Vec4f> linesBottom = LSD(croppedImg);
 
 
+  //so we can find the long line and the biggest concentration of lines
+  //we know that there should be several points nearby each of the lines
+
+
   //get the rectangle of the crop
-  croppedRectangle.x = linesLeft.at(findLongestLine(linesLeft))[0] + croppingOffset;
-  croppedRectangle.y = linesTop.at(findLongestLine(linesTop))[1];
-  croppedRectangle.width = ((img.cols - HOR_BOUND) + linesRight.at(findLongestLine(linesRight))[0] - croppedRectangle.x );
-  croppedRectangle.height = ((img.rows - VERT_BOUND) + linesBottom.at(findLongestLine(linesBottom))[1] - croppedRectangle.y);
+  croppedRectangle.x = linesLeft.at(findLongestLine(removeStrayLines(linesLeft)))[0] + croppingOffset;
+  croppedRectangle.y = linesTop.at(findLongestLine(removeStrayLines(linesTop)))[1];
+  croppedRectangle.width = ((img.cols - HOR_BOUND) + linesRight.at(findLongestLine(removeStrayLines(linesRight)))[0] - croppedRectangle.x );
+  croppedRectangle.height = ((img.rows - VERT_BOUND) + linesBottom.at(findLongestLine(removeStrayLines(linesBottom)))[1] - croppedRectangle.y);
   // printf("x %d\n", croppedRectangle.x);
   // printf("x %d\n", croppedRectangle.y);
   // printf("height %d\n", croppedRectangle.height);
@@ -690,11 +707,15 @@ void Vision::visionCallback(const sensor_msgs::ImageConstPtr& msg)
         img = frame;
         if(!cropped)
         {
+
+          //blur the image before we pass it in
           croppedRect = Vision::crop(img);
           cropped = true;
 
         }
+        imshow("original view", img);
         img = Mat(img, croppedRect);
+        //LSD(img);
         getRobotPose(img);
         waitKey(60);
     }

@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<launch>
+
+    <!-- Hardware agnostic code -->
+    <node name="slash_vision" pkg="slash_dash_bang_hash" type="Vision" output="screen">
+    </node>
+
+
+</launch>
