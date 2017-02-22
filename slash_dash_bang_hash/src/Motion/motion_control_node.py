@@ -18,7 +18,7 @@ from math import cos, sin, pi
 
 # Kinematic constants
 RHO = 0.02875 # Wheel radius [m]
-S_SCALE = -0.1
+S_SCALE = 0.1
 SX1 = S_SCALE*-1.0 # Wheel spin vectors - body frame (unit vectors)
 SY1 = S_SCALE*0.0
 SX2 = S_SCALE*0.5
