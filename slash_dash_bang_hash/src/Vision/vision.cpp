@@ -257,9 +257,9 @@ void Vision::getRobotPose(Mat img)
   offsetCenter[1] *= FIELD_HEIGHT;
   offsetCenter[0] -= FIELD_WIDTH / 2;
   offsetCenter[1] -= FIELD_HEIGHT / 2;
-  robot_pos.x = offsetCenter[0];
-  robot_pos.y = offsetCenter[1];
-  robot_pos.theta =  -1.0 * offsetCenter[2] * 180.0 / M_PI;
+  robot_pos.x = -1.0* offsetCenter[0];
+  robot_pos.y =  -1.0 * offsetCenter[1];
+  robot_pos.theta = offsetCenter[2] * 180.0 / M_PI;
   home1_pub.publish(robot_pos);
 
   printf("the center of the bot is: %f, %f, %f\n", robot_pos.x, robot_pos.y, robot_pos.theta);
