@@ -44,106 +44,6 @@ Mat Vision::smoothing(Mat img, int radius)
      return img;
 }
 
-
-//run this at the begining of each half so that we can save on getting averages
-//also get this in the hsv range
-void calculateAverages(Mat img)
-{
-
-    //check to see if it is a valid image
-    if ( !img.data )
-    {
-        printf("No image data \n");
-        return;
-    }
-
-    int nc = img.channels();    // number of channels
-    //printf("number of channels: %d\n", nc);
-
-
-    // Calculate the histogram of the image
-    for (int i = 0; i < img.rows; i++)
-    {
-        for (int j = 0; j < img.cols; j++)
-        {
-            for (int k = 0; k < nc; k++)
-            {
-                uchar val = nc == 1 ? img.at<uchar>(i,j) : img.at<Vec3b>(i,j)[k];
-                //add the average to here
-                switch(k){
-                case 0://red
-                    averageRed += val;
-                    break;
-                case 1://green
-                    averageGreen += val;
-                    break;
-                case 2://blue
-                    averageBlue += val;
-                    break;
-                }
-            }
-        }
-    }
-
-    //calculate averages
-    averageRed /=(img.rows*img.cols);
-    averageBlue /=(img.rows*img.cols);
-    averageGreen /=(img.rows*img.cols);
-    averageVal = (averageRed + averageBlue + averageGreen) / 3;
-    // printf("average red: %d\n", averageRed);
-    // printf("average green: %d\n", averageGreen);
-    // printf("average blue: %d\n", averageBlue);
-
-
-}
-
-
-
-
-
-
-
-void findContour(Mat img)
-{
-
-    Mat src; Mat src_gray;
-    int thresh = 100;
-    int max_thresh = 255;
-    RNG rng(12345);
-
-    Mat canny_output;
-    vector<vector<Point> > contours;
-    vector<Vec4i> hierarchy;
-
-    /// Load source image and convert it to gray
-     src = img;
-
-     /// Convert image to gray and blur it
-     cvtColor( src, src_gray, CV_BGR2GRAY );
-     blur( src_gray, src_gray, Size(3,3) );
-
-
-
-
-    /// Detect edges using canny
-    Canny( src_gray, canny_output, thresh, thresh*2, 3 );
-    /// Find contours
-    findContours( canny_output, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, Point(0, 0) );
-
-    /// Draw contours
-    Mat drawing = Mat::zeros( canny_output.size(), CV_8UC3 );
-    for( int i = 0; i< contours.size(); i++ )
-    {
-        Scalar color = Scalar( rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255) );
-        drawContours( drawing, contours, i, color, 2, 8, hierarchy, 0, Point() );
-    }
-
-    /// Show in a window
-    namedWindow( "Contours", CV_WINDOW_AUTOSIZE );
-    imshow( "Contours", drawing );
-}
-
-
 void colorSlider(Mat img)
 {
 
@@ -188,26 +88,10 @@ void colorSlider(Mat img)
 
     //}
 }
-Point2d getCenterOfMass(Moments moment)
-{
-    double m10 = moment.m10;
-    double m01 = moment.m01;
-    double mass = moment.m00;
-    double x = m10 / mass;
-    double y = m01 / mass;
-    return Point2d(x, y);
-}
-
-bool compareMomentAreas(Moments moment1, Moments moment2)
-{
-    double area1 = moment1.m00;
-    double area2 = moment2.m00;
-    return area1 < area2;
-}
 
 
 
-
+//hleper function to get the lines
 vector<Vec4f> LSD(Mat img)
 {
   Mat src_gray;
@@ -226,21 +110,21 @@ vector<Vec4f> LSD(Mat img)
 
 }
 
-
+//returns true is given hue and saturation are yellow and not gray
 bool Vision::isInYellowRange(int hue, int sat)
 {
   return (hue > YELLOW_MIN && hue < YELLOW_MAX && sat > SATURATE_LOW && sat < SATURATE_HIGH);
 }
 
 
-
+//helper function return the distance between two points
 double Distance(float dX0, float dY0, float dX1, float dY1)
 {
     return sqrt((dX1 - dX0)*(dX1 - dX0) + (dY1 - dY0)*(dY1 - dY0));
 }
 
 
-
+//get the robot position and angle
 void Vision::getRobotPose(Mat img)
 {
   //crop so we have just the mini robot location
@@ -415,9 +299,6 @@ Vector3d Vision::findCenterRobot(Mat img)
 
     //printf("front point %f, %f\n", frontPoint[0], frontPoint[1]);
 
-
-
-
     frontPoint[0] -= center[0];
     frontPoint[1] -= center[1];
 
@@ -426,103 +307,9 @@ Vector3d Vision::findCenterRobot(Mat img)
   Vector3d ret(center[0], center[1], angle);
   return ret;
 
-  //  vector<Vec4f> triangleLines;
-  //  // Draw segments
-  //  for(int i = 0; i < N; ++i)
-  //  {
-  //    const Vec4f v = lines.at(i);
-  //    int pointCount = 0;
-  //    triangleLines.clear();
-  //    triangleLines.push_back(v);
-  //    for(int l = 0; l < 4; l+=2)
-  //    {
-  //      for(int j = 1 ; j < N; j++)
-  //      {
-  //        const Vec4f v2 = lines.at(j);
-  //        for(int k = 0; k < 4; k+=2)
-  //        {
-   //
-  //          if(Distance(v[l], v[l+1], v2[k], v2[k+1]) <= 2)
-  //          {
-  //            triangleLines.push_back(v2);
-  //            pointCount++;
-  //          }
-  //        }
-  //      }
-  //      if(pointCount >= 5)
-  //      {
-  //        //if four points agree then this is the center of the bot
-  //        indexX = l;
-  //        indexY = l + 1;
-  //        indexL = i;
-  //        centerFound = true;
-  //        break;
-  //      }
-  //    }
-  //    if(centerFound)
-  //    {
-  //      break;
-  //    }
-  //  }
-  //  const Vec4f v = lines.at(indexL);
-  //  printf("the center of the bot is: %f, %f\n", v[indexX], v[indexY]);
-   //
-  //  Vector2d center(v[indexX], v[indexY]);
-  //  float angle = findTheta(triangleLines, center);
-  //  Vector3d ret(v[indexX], v[indexY], angle);
-  //  return ret;
-
-  // Vector3d ret(0, 0, 0);
-  // Pose2D robotPose;
-  //
-  // Mat imgHSV;
-  // cvtColor(img, imgHSV, COLOR_BGR2HSV); //Convert the captured frame from BGR to HSV
-  //
-  // Mat imgGray;
-  // thresholdImage(imgHSV, imgGray, yellow);
-  //
-  //
-  //
-  //
-  // vector< vector<Point> > contours;
-  // vector<Moments> mm;
-  // vector<Vec4i> hierarchy;
-  // findContours(imgGray, contours, hierarchy, CV_RETR_CCOMP, CV_CHAIN_APPROX_SIMPLE);
-  //
-  // if (hierarchy.size() != 2){
-  //   printf("too small foo\n");
-  //     return ret;
-  //   }
-  //
-  // for(int i = 0; i < hierarchy.size(); i++)
-  //     mm.push_back(moments((Mat)contours[i]));
-  //
-  // std::sort(mm.begin(), mm.end(), compareMomentAreas);
-  // Moments mmLarge = mm[mm.size() - 1];
-  // Moments mmSmall = mm[mm.size() - 2];
-  //
-  // Point2d centerLarge = getCenterOfMass(mmLarge);
-  // Point2d centerSmall = getCenterOfMass(mmSmall);
-  //
-  // Point2d robotCenter = (centerLarge + centerSmall) * (1.0 / 2);
-  // Point2d diff = centerSmall - centerLarge;
-  // printf("center sm: %f %f\n", centerSmall.x, centerSmall.y);
-  // printf("center lg: %f %f\n", centerLarge.x, centerLarge.y);
-  //
-  // printf("diff: %f %f\n", diff.y, diff.x);
-  // double angle = atan2(diff.y, diff.x);
-  //
-  // //convert angle to degrees
-  // angle = angle *180/M_PI;
-  // robotPose.x = robotCenter.x;
-  // robotPose.y = robotCenter.y;
-  // robotPose.theta = angle;
-  //   printf("the center of the bot is: %f, %f, %f\n", robotPose.x, robotPose.y, robotPose.theta);
-  //
-  // Vector3d retr(robotPose.x, robotPose.y, angle);
-  // return retr;
 }
 
+//find the first yellow pixel that works and creates a rectangle that will contain the robot
 Rect Vision::findYellowRobot(Mat img)
 {
   //blur this image
@@ -618,6 +405,7 @@ vector<Vec4f> removeStrayLines(vector<Vec4f> lines)
   return lines;
 }
 
+//crop the field
 Rect Vision::crop(Mat img)
 {
   img = smoothing(img, 50);
@@ -632,10 +420,6 @@ Rect Vision::crop(Mat img)
   croppedRectangle.y = 10;
   croppedRectangle.width = img.cols - (croppingOffset + 10);
   croppedRectangle.height = VERT_BOUND;
-  // printf("x %d\n", croppedRectangle.x);
-  // printf("y %d\n", croppedRectangle.y);
-  // printf("height %d\n", croppedRectangle.height);
-  // printf("width %d\n", croppedRectangle.width);
   croppedImg = Mat(img, croppedRectangle);
   vector<Vec4f> linesTop = LSD(croppedImg);
 
@@ -643,10 +427,6 @@ Rect Vision::crop(Mat img)
   //left
   croppedRectangle.width = HOR_BOUND - 100;
   croppedRectangle.height = img.rows -10;
-  // printf("x %d\n", croppedRectangle.x);
-  // printf("y %d\n", croppedRectangle.y);
-  // printf("height %d\n", croppedRectangle.height);
-  // printf("width %d\n", croppedRectangle.width);
   croppedImg = Mat(img, croppedRectangle);
   vector<Vec4f> linesLeft = LSD(croppedImg);
 
@@ -655,10 +435,6 @@ Rect Vision::crop(Mat img)
   croppedRectangle.y = 10;
   croppedRectangle.width = HOR_BOUND - croppingOffset;
   croppedRectangle.height = img.rows -15;
-  // printf("x %d\n", croppedRectangle.x);
-  // printf("x %d\n", croppedRectangle.y);
-  // printf("height %d\n", croppedRectangle.height);
-  // printf("width %d\n", croppedRectangle.width);
   croppedImg = Mat(img, croppedRectangle);
   vector<Vec4f> linesRight = LSD(croppedImg);
 
@@ -667,10 +443,6 @@ Rect Vision::crop(Mat img)
   croppedRectangle.y = img.rows - VERT_BOUND;
   croppedRectangle.width = img.cols - (croppingOffset + 10);
   croppedRectangle.height = VERT_BOUND;
-  // printf("x %d\n", croppedRectangle.x);
-  // printf("x %d\n", croppedRectangle.y);
-  // printf("height %d\n", croppedRectangle.height);
-  // printf("width %d\n", croppedRectangle.width);
   croppedImg = Mat(img, croppedRectangle);
   vector<Vec4f> linesBottom = LSD(croppedImg);
 
@@ -680,10 +452,10 @@ Rect Vision::crop(Mat img)
 
 
   //get the rectangle of the crop
-  croppedRectangle.x = linesLeft.at(findLongestLine(removeStrayLines(linesLeft)))[0] + croppingOffset;
-  croppedRectangle.y = linesTop.at(findLongestLine(removeStrayLines(linesTop)))[1];
-  croppedRectangle.width = ((img.cols - HOR_BOUND) + linesRight.at(findLongestLine(removeStrayLines(linesRight)))[0] - croppedRectangle.x );
-  croppedRectangle.height = ((img.rows - VERT_BOUND) + linesBottom.at(findLongestLine(removeStrayLines(linesBottom)))[1] - croppedRectangle.y);
+  croppedRectangle.x = linesLeft.at(findLongestLine(removeStrayLines(linesLeft)))[0] + croppingOffset + 10;
+  croppedRectangle.y = linesTop.at(findLongestLine(removeStrayLines(linesTop)))[1] + 10;
+  croppedRectangle.width = ((img.cols - HOR_BOUND) + linesRight.at(findLongestLine(removeStrayLines(linesRight)))[0] - croppedRectangle.x ) - 20;
+  croppedRectangle.height = ((img.rows - VERT_BOUND) + linesBottom.at(findLongestLine(removeStrayLines(linesBottom)))[1] - croppedRectangle.y) - 20;
   // printf("x %d\n", croppedRectangle.x);
   // printf("x %d\n", croppedRectangle.y);
   // printf("height %d\n", croppedRectangle.height);
@@ -696,6 +468,8 @@ Rect Vision::crop(Mat img)
 
 }
 
+
+//call back for the vision func
 void Vision::visionCallback(const sensor_msgs::ImageConstPtr& msg)
 {
   static bool cropped = false;
@@ -707,15 +481,11 @@ void Vision::visionCallback(const sensor_msgs::ImageConstPtr& msg)
         img = frame;
         if(!cropped)
         {
-
-          //blur the image before we pass it in
           croppedRect = Vision::crop(img);
           cropped = true;
-
         }
         imshow("original view", img);
         img = Mat(img, croppedRect);
-        //LSD(img);
         getRobotPose(img);
         waitKey(60);
     }
@@ -737,13 +507,8 @@ priv_nh("~")
 
   // Subscribe to camera
   image_transport::ImageTransport it(nh_);
-  //ally2_state_sub_ = nh_.subscribe<slash_dash_bang_hash::State>("ally2_state", 1, boost::bind(&AI::stateCallback, this, _1, "ally2"));
 
   image_sub = it.subscribe("/usb_cam_away/image_raw", 1, &Vision::visionCallback, this);
-
-  //image_sub = it.subscribe("/camera1/image_raw", 1, Vision::visionCallback);
-  //velocity_sub_ = nh_.subscribe<geometry_msgs::Twist>("vel_command", 1, &MotionControl::velocityCallback, this);
-
   home1_pub = nh_.advertise<geometry_msgs::Pose2D>("/vision/home1", 5);
   home2_pub = nh_.advertise<geometry_msgs::Pose2D>("/vision/home2", 5);
   away1_pub = nh_.advertise<geometry_msgs::Pose2D>("/vision/away1", 5);
@@ -759,8 +524,6 @@ priv_nh("~")
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "home");
-    //ros::NodeHandle nh_;
-
     Vision Vision_node;
     ros::spin();
 

@@ -55,15 +55,15 @@
         <remap from="desired_pose" to="/slash_dash_bang_hash_$(arg team_side)/$(arg me)/$(arg me)_desired_pose" />
         <remap if="$(arg sim_mode)" from="vel_command" to="/$(arg team_side)$(arg robot_number)/command" />
 
-        <param name="x_P" value="6.0"/>
+        <param name="x_P" value="1.0"/>
         <param name="x_I" value="0.0"/>
         <param name="x_D" value="0.0"/>
-        <param name="y_P" value="6.0"/>
+        <param name="y_P" value="1.0"/>
         <param name="y_I" value="0.0"/>
         <param name="y_D" value="0.0"/>
 
 
-        <param name="theta_P" value="6.0"/>
+        <param name="theta_P" value="1.0"/>
         <param name="theta_I" value="0.0"/>
         <param name="theta_D" value="0.0"/>
 
