@@ -3,10 +3,17 @@
 
 
 
-#define YELLOW_MIN 23
+#define YELLOW_MIN 19
 #define YELLOW_MAX 36
 #define SATURATE_LOW 40
 #define SATURATE_HIGH 255
+
+#define WHITE_MIN 0
+#define WHITE_MAX 23
+#define WHITE_VAL_LOW 205
+#define WHITE_VAL_HIGH 240
+
+
 
 #define PI 3.14159265
 
@@ -115,7 +122,11 @@ bool Vision::isInYellowRange(int hue, int sat)
 {
   return (hue > YELLOW_MIN && hue < YELLOW_MAX && sat > SATURATE_LOW && sat < SATURATE_HIGH);
 }
-
+//returns true is given hue and saturation are white and not gray
+bool Vision::isInwhiteRange(int hue, int sat, int val)
+{
+  return (hue > WHITE_MIN && hue < WHITE_MAX && val > WHITE_VAL_LOW && val < WHITE_VAL_HIGH);
+}
 
 //helper function return the distance between two points
 double Distance(float dX0, float dY0, float dX1, float dY1)
@@ -123,6 +134,20 @@ double Distance(float dX0, float dY0, float dX1, float dY1)
     return sqrt((dX1 - dX0)*(dX1 - dX0) + (dY1 - dY0)*(dY1 - dY0));
 }
 
+
+
+Vector3d Vision::convertToWorldCoord(Vector3d pixelCoord, int offSetX, int offSetY, int cols, int rows)
+{
+  pixelCoord[0] += offSetX;
+  pixelCoord[1] += offSetY;
+  pixelCoord[0] /= cols;
+  pixelCoord[1] /= rows;
+  pixelCoord[0] *= FIELD_WIDTH;
+  pixelCoord[1] *= FIELD_HEIGHT;
+  pixelCoord[0] -= FIELD_WIDTH / 2;
+  pixelCoord[1] -= FIELD_HEIGHT / 2;
+  return pixelCoord;
+}
 
 //get the robot position and angle
 void Vision::getRobotPose(Mat img)
@@ -133,14 +158,7 @@ void Vision::getRobotPose(Mat img)
   Mat croppedImg = Mat(img, croppedRectangle);
   Vector3d offsetCenter = findCenterRobot(croppedImg);
   geometry_msgs::Pose2D robot_pos;
-  offsetCenter[0] += croppedRectangle.x;
-  offsetCenter[1] += croppedRectangle.y;
-  offsetCenter[0] /= img.cols;
-  offsetCenter[1] /= img.rows;
-  offsetCenter[0] *= FIELD_WIDTH;
-  offsetCenter[1] *= FIELD_HEIGHT;
-  offsetCenter[0] -= FIELD_WIDTH / 2;
-  offsetCenter[1] -= FIELD_HEIGHT / 2;
+  offsetCenter = convertToWorldCoord(offsetCenter, croppedRectangle.x, croppedRectangle.y, img.cols, img.rows);
   robot_pos.x = -1.0* offsetCenter[0];
   robot_pos.y =  -1.0 * offsetCenter[1];
   robot_pos.theta = offsetCenter[2] * 180.0 / M_PI;
@@ -151,63 +169,7 @@ void Vision::getRobotPose(Mat img)
 }
 
 
-float findTheta(vector<Vec4f> lines, Vector2d center)
-{
-  Ptr<LineSegmentDetector> ls = createLineSegmentDetector(LSD_REFINE_NONE);
-  int N = lines.size();
-  //look for the 2 longest
-  int index = 0;
-  int index_2 = 1;
-  for(int i = 2 ; i < N; i++)
-  {
-    const Vec4f v = lines.at(i);
-    const Vec4f v2 = lines.at(index);
-    const Vec4f v3 = lines.at(index_2);
 
-    if(Distance(v[0], v[1], v[2], v[3]) > Distance(v3[0], v3[1], v3[2], v3[3]))
-    {
-      //then it is greater than our 2nd best
-      //now we need to know if it is better than our best as well
-      if(Distance(v[0], v[1], v[2], v[3]) > Distance(v2[0], v2[1], v2[2], v2[3]))
-      {
-        //now we have our best
-        index = i;
-      }
-      else
-      {
-        index_2 = i;
-      }
-    }
-  }
-  const Vec4f v = lines.at(index);
-  const Vec4f v2 = lines.at(index_2);
-  Vector2d point_1(v[2], v[3]);
-  Vector2d point_2(v2[2], v2[3]);
-  //find the two far points and then get the angle compared to the box
-  if(Distance(v[0], v[1], center[0], center[1]) > Distance(v[2], v[3], center[0], center[1]))
-  {
-    //the first point is the one we want
-    point_1[0] = v[0];
-    point_1[1] = v[1];
-  }
-  if(Distance(v2[0], v2[1], center[0], center[1]) > Distance(v2[2], v2[3], center[0], center[1]))
-  {
-    //the first point is the one we want
-    point_2[0] = v2[0];
-    point_2[1] = v2[1];
-  }
-
-
-
-  point_1[0] = (point_1[0] + point_2[0]) / 2;
-  point_1[1] = (point_1[1] + point_2[1]) / 2;
-
-
-  point_1[0] -= center[0];
-  point_1[1] -= center[1];
-
-  return atan2(point_1[1], point_1[0]);
-}
 
 
 
@@ -308,6 +270,51 @@ Vector3d Vision::findCenterRobot(Mat img)
   return ret;
 
 }
+
+//find white ball
+void Vision::findWhiteBall(Mat img)
+{
+
+  //blur this image
+  Mat blurImg = smoothing(img, 5);
+  Mat imgHSV;
+  cvtColor(blurImg, imgHSV, COLOR_BGR2HSV); //Convert the captured frame from BGR to HSV
+  vector<Mat> channels;
+  split(imgHSV, channels);
+
+  int x = 0;
+  int y = 0;
+  // search through the image to find yellow
+  for (int i = 0; i < imgHSV.cols; i++)
+  {
+      for (int j = 0; j < imgHSV.rows; j++)
+      {
+        int hue = channels[0].at<uchar>(j,i);
+        int sat = channels[1].at<uchar>(j,i);
+        int val = channels[2].at<uchar>(j, i);
+          if( isInwhiteRange(hue, sat, val))
+          {
+            //this should be where the ball is
+            x = i;
+            y = j;
+            //TODO:find the center of the ball
+          }
+      }
+  }
+  printf("the ball location in pixels: %d, %d\n", x, y);
+  Vector3d coordinates(x, y , 0);
+  Vector3d worldCoords;
+  worldCoords = convertToWorldCoord(coordinates, 0, 0, img.cols, img. rows);
+  printf("the ball location in world: %f, %f\n", worldCoords[0], worldCoords[1]);
+  geometry_msgs::Pose2D ball_pos;
+
+  ball_pos.x = -1.0* worldCoords[0];
+  ball_pos.y =  -1.0 * worldCoords[1];
+  ball_pos.theta = 0;
+  ball_pub.publish(ball_pos);
+}
+
+
 
 //find the first yellow pixel that works and creates a rectangle that will contain the robot
 Rect Vision::findYellowRobot(Mat img)
@@ -454,8 +461,8 @@ Rect Vision::crop(Mat img)
   //get the rectangle of the crop
   croppedRectangle.x = linesLeft.at(findLongestLine(removeStrayLines(linesLeft)))[0] + croppingOffset + 10;
   croppedRectangle.y = linesTop.at(findLongestLine(removeStrayLines(linesTop)))[1] + 10;
-  croppedRectangle.width = ((img.cols - HOR_BOUND) + linesRight.at(findLongestLine(removeStrayLines(linesRight)))[0] - croppedRectangle.x ) - 20;
-  croppedRectangle.height = ((img.rows - VERT_BOUND) + linesBottom.at(findLongestLine(removeStrayLines(linesBottom)))[1] - croppedRectangle.y) - 20;
+  croppedRectangle.width = ((img.cols - HOR_BOUND) + linesRight.at(findLongestLine(removeStrayLines(linesRight)))[0] - croppedRectangle.x ) - 10;
+  croppedRectangle.height = ((img.rows - VERT_BOUND) + linesBottom.at(findLongestLine(removeStrayLines(linesBottom)))[1] - croppedRectangle.y) - 10;
   // printf("x %d\n", croppedRectangle.x);
   // printf("x %d\n", croppedRectangle.y);
   // printf("height %d\n", croppedRectangle.height);
@@ -487,6 +494,8 @@ void Vision::visionCallback(const sensor_msgs::ImageConstPtr& msg)
         imshow("original view", img);
         img = Mat(img, croppedRect);
         getRobotPose(img);
+        findWhiteBall(img);
+        colorSlider(img);
         waitKey(60);
     }
     catch (cv_bridge::Exception& e)
