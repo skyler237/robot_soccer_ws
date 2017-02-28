@@ -11,6 +11,11 @@ priv_nh("~")
   ros::NodeHandle priv_nh("~");
   priv_nh.param<string>("team", team_, "home");
   tau_ = priv_nh.param<double>("dirty_deriv_gain", 0.05);
+  sample_period_ = priv_nh.param<double>("sample_period", 0.01); // Default 100 Hz
+  LPF_corner_freq_xy_ = priv_nh.param<double>("LPF_corner_freq_xy", 10); // Default 10 Hz
+  LPF_alpha_xy_ = exp(-1.0*LPF_corner_freq_xy_*sample_period_);
+  LPF_corner_freq_theta_ = priv_nh.param<double>("LPF_corner_freq_theta", 10); // Default 10 Hz
+  LPF_alpha_theta_ = exp(-1.0*LPF_corner_freq_theta_*sample_period_);
 
   game_state_sub_ = nh_.subscribe<soccerref::GameState>("/game_state", 1, &Estimator::gameStateCallback, this);
   vision_data_sub_ = nh_.subscribe<geometry_msgs::Pose2D>("vision_data", 1, &Estimator::visionCallback, this);
@@ -38,9 +43,9 @@ void Estimator::estimateStates()
 
   // TODO: Actually implement an estimator here -- currently just passes the data through
   state_ = vision_data_;
-
-
+  lowPassFilterStates();
   calculateVelocities();
+
   publishStates();
 }
 
@@ -58,11 +63,23 @@ void Estimator::calculateVelocities()
   double dt = now - prev;
   prev = now;
 
-  if (dt > 0.0)
-  {
-    state_.xdot = (2.0*tau_ - dt)/(2.0*tau_ + dt)*state_.xdot + 2.0/(2.0*tau_ + dt)*(state_.x - state_prev_.x);
-    state_.ydot = (2.0*tau_ - dt)/(2.0*tau_ + dt)*state_.ydot + 2.0/(2.0*tau_ + dt)*(state_.y - state_prev_.y);
-  }
+  // if (dt > 0.0) -- time not working for now
+  // {
+    state_.xdot = tustinDerivative(state_.xhat, state_prev_.xhat, state_prev_.xdot, tau_, dt);
+    state_.ydot = tustinDerivative(state_.yhat, state_prev_.yhat, state_prev_.ydot, tau_, dt);
+  // }
+}
+
+double Estimator::lowPassFilter(double alpha, double previous, double measured)
+{
+  return alpha*previous  + (1.0 - alpha)*measured;
+}
+
+void Estimator::lowPassFilterStates()
+{
+  state_.xhat = lowPassFilter(LPF_alpha_xy_, state_prev_.xhat, vision_data_.x);
+  state_.yhat = lowPassFilter(LPF_alpha_xy_, state_prev_.yhat, vision_data_.y);
+  state_.thetahat = lowPassFilter(LPF_alpha_theta_, state_prev_.thetahat, vision_data_.theta);
 }
 
 slash_dash_bang_hash::State Estimator::poseToState(geometry_msgs::Pose2D pose)

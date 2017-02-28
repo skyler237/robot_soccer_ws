@@ -65,6 +65,8 @@ using namespace slash_dash_bang_hash;
 
   // Returns true if the robot is close enough and in position to make a goal at the given y
   bool readyForGoalShot(double shot_destination_y, State robot_state, State ally_state, State opp1_state, State opp2_state, State ball_state);
+
+  double tustinDerivative(double x, double x_prev, double xdot_prev, double tau, double dt);
 #endif /* end of include guard:  */
 
 

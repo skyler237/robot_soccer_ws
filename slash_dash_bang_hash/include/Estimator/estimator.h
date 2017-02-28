@@ -20,35 +20,6 @@ typedef boost::shared_ptr< ::slash_dash_bang_hash::State const> StateConstPtr;
 #define FIELD_HEIGHT 2.38
 #define ROBOT_RADIUS 0.10
 
-// struct State
-// {
-//     // Positions
-//     double x;
-//     double y;
-//     double theta;
-//     // Velocities
-//     double xdot;
-//     double ydot;
-//     double thetadot;
-//     // Estimated states
-//     double xhat;
-//     double yhat;
-//     double thetahat;
-// };
-
-// struct State
-// {
-//     // Positions
-//     double x;
-//     double y;
-//     // Velocities
-//     double xdot;
-//     double ydot;
-//     // Estimated states
-//     double xhat;
-//     double yhat;
-// };
-
 class Estimator {
 public:
    Estimator();
@@ -74,6 +45,7 @@ public:
   slash_dash_bang_hash::State state_prev_;
 
   void estimateStates();
+  void lowPassFilterStates();
   void calculateVelocities();
   void publishStates();
 
@@ -81,5 +53,6 @@ public:
   void gameStateCallback(const soccerref::GameState::ConstPtr &msg);
 
   // Helper functions
+  double lowPassFilter(double alpha, double previous, double measured);
   slash_dash_bang_hash::State poseToState(geometry_msgs::Pose2D pose);
 };

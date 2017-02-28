@@ -183,3 +183,7 @@ bool readyForGoalShot(double shot_destination_y, State robot_state, State ally_s
     }
   }
 }
+
+double tustinDerivative(double x, double x_prev, double xdot_prev, double tau, double dt) {
+  return (2.0*tau - dt)/(2.0*tau + dt)*xdot_prev + 2.0/(2.0*tau + dt)*(x - x_prev);
+}
