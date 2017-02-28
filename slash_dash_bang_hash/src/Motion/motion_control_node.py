@@ -121,8 +121,9 @@ def sendVelocityCommands():
 
 
     setSpeed(speedM1*pulsePerRotation, speedM2*pulsePerRotation, speedM3*pulsePerRotation)
-
-
+    speeds_actual_raw = getSpeed()
+    speeds_actual = [x/pulsePerRotation for x in speeds_actual_raw]
+    print(speeds_actual)
 
 
 def main():
