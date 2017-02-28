@@ -18,7 +18,7 @@ from math import cos, sin, pi
 
 # Kinematic constants
 RHO = 0.02875 # Wheel radius [m]
-S_SCALE = 0.1
+S_SCALE = -0.01
 SX1 = S_SCALE*1.0 # Wheel spin vectors - body frame (unit vectors)
 SY1 = S_SCALE*0.0
 SX2 = S_SCALE*-0.5
@@ -106,7 +106,7 @@ def computeMotorSpeeds():
 def sendVelocityCommands():
     speedM1 = wheel_speeds_[0] # rot/s
     speedM2 = wheel_speeds_[1] # rot/s
-    speedM3 = -1.0 * wheel_speeds_[2] # rot/s
+    speedM3 = wheel_speeds_[2] # rot/s
 
     print(wheel_speeds_)
 
