@@ -18,13 +18,13 @@ from math import cos, sin, pi
 
 # Kinematic constants
 RHO = 0.02875 # Wheel radius [m]
-S_SCALE = 0.1
-SX1 = S_SCALE*-1.0 # Wheel spin vectors - body frame (unit vectors)
+S_SCALE = -0.1
+SX1 = S_SCALE*1.0 # Wheel spin vectors - body frame (unit vectors)
 SY1 = S_SCALE*0.0
-SX2 = S_SCALE*0.5
-SY2 = S_SCALE*0.866
-SX3 = S_SCALE*0.5
-SY3 = S_SCALE*-0.866
+SX2 = S_SCALE*-0.5
+SY2 = S_SCALE*-0.866
+SX3 = S_SCALE*-0.5
+SY3 = S_SCALE*0.866
 RX1 = 0.0 # Wheel position vectors - body frame (in meters)
 RY1 = -0.075
 RX2 = -0.06495
@@ -90,8 +90,11 @@ def _handle_velocity_command(msg):
 
 def computeMotorSpeeds():
     global wheel_speeds_
-    ct = cos(theta_)
-    st = sin(theta_)
+    
+    #Rotate by 90 degrees to align world and robot coordinate frames
+    #(Front of robot is x in world frame and y in robot frame)
+    ct = cos(theta_-pi/2)
+    st = sin(theta_-pi/2)
 
     R = np.array([[ ct, st, 0],
                   [-st, ct, 0],
@@ -106,7 +109,7 @@ def computeMotorSpeeds():
 def sendVelocityCommands():
     speedM1 = wheel_speeds_[0] # rot/s
     speedM2 = wheel_speeds_[1] # rot/s
-    speedM3 = -1.0 * wheel_speeds_[2] # rot/s
+    speedM3 = wheel_speeds_[2] # rot/s
 
     print(wheel_speeds_)
 

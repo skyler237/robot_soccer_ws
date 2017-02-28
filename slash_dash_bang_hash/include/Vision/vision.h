@@ -85,7 +85,9 @@ public:
   void visionCallback(const sensor_msgs::ImageConstPtr& msg);
   Rect crop(Mat img);
   Mat smoothing(Mat img, int radius);
-
+  void findWhiteBall(Mat img);
+  bool isInwhiteRange(int hue, int sat, int val);
+  Vector3d convertToWorldCoord(Vector3d pixelCoord, int offSetX, int offSetY, int cols, int rows);
 
 
 
