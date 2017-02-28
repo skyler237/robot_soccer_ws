@@ -106,7 +106,7 @@ def computeMotorSpeeds():
 def sendVelocityCommands():
     speedM1 = wheel_speeds_[0] # rot/s
     speedM2 = wheel_speeds_[1] # rot/s
-    speedM3 = wheel_speeds_[2] # rot/s
+    speedM3 = -1.0 * wheel_speeds_[2] # rot/s
 
     print(wheel_speeds_)
 

@@ -154,10 +154,11 @@ void Controller::publishCommand()
   ROS_INFO("C publishCommand");
 
   geometry_msgs::Twist vel;
-  //vel.linear.x = command_(0);
-  vel.linear.x = 0.0;
+  vel.linear.x = command_(0);
+  //vel.linear.x = 0.0;
   vel.linear.y = command_(1);
-  // vel.angular.z = command_(2);
+  //vel.linear.y = 0.0;
+ // vel.angular.z = command_(2);
   vel.angular.z = 0.0;
 
   motor_pub_.publish(vel);
