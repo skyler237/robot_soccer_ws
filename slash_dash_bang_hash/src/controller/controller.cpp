@@ -96,7 +96,7 @@ void Controller::computeControl() {
     // HACK!
     x_command = saturate(x_PID_.computePIDDirect(desired_pose_.x - robot_state_.x, robot_state_.xdot, 0.01), -1*max_xy_vel_, max_xy_vel_);
     y_command = saturate(y_PID_.computePIDDirect(desired_pose_.y - robot_state_.y, robot_state_.ydot, 0.01), -1*max_xy_vel_, max_xy_vel_);
-    theta_command = saturate(theta_PID_.computePIDDirect(theta_error, robot_state.thetadot, 0.01), -1*max_omega_, max_omega_);
+    theta_command = saturate(theta_PID_.computePIDDirect(theta_error, robot_state_.thetadot, 0.01), -1*max_omega_, max_omega_);
 
     command_ << x_command, y_command, theta_command;
      ROS_INFO("Robot 1 Control: x_vel=%f, y_vel=%f, omega=%f", x_command, y_command, theta_command);
