@@ -57,7 +57,7 @@ void Controller::desiredPoseCallback(const StateConstPtr &msg)
 }
 
 void Controller::computeControl() {
-  //ROS_INFO("C computeControl");
+  ROS_INFO("C computeControl");
 
   double now = ros::Time::now().toSec();
   static double prev = 0;
@@ -69,9 +69,11 @@ void Controller::computeControl() {
   double y_command;
   double theta_command;
 
-  if (dt > CONTROL_TIME_STEP && (gameState_.play || gameState_.reset_field))
-  // if ((gameState_.play || gameState_.reset_field))
+  // if (dt > CONTROL_TIME_STEP && (gameState_.play || gameState_.reset_field))
+  if ((gameState_.play || gameState_.reset_field))
   {
+
+    ROS_INFO("C computeControl inside");
     // Update ally_command_ and ally2_command_ variables
 
     // Compute the PID values for each state variable
@@ -88,14 +90,17 @@ void Controller::computeControl() {
       }
     }
 
-    x_command = saturate(x_PID_.computePID(robot_state_.x, desired_pose_.x, dt), -1*max_xy_vel_, max_xy_vel_);
-    y_command = saturate(y_PID_.computePID(robot_state_.y, desired_pose_.y, dt), -1*max_xy_vel_, max_xy_vel_);
-    theta_command = saturate(theta_PID_.computePID(robot_state_.theta, desired_pose_.theta, dt), -1*max_omega_, max_omega_);
+    // x_command = saturate(x_PID_.computePID(robot_state_.x, desired_pose_.x, dt), -1*max_xy_vel_, max_xy_vel_);
+    // y_command = saturate(y_PID_.computePID(robot_state_.y, desired_pose_.y, dt), -1*max_xy_vel_, max_xy_vel_);
+    // theta_command = saturate(theta_PID_.computePID(robot_state_.theta, desired_pose_.theta, dt), -1*max_omega_, max_omega_);
 
-    
+    // HACK!
+    x_command = saturate(x_PID_.computePID(robot_state_.x, desired_pose_.x, 0.01), -1*max_xy_vel_, max_xy_vel_);
+    y_command = saturate(y_PID_.computePID(robot_state_.y, desired_pose_.y, 0.01), -1*max_xy_vel_, max_xy_vel_);
+    theta_command = saturate(theta_PID_.computePID(robot_state_.theta, desired_pose_.theta, 0.01), -1*max_omega_, max_omega_);
 
     command_ << x_command, y_command, theta_command;
-    // ROS_INFO("Robot 1 Control: x_vel=%f, y_vel=%f, omega=%f", x_command, y_command, theta_command);
+     ROS_INFO("Robot 1 Control: x_vel=%f, y_vel=%f, omega=%f", x_command, y_command, theta_command);
 
     // --- OR ---
 
@@ -146,12 +151,15 @@ void Controller::computeControl() {
 
 void Controller::publishCommand()
 {
-  //ROS_INFO("C publishCommand");
+  ROS_INFO("C publishCommand");
 
   geometry_msgs::Twist vel;
   vel.linear.x = command_(0);
+  //vel.linear.x = 0.0;
   vel.linear.y = command_(1);
-  vel.angular.z = command_(2);
+  //vel.linear.y = 0.0;
+ // vel.angular.z = command_(2);
+  vel.angular.z = 0.0;
 
   motor_pub_.publish(vel);
 

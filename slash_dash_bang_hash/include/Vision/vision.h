@@ -13,6 +13,7 @@
 
 
 #include <cmath>
+#include <math.h>
 #include <iostream>
 #include <cv.h>
 #include <highgui.h>
@@ -34,6 +35,10 @@ typedef boost::shared_ptr< ::slash_dash_bang_hash::State const> StateConstPtr;
 #define FIELD_HEIGHT_PIXELS     378.0 // measured from inside of wall to wall
 #define CAMERA_WIDTH            640.0
 #define CAMERA_HEIGHT           480.0
+
+#define FIELD_WIDTH 3.40  // in meters
+#define FIELD_HEIGHT 2.38
+
 
 // These colours need to match the Gazebo materials
 Scalar red[]    = {Scalar(0,   128, 128), Scalar(10,  255, 255)};
@@ -71,13 +76,25 @@ public:
   geometry_msgs::Pose2D poseAway2;
   geometry_msgs::Pose2D poseBall;
 
-  //void visionCallback(const sensor_msgs::ImageConstPtr& msg);
-  // void estimateStates();
-  // void calculateVelocities();
-  // void publishStates();
-  //
-  // void visionCallback(const geometry_msgs::Pose2D::ConstPtr &msg);
-  // void gameStateCallback(const soccerref::GameState::ConstPtr &msg);
+  //Vision functions
+  //find a box with our yellow robot
+  Rect findYellowRobot(Mat img);
+  bool isInYellowRange(int hue, int sat);
+  void getRobotPose(Mat img);
+  Vector3d findCenterRobot(Mat img);
+  void visionCallback(const sensor_msgs::ImageConstPtr& msg);
+  Rect crop(Mat img);
+  Mat smoothing(Mat img, int radius);
+  void findWhiteBall(Mat img);
+  bool isInwhiteRange(int hue, int sat, int val);
+  bool isInPinkRange(int hue, int sat, int val);
+  void findPinkBall(Mat img);
+  Vector3d convertToWorldCoord(Vector3d pixelCoord, int offSetX, int offSetY, int cols, int rows);
+
+
+
+
+
   //
   // Helper functions
 };

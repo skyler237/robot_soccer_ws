@@ -22,12 +22,15 @@ priv_nh("~")
 
   state_pub_ = nh_.advertise<slash_dash_bang_hash::State>("state", 5);
 
+  ROS_INFO("Initializing estimator");
+
 
 }
 
 void Estimator::visionCallback(const geometry_msgs::Pose2D::ConstPtr &msg)
 {
     vision_data_ = poseToState(*msg);
+    ROS_INFO("Estimator callback");
 
     estimateStates();
 }
@@ -42,6 +45,7 @@ void Estimator::estimateStates()
 
 
   // TODO: Actually implement an estimator here -- currently just passes the data through
+  ROS_INFO("Estimator estimateStates");
   state_ = vision_data_;
   lowPassFilterStates();
   calculateVelocities();
@@ -52,7 +56,7 @@ void Estimator::estimateStates()
 void Estimator::publishStates()
 {
   state_prev_ = state_;
-
+  ROS_INFO("Estimator publishStates");
   state_pub_.publish(state_);
 }
 
@@ -110,6 +114,8 @@ int main(int argc, char **argv)
     ros::NodeHandle nh_;
 
     Estimator estimator_node;
+
+    ROS_INFO("Main for estimator");
 
     ros::spin();
     // ros::Rate loop_rate(30);

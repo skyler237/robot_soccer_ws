@@ -3,7 +3,7 @@
     <!-- declare arg to be passed in -->
     <arg name="team_side" default="home" />
     <arg name="sim_mode" default="false" />
-    <arg name="two_robots" default="true" />
+    <arg name="two_robots" default="false" />
 
     <!-- Outputs to either real world or simulation -->
     <arg name="vel_cmd_ally1" default="vel_cmds" />

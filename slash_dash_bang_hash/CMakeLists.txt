@@ -12,7 +12,7 @@ find_package(catkin REQUIRED
   geometry_msgs
   std_srvs
   cv_bridge
-  image_transport 
+  image_transport
   OpenCV
 	)
 
@@ -108,7 +108,7 @@ generate_messages(
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES slash_dash_bang_hash
- CATKIN_DEPENDS roscpp rospy std_msgs std_srvs gazebo_msgs geometry_msgs eigen3 message_runtime gazebo_ros
+ CATKIN_DEPENDS roscpp rospy std_msgs std_srvs geometry_msgs eigen3 message_runtime
 #  DEPENDS system_lib
 )
 

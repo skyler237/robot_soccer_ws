@@ -18,12 +18,13 @@ from math import cos, sin, pi
 
 # Kinematic constants
 RHO = 0.02875 # Wheel radius [m]
-SX1 = -1.0 # Wheel spin vectors - body frame (unit vectors)
-SY1 = 0.0
-SX2 = 0.5
-SY2 = 0.866
-SX3 = 0.5
-SY3 = -0.866
+S_SCALE = -0.1
+SX1 = S_SCALE*1.0 # Wheel spin vectors - body frame (unit vectors)
+SY1 = S_SCALE*0.0
+SX2 = S_SCALE*-0.5
+SY2 = S_SCALE*-0.866
+SX3 = S_SCALE*-0.5
+SY3 = S_SCALE*0.866
 RX1 = 0.0 # Wheel position vectors - body frame (in meters)
 RY1 = -0.075
 RX2 = -0.06495
@@ -89,8 +90,11 @@ def _handle_velocity_command(msg):
 
 def computeMotorSpeeds():
     global wheel_speeds_
-    ct = cos(theta_)
-    st = sin(theta_)
+    
+    #Rotate by 90 degrees to align world and robot coordinate frames
+    #(Front of robot is x in world frame and y in robot frame)
+    ct = cos(theta_-pi/2)
+    st = sin(theta_-pi/2)
 
     R = np.array([[ ct, st, 0],
                   [-st, ct, 0],
@@ -114,15 +118,12 @@ def sendVelocityCommands():
     pulsePerRotation = 4955 #Old motors
     # pulsePerRotation = 116.2 #New motors
 
-    # Set the PIDQ values for all motors
-    setPID(0, 1, 1, 40000)
 
-    # Set tick period (triggers PID control) and velocity filter corner frequency
-    setT(20, 50)
 
     setSpeed(speedM1*pulsePerRotation, speedM2*pulsePerRotation, speedM3*pulsePerRotation)
-
-
+    speeds_actual_raw = getSpeed()
+    speeds_actual = [x/pulsePerRotation for x in speeds_actual_raw]
+    print(speeds_actual)
 
 
 def main():
@@ -133,6 +134,12 @@ def main():
     rospy.Subscriber('vel_command', Twist, _handle_velocity_command)
     motor_speed_pub_ = rospy.Publisher('motor_speeds', MotorSpeeds, queue_size=10)
 
+
+    # Set the PIDQ values for all motors
+    setPID(0, 1, 0.3, 30000)
+
+    # Set tick period (triggers PID control) and velocity filter corner frequency
+    setT(20, 50)
 
     # spin() simply keeps python from exiting until this node is stopped
     rospy.spin()
