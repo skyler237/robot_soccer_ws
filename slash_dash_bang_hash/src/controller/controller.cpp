@@ -158,8 +158,8 @@ void Controller::publishCommand()
   //vel.linear.x = 0.0;
   vel.linear.y = command_(1);
   //vel.linear.y = 0.0;
- // vel.angular.z = command_(2);
-  vel.angular.z = 0.0;
+ vel.angular.z = command_(2);
+  // vel.angular.z = 0.0;
 
   motor_pub_.publish(vel);
 
