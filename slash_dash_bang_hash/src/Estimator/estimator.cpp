@@ -53,7 +53,14 @@ void Estimator::estimateStates()
 void Estimator::publishStates()
 {
   state_prev_ = state_;
-  state_pub_.publish(state_);
+
+  // Transfer estimated states to the states used by the rest of the architecture
+  State state_to_publish = state_;
+  state_to_publish.x = state_.xhat;
+  state_to_publish.y = state_.yhat;
+  state_to_publish.theta = state_.thetahat;
+
+  state_pub_.publish(state_to_publish);
 }
 
 void Estimator::calculateVelocities()
@@ -67,13 +74,13 @@ void Estimator::calculateVelocities()
 
   // if (dt > 0.0) -- time not working for now
   // {
-    // state_.xdot = tustinDerivative(state_.xhat, state_prev_.xhat, state_prev_.xdot, tau_, dt);
-    // state_.ydot = tustinDerivative(state_.yhat, state_prev_.yhat, state_prev_.ydot, tau_, dt);
-    // state_.thetadot = tustinDerivative(state_.thetahat, state_prev_.thetahat, state_prev_.thetadot, tau_, dt);
+    state_.xdot = tustinDerivative(state_.xhat, state_prev_.xhat, state_prev_.xdot, tau_, dt);
+    state_.ydot = tustinDerivative(state_.yhat, state_prev_.yhat, state_prev_.ydot, tau_, dt);
+    state_.thetadot = tustinDerivative(state_.thetahat, state_prev_.thetahat, state_prev_.thetadot, tau_, dt);
 
-    state_.xdot = tustinDerivative(state_.x, state_prev_.x, state_prev_.xdot, tau_, dt);
-    state_.ydot = tustinDerivative(state_.y, state_prev_.y, state_prev_.ydot, tau_, dt);
-    state_.thetadot = tustinDerivative(state_.theta, state_prev_.theta, state_prev_.thetadot, tau_, dt);
+    // state_.xdot = tustinDerivative(state_.x, state_prev_.x, state_prev_.xdot, tau_, dt);
+    // state_.ydot = tustinDerivative(state_.y, state_prev_.y, state_prev_.ydot, tau_, dt);
+    // state_.thetadot = tustinDerivative(state_.theta, state_prev_.theta, state_prev_.thetadot, tau_, dt);
   // }
 }
 

@@ -7,6 +7,9 @@
     <arg name="sim_mode" default="false" />
     <arg name="team_side" default="home" />
     <arg name="vel_cmds_remap" default="vel_cmds" />
+    <arg name="LPF_corner_freq_xy" default="50" />
+    <arg name="LPF_corner_freq_theta" default="50" />
+    <arg name="dirty_deriv_gain" default="0.10" />
 
     <!-- using which side of the field we are on, determine the appropriate -->
     <!-- connections to the output of the vision system -->
@@ -18,30 +21,45 @@
       <remap from="vision_data" to="/vision/$(arg team_side)1" />
       <remap from="state" to="/slash_dash_bang_hash_$(arg team_side)/$(arg me)/ally1_state" />
       <param name="team" value="$(arg team_side)" />
+      <param name="LPF_corner_freq_xy" value="$(arg LPF_corner_freq_xy)" />
+      <param name="LPF_corner_freq_theta" value="$(arg LPF_corner_freq_theta)" />
+      <param name="dirty_deriv_gain" value="$(arg dirty_deriv_gain)" />
     </node>
     <node name="ally2_estimator" pkg="slash_dash_bang_hash" type="Estimator" >
       <remap from="vision_data" to="/vision/$(arg team_side)2" />
       <remap from="state" to="/slash_dash_bang_hash_$(arg team_side)/$(arg me)/ally2_state" />
       <param name="team" value="$(arg team_side)" />
+      <param name="LPF_corner_freq_xy" value="$(arg LPF_corner_freq_xy)" />
+      <param name="LPF_corner_freq_theta" value="$(arg LPF_corner_freq_theta)" />
+      <param name="dirty_deriv_gain" value="$(arg dirty_deriv_gain)" />
     </node>
     <node name="opp1_estimator" pkg="slash_dash_bang_hash" type="Estimator" >
       <remap from="vision_data" to="/vision/$(arg other_side)1" />
       <remap from="state" to="/slash_dash_bang_hash_$(arg team_side)/$(arg me)/opp1_state" />
       <param name="team" value="$(arg team_side)" />
+      <param name="LPF_corner_freq_xy" value="$(arg LPF_corner_freq_xy)" />
+      <param name="LPF_corner_freq_theta" value="$(arg LPF_corner_freq_theta)" />
+      <param name="dirty_deriv_gain" value="$(arg dirty_deriv_gain)" />
     </node>
     <node name="opp2_estimator" pkg="slash_dash_bang_hash" type="Estimator" >
       <remap from="vision_data" to="/vision/$(arg other_side)2" />
       <remap from="state" to="/slash_dash_bang_hash_$(arg team_side)/$(arg me)/opp2_state" />
       <param name="team" value="$(arg team_side)" />
+      <param name="LPF_corner_freq_xy" value="$(arg LPF_corner_freq_xy)" />
+      <param name="LPF_corner_freq_theta" value="$(arg LPF_corner_freq_theta)" />
+      <param name="dirty_deriv_gain" value="$(arg dirty_deriv_gain)" />
     </node>
     <node name="ball_estimator" pkg="slash_dash_bang_hash" type="Estimator" >
       <remap from="vision_data" to="/vision/ball" />
       <remap from="state" to="/slash_dash_bang_hash_$(arg team_side)/$(arg me)/ball_state" />
       <param name="team" value="$(arg team_side)" />
+      <param name="LPF_corner_freq_xy" value="$(arg LPF_corner_freq_xy)" />
+      <param name="LPF_corner_freq_theta" value="$(arg LPF_corner_freq_theta)" />
+      <param name="dirty_deriv_gain" value="$(arg dirty_deriv_gain)" />
     </node>
 
 
-    <node name="AI" pkg="slash_dash_bang_hash" type="AI" output="screen">
+    <node name="AI" pkg="slash_dash_bang_hash" type="AI">
       <param name="robot_number" value="$(arg robot_number)" />
     </node>
     <node name="path_planner" pkg="slash_dash_bang_hash" type="PathPlanner" >
@@ -49,7 +67,7 @@
       <remap from="desired_pose" to="/slash_dash_bang_hash_$(arg team_side)/$(arg me)/$(arg me)_desired_pose" />
       <param name="robot_number" value="$(arg robot_number)" />
     </node>
-    <node name="controller" pkg="slash_dash_bang_hash" type="Controller" output="screen">
+    <node name="controller" pkg="slash_dash_bang_hash" type="Controller">
         <!-- The controller needs to know which robot state to listen to -->
         <remap from="robot_state" to="/slash_dash_bang_hash_$(arg team_side)/$(arg me)/$(arg me)_state" />
         <remap from="desired_pose" to="/slash_dash_bang_hash_$(arg team_side)/$(arg me)/$(arg me)_desired_pose" />
