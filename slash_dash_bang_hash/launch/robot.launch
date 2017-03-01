@@ -63,7 +63,7 @@
         <param name="y_D" value="0.0"/>
 
 
-        <param name="theta_P" value="3.0"/>
+        <param name="theta_P" value="0.1"/>
         <param name="theta_I" value="0.1"/>
         <param name="theta_D" value="0.0"/>
 
