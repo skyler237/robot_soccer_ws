@@ -43,9 +43,6 @@ void Estimator::gameStateCallback(const soccerref::GameState::ConstPtr &msg)
 void Estimator::estimateStates()
 {
 
-
-  // TODO: Actually implement an estimator here -- currently just passes the data through
-  ROS_INFO("Estimator estimateStates");
   state_ = vision_data_;
   lowPassFilterStates();
   calculateVelocities();
@@ -56,7 +53,6 @@ void Estimator::estimateStates()
 void Estimator::publishStates()
 {
   state_prev_ = state_;
-  ROS_INFO("Estimator publishStates");
   state_pub_.publish(state_);
 }
 
@@ -116,6 +112,8 @@ int main(int argc, char **argv)
     Estimator estimator_node;
 
     ROS_INFO("Main for estimator");
+
+    // Initialize state_prev_
 
     // ros::spin();
     ros::Rate loop_rate(100); // Run at 100 Hz

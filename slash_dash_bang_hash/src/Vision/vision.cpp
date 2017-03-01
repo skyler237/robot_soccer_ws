@@ -380,8 +380,8 @@ void Vision::findPinkBall(Mat img)
   printf("the ball location in world: %f, %f\n", worldCoords[0], worldCoords[1]);
   geometry_msgs::Pose2D ball_pos;
 
-  ball_pos.x = -1.0* worldCoords[0];
-  ball_pos.y =  -1.0 * worldCoords[1];
+  ball_pos.x = worldCoords[0];
+  ball_pos.y = -1.0 * worldCoords[1];
   ball_pos.theta = 0;
   ball_pub.publish(ball_pos);
 }

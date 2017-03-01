@@ -41,7 +41,7 @@
     </node>
 
 
-    <node name="AI" pkg="slash_dash_bang_hash" type="AI" >
+    <node name="AI" pkg="slash_dash_bang_hash" type="AI" output="screen">
       <param name="robot_number" value="$(arg robot_number)" />
     </node>
     <node name="path_planner" pkg="slash_dash_bang_hash" type="PathPlanner" >

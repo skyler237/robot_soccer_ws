@@ -44,6 +44,12 @@ public:
   slash_dash_bang_hash::State state_;
   slash_dash_bang_hash::State state_prev_;
 
+  double sample_period_;
+  double LPF_corner_freq_xy_;
+  double LPF_alpha_xy_;
+  double LPF_corner_freq_theta_;
+  double LPF_alpha_theta_;
+
   void estimateStates();
   void lowPassFilterStates();
   void calculateVelocities();
