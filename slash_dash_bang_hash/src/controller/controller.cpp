@@ -79,8 +79,9 @@ void Controller::computeControl() {
     // Compute the PID values for each state variable
 
     // Correct the "theta gap" -- choose the direction that is quickest
-    double theta_error = abs(robot_state_.theta - desired_pose_.theta);
-    if(abs(360.0 - theta_error) < theta_error) {
+    ROS_INFO("Original theta: actual=%f, desired=%f", robot_state_.theta, desired_pose_.theta);
+    double theta_error = fabs(robot_state_.theta - desired_pose_.theta);
+    if(fabs(360.0 - theta_error) < theta_error) {
       if(robot_state_.theta > desired_pose_.theta)
       {
         robot_state_.theta -= 360.0;
@@ -89,6 +90,7 @@ void Controller::computeControl() {
         desired_pose_.theta -= 360.0;
       }
     }
+    ROS_INFO("corrected theta: actual=%f, desired=%f", robot_state_.theta, desired_pose_.theta);
 
     // x_command = saturate(x_PID_.computePID(robot_state_.x, desired_pose_.x, dt), -1*max_xy_vel_, max_xy_vel_);
     // y_command = saturate(y_PID_.computePID(robot_state_.y, desired_pose_.y, dt), -1*max_xy_vel_, max_xy_vel_);
