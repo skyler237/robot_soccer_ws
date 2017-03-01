@@ -63,6 +63,8 @@ void Estimator::calculateVelocities()
   double dt = now - prev;
   prev = now;
 
+  dt = sample_period_;
+
   // if (dt > 0.0) -- time not working for now
   // {
     state_.xdot = tustinDerivative(state_.xhat, state_prev_.xhat, state_prev_.xdot, tau_, dt);
