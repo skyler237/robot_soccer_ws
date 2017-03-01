@@ -117,14 +117,14 @@ int main(int argc, char **argv)
 
     ROS_INFO("Main for estimator");
 
-    ros::spin();
-    // ros::Rate loop_rate(30);
-    // while(ros::ok())
-    // {
-    //     // process any callbacks
-    //     ros::spinOnce();
-    //
-    //     // force looping at a constant rate
-    //     loop_rate.sleep();
-    // }
+    // ros::spin();
+    ros::Rate loop_rate(100); // Run at 100 Hz
+    while(ros::ok())
+    {
+        // process any callbacks
+        ros::spinOnce();
+
+        // force looping at a constant rate
+        loop_rate.sleep();
+    }
 }
