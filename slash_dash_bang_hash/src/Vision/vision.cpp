@@ -185,7 +185,7 @@ void Vision::getRobotPose(Mat img)
   geometry_msgs::Pose2D robot_pos;
   offsetCenter = convertToWorldCoord(offsetCenter, croppedRectangle.x, croppedRectangle.y, img.cols, img.rows);
   robot_pos.x = offsetCenter[0];
-  robot_pos.y =  offsetCenter[1];
+  robot_pos.y = -1.0*offsetCenter[1];
   robot_pos.theta = offsetCenter[2] * 180.0 / M_PI;
   home1_pub.publish(robot_pos);
 
