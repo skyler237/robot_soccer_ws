@@ -87,6 +87,8 @@ public:
   Mat smoothing(Mat img, int radius);
   void findWhiteBall(Mat img);
   bool isInwhiteRange(int hue, int sat, int val);
+  bool isInPinkRange(int hue, int sat, int val);
+  void findPinkBall(Mat img);
   Vector3d convertToWorldCoord(Vector3d pixelCoord, int offSetX, int offSetY, int cols, int rows);
 
 

@@ -13,6 +13,15 @@
 #define WHITE_VAL_LOW 205
 #define WHITE_VAL_HIGH 240
 
+#define PINK_MIN 0
+#define PINK_MAX 30
+#define PINK_VAL_LOW 210
+#define PINK_VAL_HIGH 255
+#define PINK_SAT_LOW 0
+#define PINK_SAT_HIGH 50
+
+#define PINK_GREEN_MAX 215
+
 
 
 #define PI 3.14159265
@@ -58,6 +67,7 @@ void colorSlider(Mat img)
 
 
     //Create trackbars in "Control" window
+
     cvCreateTrackbar("LowH", "Control", &iLowH, 179); //Hue (0 - 179)
     cvCreateTrackbar("HighH", "Control", &iHighH, 179);
 
@@ -67,6 +77,16 @@ void colorSlider(Mat img)
     cvCreateTrackbar("LowV", "Control", &iLowV, 255); //Value (0 - 255)
     cvCreateTrackbar("HighV", "Control", &iHighV, 255);
 
+/*
+    cvCreateTrackbar("redLow", "Control", &iLowH, 255); //Hue (0 - 179)
+    cvCreateTrackbar("redHigh", "Control", &iHighH, 255);
+
+    cvCreateTrackbar("greenLow", "Control", &iLowS, 255); //Saturation (0 - 255)
+    cvCreateTrackbar("greenHigh", "Control", &iHighS, 255);
+
+    cvCreateTrackbar("blueLow", "Control", &iLowV, 255); //Value (0 - 255)
+    cvCreateTrackbar("blueHigh", "Control", &iHighV, 255);
+*/
 
     Mat imgOriginal;
     imgOriginal = img;
@@ -74,13 +94,12 @@ void colorSlider(Mat img)
     //{
 
         Mat imgHSV;
-
         cvtColor(imgOriginal, imgHSV, COLOR_BGR2HSV); //Convert the captured frame from BGR to HSV
 
         Mat imgThresholded;
 
         inRange(imgHSV, Scalar(iLowH, iLowS, iLowV), Scalar(iHighH, iHighS, iHighV), imgThresholded); //Threshold the image
-
+        //inRange(imgOriginal, Scalar(iLowH, iLowS, iLowV), Scalar(iHighH, iHighS, iHighV), imgThresholded);
         //morphological opening (remove small objects from the foreground)
         erode(imgThresholded, imgThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) );
         dilate( imgThresholded, imgThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) );
@@ -126,6 +145,12 @@ bool Vision::isInYellowRange(int hue, int sat)
 bool Vision::isInwhiteRange(int hue, int sat, int val)
 {
   return (hue > WHITE_MIN && hue < WHITE_MAX && val > WHITE_VAL_LOW && val < WHITE_VAL_HIGH);
+}
+
+//returns true is given hue and saturation are white and not gray
+bool Vision::isInPinkRange(int hue, int sat, int val)
+{
+  return (hue > PINK_MIN && hue < PINK_MAX && val > PINK_VAL_LOW && val < PINK_VAL_HIGH && sat > PINK_SAT_LOW && sat < PINK_SAT_HIGH);
 }
 
 //helper function return the distance between two points
@@ -293,6 +318,53 @@ void Vision::findWhiteBall(Mat img)
         int sat = channels[1].at<uchar>(j,i);
         int val = channels[2].at<uchar>(j, i);
           if( isInwhiteRange(hue, sat, val))
+          {
+            //this should be where the ball is
+            x = i;
+            y = j;
+            //TODO:find the center of the ball
+          }
+      }
+  }
+  printf("the ball location in pixels: %d, %d\n", x, y);
+  Vector3d coordinates(x, y , 0);
+  Vector3d worldCoords;
+  worldCoords = convertToWorldCoord(coordinates, 0, 0, img.cols, img. rows);
+  printf("the ball location in world: %f, %f\n", worldCoords[0], worldCoords[1]);
+  geometry_msgs::Pose2D ball_pos;
+
+  ball_pos.x = -1.0* worldCoords[0];
+  ball_pos.y =  -1.0 * worldCoords[1];
+  ball_pos.theta = 0;
+  ball_pub.publish(ball_pos);
+}
+
+void Vision::findPinkBall(Mat img)
+{
+
+  //blur this image
+  Mat blurImg = smoothing(img, 5);
+  vector<Mat> blurChannels;
+  split(blurImg, blurChannels);
+  Mat imgHSV;
+  cvtColor(blurImg, imgHSV, COLOR_BGR2HSV); //Convert the captured frame from BGR to HSV
+  vector<Mat> channels;
+  split(imgHSV, channels);
+  if (channels.size() == 0){
+    return;
+  }
+
+  int x = 0;
+  int y = 0;
+  // search through the image to find yellow
+  for (int i = 0; i < imgHSV.cols; i++)
+  {
+      for (int j = 0; j < imgHSV.rows; j++)
+      {
+        int hue = channels[0].at<uchar>(j,i);
+        int sat = channels[1].at<uchar>(j,i);
+        int val = channels[2].at<uchar>(j, i);
+          if( isInPinkRange(hue, sat, val) && blurChannels[1].at<uchar>(j,i) < PINK_GREEN_MAX)
           {
             //this should be where the ball is
             x = i;
@@ -494,8 +566,9 @@ void Vision::visionCallback(const sensor_msgs::ImageConstPtr& msg)
         imshow("original view", img);
         img = Mat(img, croppedRect);
         getRobotPose(img);
-        findWhiteBall(img);
-        colorSlider(img);
+        findPinkBall(img);
+        Mat blurImg = Vision::smoothing(img, 5);
+        colorSlider(blurImg);
         waitKey(60);
     }
     catch (cv_bridge::Exception& e)
