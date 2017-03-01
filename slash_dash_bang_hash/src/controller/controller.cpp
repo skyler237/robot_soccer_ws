@@ -80,15 +80,12 @@ void Controller::computeControl() {
 
     // Correct the "theta gap" -- choose the direction that is quickest
     ROS_INFO("Original theta: actual=%f, desired=%f", robot_state_.theta, desired_pose_.theta);
-    double theta_error = fabs(robot_state_.theta - desired_pose_.theta);
-    if(fabs(360.0 - theta_error) < theta_error) {
-      if(robot_state_.theta > desired_pose_.theta)
-      {
-        robot_state_.theta -= 360.0;
-      }
-      else{
-        desired_pose_.theta -= 360.0;
-      }
+    double theta_error = desired_pose_.theta - robot_state_.theta;
+    if(fabs(theta_error) > fabs(360.0 - theta_error)) {
+      theta_error = theta_error - 360.0;
+    }
+    else if(fabs(theta_error) > fabs(360.0 + theta_error)) {
+      theta_error = theta_error + 360.0;
     }
     ROS_INFO("corrected theta: actual=%f, desired=%f", robot_state_.theta, desired_pose_.theta);
 
@@ -97,9 +94,9 @@ void Controller::computeControl() {
     // theta_command = saturate(theta_PID_.computePID(robot_state_.theta, desired_pose_.theta, dt), -1*max_omega_, max_omega_);
 
     // HACK!
-    x_command = saturate(x_PID_.computePID(robot_state_.x, desired_pose_.x, 0.01), -1*max_xy_vel_, max_xy_vel_);
-    y_command = saturate(y_PID_.computePID(robot_state_.y, desired_pose_.y, 0.01), -1*max_xy_vel_, max_xy_vel_);
-    theta_command = saturate(theta_PID_.computePID(robot_state_.theta, desired_pose_.theta, 0.01), -1*max_omega_, max_omega_);
+    x_command = saturate(x_PID_.computePIDDirect(desired_pose_.x - robot_state_.x, robot_state_.xdot, 0.01), -1*max_xy_vel_, max_xy_vel_);
+    y_command = saturate(y_PID_.computePIDDirect(desired_pose_.y - robot_state_.y, robot_state_.ydot, 0.01), -1*max_xy_vel_, max_xy_vel_);
+    theta_command = saturate(theta_PID_.computePIDDirect(theta_error, robot_state.thetadot, 0.01), -1*max_omega_, max_omega_);
 
     command_ << x_command, y_command, theta_command;
      ROS_INFO("Robot 1 Control: x_vel=%f, y_vel=%f, omega=%f", x_command, y_command, theta_command);

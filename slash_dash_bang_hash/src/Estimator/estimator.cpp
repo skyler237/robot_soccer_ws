@@ -67,8 +67,13 @@ void Estimator::calculateVelocities()
 
   // if (dt > 0.0) -- time not working for now
   // {
-    state_.xdot = tustinDerivative(state_.xhat, state_prev_.xhat, state_prev_.xdot, tau_, dt);
-    state_.ydot = tustinDerivative(state_.yhat, state_prev_.yhat, state_prev_.ydot, tau_, dt);
+    // state_.xdot = tustinDerivative(state_.xhat, state_prev_.xhat, state_prev_.xdot, tau_, dt);
+    // state_.ydot = tustinDerivative(state_.yhat, state_prev_.yhat, state_prev_.ydot, tau_, dt);
+    // state_.thetadot = tustinDerivative(state_.thetahat, state_prev_.thetahat, state_prev_.thetadot, tau_, dt);
+
+    state_.xdot = tustinDerivative(state_.x, state_prev_.x, state_prev_.xdot, tau_, dt);
+    state_.ydot = tustinDerivative(state_.y, state_prevhat, state_prev_.ydot, tau_, dt);
+    state_.thetadot = tustinDerivative(state_.theta, state_prev_.theta, state_prev_.thetadot, tau_, dt);
   // }
 }
 
