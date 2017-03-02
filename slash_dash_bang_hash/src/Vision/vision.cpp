@@ -182,10 +182,13 @@ void Vision::getRobotPose(Mat img)
   croppedRectangle = findYellowRobot(img);
   Mat croppedImg = Mat(img, croppedRectangle);
   Vector3d offsetCenter = findCenterRobot(croppedImg);
+
   geometry_msgs::Pose2D robot_pos;
+
   offsetCenter = convertToWorldCoord(offsetCenter, croppedRectangle.x, croppedRectangle.y, img.cols, img.rows);
+
   robot_pos.x = offsetCenter[0];
-  robot_pos.y =  offsetCenter[1];
+  robot_pos.y = -1.0* offsetCenter[1]; // HACK!
   robot_pos.theta = offsetCenter[2] * 180.0 / M_PI;
   home1_pub.publish(robot_pos);
 
@@ -235,6 +238,13 @@ Vector3d Vision::findCenterRobot(Mat img)
   //the points should be within 3px in any direction of each other
 
    int N = lines.size();
+   //if we haven't found any lines then we should return 0,0,0
+   if(N <= 0)
+   {
+     Vector3d ret(0,0,0);
+     return ret;
+   }
+
    int indexY = 0;
    int indexX = 0;
    int indexL = 0;
@@ -245,9 +255,12 @@ Vector3d Vision::findCenterRobot(Mat img)
    //find the longest line and go for it
    int longestIndex = findLongestLine(lines);
   const Vec4f v = lines.at(longestIndex);
+
    Vector2d center(v[0], v[1]);
+
    center[0] = (center[0] + v[2]) / 2;
    center[1] = (center[1] + v[3]) / 2;
+
    //printf("the center of the bot is: %f, %f\n", center[0], center[1]);
 
     //forward facing is the one with more black pixels
@@ -292,6 +305,7 @@ Vector3d Vision::findCenterRobot(Mat img)
   float angle =  atan2(frontPoint[1], frontPoint[0]);
   //printf("angle %f\n", angle);
   Vector3d ret(center[0], center[1], angle);
+
   return ret;
 
 }
@@ -401,9 +415,9 @@ Rect Vision::findYellowRobot(Mat img)
   int x = 0;
   int y = 0;
   // search through the image to find yellow
-  for (int i = 0; i < imgHSV.cols; i++)
+  for (int i = 0; i < imgHSV.cols - 1; i++)
   {
-      for (int j = 0; j < imgHSV.rows; j++)
+      for (int j = 0; j < imgHSV.rows - 1; j++)
       {
         int hue = channels[0].at<uchar>(j,i);
         int sat = channels[1].at<uchar>(j,i);
@@ -412,9 +426,9 @@ Rect Vision::findYellowRobot(Mat img)
             //this means we have found yellow and want to create a box from this point
             int count = 0;
             //from here we want to do a search around the immediate block
-            for(int k = max(0, i - 8); k < min(imgHSV.cols, i + 8); k++)
+            for(int k = max(0, i - 8); k < min(imgHSV.cols - 1, i + 8); k++)
             {
-              for(int l = max(0, j - 8); l < min(imgHSV.rows, j + 8); l++)
+              for(int l = max(0, j - 8); l < min(imgHSV.rows - 1, j + 8); l++)
               {
                 hue = channels[0].at<uchar>(l, k);
                 sat = channels[1].at<uchar>(l,k);
