@@ -68,6 +68,16 @@ public:
   ros::Publisher ball_pub;
   ros::Publisher ball_position_pub; // for publishing internally from the vision window
 
+  //subscriber to the desired pose
+  ros::Subscriber desired_pose_sub_;
+  ros::Subscriber destination_sub_;
+
+  //desired pose
+  slash_dash_bang_hash::State desired_pose_;
+  //destination, end goal
+  slash_dash_bang_hash::State destination_;
+
+
   // Use variables to store position of objects. These variables are very
   // useful when the ball cannot be seen, otherwise we'll get the position (0, 0)
   geometry_msgs::Pose2D poseHome1;
@@ -90,6 +100,9 @@ public:
   bool isInPinkRange(int hue, int sat, int val);
   void findPinkBall(Mat img);
   Vector3d convertToWorldCoord(Vector3d pixelCoord, int offSetX, int offSetY, int cols, int rows);
+  void drawPosDest(Mat img);
+  void setDesiredPose(const StateConstPtr &msg);
+  void setDestination(const StateConstPtr &msg);
 
 
 

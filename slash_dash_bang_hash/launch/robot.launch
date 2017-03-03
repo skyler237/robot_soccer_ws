@@ -61,12 +61,16 @@
 
     <node name="AI" pkg="slash_dash_bang_hash" type="AI">
       <param name="robot_number" value="$(arg robot_number)" />
+      <param name="manual_destinations" value="1" />
     </node>
+
     <node name="path_planner" pkg="slash_dash_bang_hash" type="PathPlanner" >
       <remap from="destination" to="/slash_dash_bang_hash_$(arg team_side)/$(arg me)/$(arg me)_destination" />
       <remap from="desired_pose" to="/slash_dash_bang_hash_$(arg team_side)/$(arg me)/$(arg me)_desired_pose" />
       <param name="robot_number" value="$(arg robot_number)" />
+
     </node>
+    
     <node name="controller" pkg="slash_dash_bang_hash" type="Controller">
         <!-- The controller needs to know which robot state to listen to -->
         <remap from="robot_state" to="/slash_dash_bang_hash_$(arg team_side)/$(arg me)/$(arg me)_state" />
