@@ -14,6 +14,7 @@ priv_nh("~")
   ros::NodeHandle priv_nh("~");
   priv_nh.param<string>("team", team_, "home");
   priv_nh.param<int>("robot_number", robot_number_, 1);
+  priv_nh.param<int>("manual_destinations", manual_destinations_, 0);
 
 
   ally1_state_sub_ = nh_.subscribe<slash_dash_bang_hash::State>("ally1_state", 1, boost::bind(&AI::stateCallback, this, _1, "ally1"));
@@ -22,6 +23,7 @@ priv_nh("~")
   opp2_state_sub_ = nh_.subscribe<slash_dash_bang_hash::State>("opp2_state", 1, boost::bind(&AI::stateCallback, this, _1, "opponent2"));
   ball_state_sub_ = nh_.subscribe<slash_dash_bang_hash::State>("ball_state", 1, boost::bind(&AI::stateCallback, this, _1, "ball"));
   game_state_sub_ = nh_.subscribe<soccerref::GameState>("/game_state", 1, &AI::gameStateCallback, this);
+
 
   ally1_destination_pub_ = nh_.advertise<slash_dash_bang_hash::State>("ally1_destination", 5);
   ally2_destination_pub_ = nh_.advertise<slash_dash_bang_hash::State>("ally2_destination", 5);
@@ -130,8 +132,10 @@ void AI::checkForKick(int robotId)
 
 void AI::publishDestinations()
 {
-  ally1_destination_pub_.publish(ally1_destination_);
-  ally2_destination_pub_.publish(ally2_destination_);
+  if(manual_destinations_ == 0) {
+    ally1_destination_pub_.publish(ally1_destination_);
+    ally2_destination_pub_.publish(ally2_destination_);
+  }
 }
 
 

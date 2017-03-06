@@ -47,6 +47,8 @@ public:
   State opp1_state_, opp2_state_;
   State ball_state_;
 
+  int manual_destinations_;
+
   Vector2d ally1_startingPos_;
   Vector2d ally2_startingPos_;
 

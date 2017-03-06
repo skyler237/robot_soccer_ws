@@ -174,18 +174,62 @@ Vector3d Vision::convertToWorldCoord(Vector3d pixelCoord, int offSetX, int offSe
   return pixelCoord;
 }
 
+
+
+
+
+
+
 //get the robot position and angle
 void Vision::getRobotPose(Mat img)
 {
+
+
+  //blur this image
+  // Mat blurImg = smoothing(img, 5);
+  // Mat imgHSV;
+  // cvtColor(blurImg, imgHSV, COLOR_BGR2HSV); //Convert the captured frame from BGR to HSV
+  // vector<Mat> channels;
+  // split(imgHSV, channels);
+  //
+  // int x = 0;
+  // int y = 0;
+  // int count = 0;
+  // // search through the image to find yellow
+  // for (int i = 0; i < imgHSV.cols - 1; i++)
+  // {
+  //     for (int j = 0; j < imgHSV.rows - 1; j++)
+  //     {
+  //       int hue = channels[0].at<uchar>(j,i);
+  //       int sat = channels[1].at<uchar>(j,i);
+  //         if( isInYellowRange(hue, sat))
+  //         {
+  //           x += i;
+  //           y += j;
+  //           count++;
+  //         }
+  //
+  //       }
+  // }
+  // x /= count;
+  // y /= count;
+  // printf("center of the Bot average: %d, %d\n", x, y);
+
+
+
   //crop so we have just the mini robot location
   Rect croppedRectangle;
   croppedRectangle = findYellowRobot(img);
   Mat croppedImg = Mat(img, croppedRectangle);
   Vector3d offsetCenter = findCenterRobot(croppedImg);
+
   geometry_msgs::Pose2D robot_pos;
+  printf("center of the Bot lines: %d, %d\n", offsetCenter[0], offsetCenter[1]);
+
   offsetCenter = convertToWorldCoord(offsetCenter, croppedRectangle.x, croppedRectangle.y, img.cols, img.rows);
+
   robot_pos.x = offsetCenter[0];
-  robot_pos.y = -1.0*offsetCenter[1];
+  robot_pos.y = -1.0* offsetCenter[1]; // HACK!
   robot_pos.theta = offsetCenter[2] * 180.0 / M_PI;
   home1_pub.publish(robot_pos);
 
@@ -235,6 +279,13 @@ Vector3d Vision::findCenterRobot(Mat img)
   //the points should be within 3px in any direction of each other
 
    int N = lines.size();
+   //if we haven't found any lines then we should return 0,0,0
+   if(N <= 0)
+   {
+     Vector3d ret(0,0,0);
+     return ret;
+   }
+
    int indexY = 0;
    int indexX = 0;
    int indexL = 0;
@@ -245,9 +296,12 @@ Vector3d Vision::findCenterRobot(Mat img)
    //find the longest line and go for it
    int longestIndex = findLongestLine(lines);
   const Vec4f v = lines.at(longestIndex);
+
    Vector2d center(v[0], v[1]);
+
    center[0] = (center[0] + v[2]) / 2;
    center[1] = (center[1] + v[3]) / 2;
+
    //printf("the center of the bot is: %f, %f\n", center[0], center[1]);
 
     //forward facing is the one with more black pixels
@@ -289,9 +343,10 @@ Vector3d Vision::findCenterRobot(Mat img)
     frontPoint[0] -= center[0];
     frontPoint[1] -= center[1];
 
-  float angle =  atan2(frontPoint[1], frontPoint[0]);
+  float angle =  atan2(-frontPoint[1], frontPoint[0]);
   //printf("angle %f\n", angle);
   Vector3d ret(center[0], center[1], angle);
+
   return ret;
 
 }
@@ -401,9 +456,9 @@ Rect Vision::findYellowRobot(Mat img)
   int x = 0;
   int y = 0;
   // search through the image to find yellow
-  for (int i = 0; i < imgHSV.cols; i++)
+  for (int i = 0; i < imgHSV.cols - 1; i++)
   {
-      for (int j = 0; j < imgHSV.rows; j++)
+      for (int j = 0; j < imgHSV.rows - 1; j++)
       {
         int hue = channels[0].at<uchar>(j,i);
         int sat = channels[1].at<uchar>(j,i);
@@ -412,9 +467,9 @@ Rect Vision::findYellowRobot(Mat img)
             //this means we have found yellow and want to create a box from this point
             int count = 0;
             //from here we want to do a search around the immediate block
-            for(int k = max(0, i - 8); k < min(imgHSV.cols, i + 8); k++)
+            for(int k = max(0, i - 8); k < min(imgHSV.cols - 1, i + 8); k++)
             {
-              for(int l = max(0, j - 8); l < min(imgHSV.rows, j + 8); l++)
+              for(int l = max(0, j - 8); l < min(imgHSV.rows - 1, j + 8); l++)
               {
                 hue = channels[0].at<uchar>(l, k);
                 sat = channels[1].at<uchar>(l,k);
@@ -437,6 +492,10 @@ Rect Vision::findYellowRobot(Mat img)
         break;
       }
   }
+
+
+
+
 
 
   Rect croppedRectangle;
@@ -492,35 +551,38 @@ Rect Vision::crop(Mat img)
   Mat croppedImg;
 
   int croppingOffset = 70;
+  int widthOffset = 80;
+  int leftBuffer = 100;
+  int genericBuffer = 10;
 
   //get the lines for portions of the field
   //top
   croppedRectangle.x = croppingOffset;
-  croppedRectangle.y = 10;
-  croppedRectangle.width = img.cols - (croppingOffset + 10);
+  croppedRectangle.y = genericBuffer;
+  croppedRectangle.width = img.cols - (widthOffset);
   croppedRectangle.height = VERT_BOUND;
   croppedImg = Mat(img, croppedRectangle);
   vector<Vec4f> linesTop = LSD(croppedImg);
 
 
   //left
-  croppedRectangle.width = HOR_BOUND - 100;
-  croppedRectangle.height = img.rows -10;
+  croppedRectangle.width = HOR_BOUND - leftBuffer;
+  croppedRectangle.height = img.rows -genericBuffer;
   croppedImg = Mat(img, croppedRectangle);
   vector<Vec4f> linesLeft = LSD(croppedImg);
 
   //right
   croppedRectangle.x = (img.cols - HOR_BOUND);
-  croppedRectangle.y = 10;
-  croppedRectangle.width = HOR_BOUND - croppingOffset;
-  croppedRectangle.height = img.rows -15;
+  croppedRectangle.y = genericBuffer;
+  croppedRectangle.width = HOR_BOUND - widthOffset;
+  croppedRectangle.height = img.rows -genericBuffer;
   croppedImg = Mat(img, croppedRectangle);
   vector<Vec4f> linesRight = LSD(croppedImg);
 
   //bottom
   croppedRectangle.x = croppingOffset;
   croppedRectangle.y = img.rows - VERT_BOUND;
-  croppedRectangle.width = img.cols - (croppingOffset + 10);
+  croppedRectangle.width = img.cols - (widthOffset);
   croppedRectangle.height = VERT_BOUND;
   croppedImg = Mat(img, croppedRectangle);
   vector<Vec4f> linesBottom = LSD(croppedImg);
@@ -531,10 +593,10 @@ Rect Vision::crop(Mat img)
 
 
   //get the rectangle of the crop
-  croppedRectangle.x = linesLeft.at(findLongestLine(removeStrayLines(linesLeft)))[0] + croppingOffset + 10;
-  croppedRectangle.y = linesTop.at(findLongestLine(removeStrayLines(linesTop)))[1] + 10;
-  croppedRectangle.width = ((img.cols - HOR_BOUND) + linesRight.at(findLongestLine(removeStrayLines(linesRight)))[0] - croppedRectangle.x ) - 10;
-  croppedRectangle.height = ((img.rows - VERT_BOUND) + linesBottom.at(findLongestLine(removeStrayLines(linesBottom)))[1] - croppedRectangle.y) - 10;
+  croppedRectangle.x = linesLeft.at(findLongestLine(removeStrayLines(linesLeft)))[0] + widthOffset;
+  croppedRectangle.y = linesTop.at(findLongestLine(removeStrayLines(linesTop)))[1] + genericBuffer;
+  croppedRectangle.width = ((img.cols - HOR_BOUND) + linesRight.at(findLongestLine(removeStrayLines(linesRight)))[0] - croppedRectangle.x ) - genericBuffer;
+  croppedRectangle.height = ((img.rows - VERT_BOUND) + linesBottom.at(findLongestLine(removeStrayLines(linesBottom)))[1] - croppedRectangle.y) - genericBuffer;
   // printf("x %d\n", croppedRectangle.x);
   // printf("x %d\n", croppedRectangle.y);
   // printf("height %d\n", croppedRectangle.height);
@@ -546,6 +608,28 @@ Rect Vision::crop(Mat img)
   return croppedRectangle;
 
 }
+
+void Vision::setDestination(const StateConstPtr &msg)
+{
+    destination_ = *msg;
+}
+
+void Vision::setDesiredPose(const StateConstPtr &msg)
+{
+  desired_pose_ = *msg;
+}
+
+//draw desired position and the desired destination
+void Vision::drawPosDest(Mat img)
+{
+
+  //extract the point from here
+  Point center(desired_pose_.x, desired_pose_.y);
+  int radius = 5;
+  circle(img, center, radius, Scalar( 0, 0, 255 ));
+  imshow("circle", img);
+}
+
 
 
 //call back for the vision func
@@ -569,6 +653,7 @@ void Vision::visionCallback(const sensor_msgs::ImageConstPtr& msg)
         findPinkBall(img);
         Mat blurImg = Vision::smoothing(img, 5);
         colorSlider(blurImg);
+        drawPosDest(img);
         waitKey(60);
     }
     catch (cv_bridge::Exception& e)
@@ -591,6 +676,9 @@ priv_nh("~")
   image_transport::ImageTransport it(nh_);
 
   image_sub = it.subscribe("/usb_cam_away/image_raw", 1, &Vision::visionCallback, this);
+  desired_pose_sub_ = nh_.subscribe<slash_dash_bang_hash::State>("desired_pose", 1, &Vision::setDesiredPose, this);
+  destination_sub_ = nh_.subscribe<slash_dash_bang_hash::State>("destination", 1, &Vision::setDestination, this);
+
   home1_pub = nh_.advertise<geometry_msgs::Pose2D>("/vision/home1", 5);
   home2_pub = nh_.advertise<geometry_msgs::Pose2D>("/vision/home2", 5);
   away1_pub = nh_.advertise<geometry_msgs::Pose2D>("/vision/away1", 5);
