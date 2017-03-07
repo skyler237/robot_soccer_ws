@@ -56,10 +56,8 @@ double PID::computePID(double current, double desired, double dt)
 }
 
 // This can be used if the derivative of the state is already known and does not need ot be numerically calculated
-double PID::computePIDDirect(double x, double x_r, double xdot, double dt)
+double PID::computePIDDirect(double error, double xdot, double dt)
 {
-  double error = x_r - x;
-
   // Handle border cases (don't compute anything)
   if(dt == 0.0 || abs(error) > 9999999)
   {

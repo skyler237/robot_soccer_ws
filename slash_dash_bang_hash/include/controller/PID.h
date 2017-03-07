@@ -18,6 +18,6 @@ public:
 
   double computePID(double current, double desired, double dt);
   // Use this when the derivative of the state is already known
-  double computePIDDirect(double x, double x_r, double xdot, double dt);
+  double computePIDDirect(double error, double xdot, double dt);
   void setGains(double p, double i, double d, double tau);
 };

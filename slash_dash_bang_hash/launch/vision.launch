@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="me" default="ally1" />
+  <arg name="team_side" default="home" />
+
+    <!-- Hardware agnostic code -->
+    <node name="slash_vision" pkg="slash_dash_bang_hash" type="Vision" output="screen">
+      <remap from="destination" to="/slash_dash_bang_hash_$(arg team_side)/$(arg me)/$(arg me)_destination" />
+      <remap from="desired_pose" to="/slash_dash_bang_hash_$(arg team_side)/$(arg me)/$(arg me)_desired_pose" />
+    </node>
+
+
+</launch>

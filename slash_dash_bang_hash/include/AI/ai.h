@@ -16,23 +16,6 @@ using namespace Eigen;
 typedef boost::shared_ptr< ::slash_dash_bang_hash::State const> StateConstPtr;
 
 
-
-// struct State
-// {
-//     // Positions
-//     double x;
-//     double y;
-//     double theta;
-//     // Velocities
-//     double xdot;
-//     double ydot;
-//     double thetadot;
-//     // Estimated states
-//     double xhat;
-//     double yhat;
-//     double thetahat;
-// };
-
 using namespace slash_dash_bang_hash;
 
 class AI {
@@ -64,6 +47,8 @@ public:
   State opp1_state_, opp2_state_;
   State ball_state_;
 
+  int manual_destinations_;
+
   Vector2d ally1_startingPos_;
   Vector2d ally2_startingPos_;
 
@@ -78,6 +63,7 @@ public:
   State play_rushGoal(State robot, State ball);
   State play_findBestShot(int robotId, State robot, State ball);
   State play_skillsTournament(State robot_state);
+  State play_playsTournament(State robot_state);
   void stateCallback(const StateConstPtr &msg, const std::string& robot);
   void gameStateCallback(const soccerref::GameState::ConstPtr &msg);
 };

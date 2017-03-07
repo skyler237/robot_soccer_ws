@@ -14,6 +14,7 @@ priv_nh("~")
   ros::NodeHandle priv_nh("~");
   priv_nh.param<string>("team", team_, "home");
   priv_nh.param<int>("robot_number", robot_number_, 1);
+  priv_nh.param<int>("manual_destinations", manual_destinations_, 0);
 
 
   ally1_state_sub_ = nh_.subscribe<slash_dash_bang_hash::State>("ally1_state", 1, boost::bind(&AI::stateCallback, this, _1, "ally1"));
@@ -22,6 +23,7 @@ priv_nh("~")
   opp2_state_sub_ = nh_.subscribe<slash_dash_bang_hash::State>("opp2_state", 1, boost::bind(&AI::stateCallback, this, _1, "opponent2"));
   ball_state_sub_ = nh_.subscribe<slash_dash_bang_hash::State>("ball_state", 1, boost::bind(&AI::stateCallback, this, _1, "ball"));
   game_state_sub_ = nh_.subscribe<soccerref::GameState>("/game_state", 1, &AI::gameStateCallback, this);
+
 
   ally1_destination_pub_ = nh_.advertise<slash_dash_bang_hash::State>("ally1_destination", 5);
   ally2_destination_pub_ = nh_.advertise<slash_dash_bang_hash::State>("ally2_destination", 5);
@@ -34,6 +36,8 @@ priv_nh("~")
   ally2_startingPos_(1) = -0.0;
 
   goal_ << FIELD_WIDTH/2, 0;
+
+  ROS_INFO("Initializing AI");
 
 }
 
@@ -48,18 +52,20 @@ void AI::computeDestination() {
   double dt = now - prev;
   prev = now;
 
-  if (dt > AI_TIME_STEP)
-  {
+  // if (dt > AI_TIME_STEP)
+  // {
     if (gameState_.play)
     {
+        ROS_INFO("Computing destination");
         /*********************************************************************/
         // Choose strategies and update ally1/ally2_destination_ variables
 
         // robot #1 positions itself behind ball and rushes the goal.
         // ally1_destination_ = play_findBestShot(1, ally1_state_, ball_state_);
-        ally1_destination_ = play_rushGoal(ally1_state_, ball_state_);
+        // ally1_destination_ = play_rushGoal(ally1_state_, ball_state_);
         // ally1_destination_ = play_standardOffense();
         // ally1_destination_ = play_skillsTournament(ally1_state_);
+        ally1_destination_ = play_playsTournament(ally1_state_);
 
         // checkForKick(1);
         //ROS_INFO("Ally1_destination: x=%f, y=%f", ally1_destination_.x, ally1_destination_.y);
@@ -96,7 +102,7 @@ void AI::computeDestination() {
 
         publishDestinations();
     }
-  }
+  // }
 
 }
 
@@ -126,8 +132,10 @@ void AI::checkForKick(int robotId)
 
 void AI::publishDestinations()
 {
-  ally1_destination_pub_.publish(ally1_destination_);
-  ally2_destination_pub_.publish(ally2_destination_);
+  if(manual_destinations_ == 0) {
+    ally1_destination_pub_.publish(ally1_destination_);
+    ally2_destination_pub_.publish(ally2_destination_);
+  }
 }
 
 
@@ -158,6 +166,8 @@ State AI::play_rushGoal(State robot, State ball)
     else {
       destination = Skills::goToPoint(robot, position);
     }
+
+    printVector(stateToVector(destination), "Rush goal destination");
 
     return destination;
 }
@@ -293,11 +303,25 @@ State AI::play_skillsTournament(State robot_state) {
   }
 }
 
+State AI::play_playsTournament(State robot_state) {
+  int play_state = gameState_.home_score % 2;
+
+  switch (play_state) {
+    case 0:
+      return play_rushGoal(robot_state, ball_state_);
+
+    case 1:
+      return play_basicDefense(robot_state, ball_state_);
+  }
+}
+
 
 void AI::stateCallback(const StateConstPtr &msg, const std::string& robot)
 {
-    if(robot == "ally1")
-        ally1_state_ = *msg;
+    if(robot == "ally1") {
+      ally1_state_ = *msg;
+      ROS_INFO("Getting ally1 state");
+    }
 
     else if(robot == "ally2")
         ally2_state_ = *msg;
