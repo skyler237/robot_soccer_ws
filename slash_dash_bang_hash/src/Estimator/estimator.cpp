@@ -39,15 +39,17 @@ void Estimator::gameStateCallback(const soccerref::GameState::ConstPtr &msg)
 
 void Estimator::estimateStates()
 {
-
-
-  // TODO: Actually implement an estimator here -- currently just passes the data through
   state_ = vision_data_;
   lowPassFilterStates();
   calculateVelocities();
 
   publishStates();
 }
+
+// void Estimator::predictAndCorrectStates()
+// {
+//
+// }
 
 void Estimator::publishStates()
 {
