@@ -43,6 +43,13 @@ void Estimator::gameStateCallback(const soccerref::GameState::ConstPtr &msg)
 void Estimator::estimateStates()
 {
 
+  double now = ros::Time::now().toSec();
+  static double prev = 0;
+  double dt = now - prev;
+  prev = now;
+
+  ROS_INFO("estimateStates: dt=%f", dt);
+
   state_ = vision_data_;
   lowPassFilterStates();
   calculateVelocities();

@@ -6,8 +6,8 @@ import serial
 
 # ser = serial.Serial('COM11', 115200, timeout=None) #windows
 # ser = serial.Serial('/dev/ttyUSB0', 115200, timeout=None) #linux
-ser = serial.Serial('/dev/ttyAMA0', 115200, timeout=None) #linux, (read note on webpage about ttyAMA0 first)
-# ser = serial.Serial('/dev/ttyS0', 115200, timeout=None) #TEST
+# ser = serial.Serial('/dev/ttyAMA0', 115200, timeout=None) #linux, (read note on webpage about ttyAMA0 first)
+ser = serial.Serial('/dev/ttyS1', 115200, timeout=None) #TEST
 from geometry_msgs.msg import Twist, Pose2D, Vector3
 # from std_srvs.srv import Trigger, TriggerResponse
 

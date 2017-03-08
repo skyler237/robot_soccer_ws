@@ -18,7 +18,7 @@
     <arg name="other_side" value="home" if="$(eval team_side == 'away')" />
 
     <!-- Hardware agnostic code -->
-    <node name="ally1_estimator" pkg="slash_dash_bang_hash" type="Estimator" >
+    <node name="ally1_estimator" pkg="slash_dash_bang_hash" type="Estimator" output="screen">
       <remap from="vision_data" to="/vision/$(arg team_side)1" />
       <remap from="state" to="/slash_dash_bang_hash_$(arg team_side)/$(arg me)/ally1_state" />
       <param name="team" value="$(arg team_side)" />
@@ -71,7 +71,7 @@
       <param name="robot_number" value="$(arg robot_number)" />
 
     </node>
-    
+
     <node name="controller" pkg="slash_dash_bang_hash" type="Controller" output="screen">
         <!-- The controller needs to know which robot state to listen to -->
         <remap from="robot_state" to="/slash_dash_bang_hash_$(arg team_side)/$(arg me)/$(arg me)_state" />
