@@ -64,7 +64,7 @@ void AI::computeDestination() {
         // ally1_destination_ = play_findBestShot(1, ally1_state_, ball_state_);
         // ally1_destination_ = play_rushGoal(ally1_state_, ball_state_);
         // ally1_destination_ = play_standardOffense();
-        //ally1_destination_ = play_skillsTournament(ally1_state_);
+        // ally1_destination_ = play_skillsTournament(ally1_state_);
         ally1_destination_ = play_playsTournament(ally1_state_);
 
         // checkForKick(1);
