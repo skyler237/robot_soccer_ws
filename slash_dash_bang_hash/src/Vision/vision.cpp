@@ -762,9 +762,10 @@ priv_nh("~")
   ros::NodeHandle priv_nh("~");
   tau_ = priv_nh.param<double>("dirty_deriv_gain", 0.05);
 
-  // Create OpenCV Window and add a mouse callback for clicking
-  namedWindow(GUI_NAME, CV_WINDOW_AUTOSIZE);
-  setMouseCallback(GUI_NAME, mouseCallback, NULL);
+  // For mouse click input
+  // // Create OpenCV Window and add a mouse callback for clicking
+  // namedWindow(GUI_NAME, CV_WINDOW_AUTOSIZE);
+  // setMouseCallback(GUI_NAME, mouseCallback, NULL);
 
   // Subscribe to camera
   image_transport::ImageTransport it(nh_);
