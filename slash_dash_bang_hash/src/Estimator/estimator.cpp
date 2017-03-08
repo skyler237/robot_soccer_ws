@@ -29,14 +29,26 @@ priv_nh("~")
 
 void Estimator::visionCallback(const geometry_msgs::Pose2D::ConstPtr &msg)
 {
+    double now = ros::Time::now().toSec();
+    static double prev = 0;
+    double dt = now - prev;
+    prev = now;
+
+    ROS_INFO("visionCallback: dt=%f", dt);
+
     vision_data_ = poseToState(*msg);
-    ROS_INFO("Estimator callback");
 
     estimateStates();
 }
 
 void Estimator::gameStateCallback(const soccerref::GameState::ConstPtr &msg)
 {
+    double now = ros::Time::now().toSec();
+    static double prev = 0;
+    double dt = now - prev;
+    prev = now;
+
+    ROS_INFO("gameStateCallback: dt=%f", dt);
     gameState_ = *msg;
 }
 
