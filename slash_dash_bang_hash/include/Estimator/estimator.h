@@ -23,6 +23,7 @@ typedef boost::shared_ptr< ::slash_dash_bang_hash::State const> StateConstPtr;
 class Estimator {
 public:
    Estimator();
+   void estimateStates();
 
  private:
   ros::NodeHandle nh_;
@@ -50,7 +51,7 @@ public:
   double LPF_corner_freq_theta_;
   double LPF_alpha_theta_;
 
-  void estimateStates();
+
   void lowPassFilterStates();
   void calculateVelocities();
   void publishStates();
