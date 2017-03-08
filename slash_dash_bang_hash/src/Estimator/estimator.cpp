@@ -34,11 +34,10 @@ void Estimator::visionCallback(const geometry_msgs::Pose2D::ConstPtr &msg)
     double dt = now - prev;
     prev = now;
 
-    ROS_INFO("visionCallback: dt=%f", dt);
+    ROS_INFO("estimator visionCallback: dt=%f", dt);
 
     vision_data_ = poseToState(*msg);
 
-    // estimateStates();
 }
 
 void Estimator::gameStateCallback(const soccerref::GameState::ConstPtr &msg)

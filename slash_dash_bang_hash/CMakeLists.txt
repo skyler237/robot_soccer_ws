@@ -16,6 +16,8 @@ find_package(catkin REQUIRED
   # OpenCV
 	)
 
+  set(CMAKE_CXX_FLAGS "-std=c++0x -fopenmp -O3")
+
 ## Generate messages in the 'msg' folder
 add_message_files(
   FILES

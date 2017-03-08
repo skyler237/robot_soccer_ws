@@ -725,6 +725,13 @@ void Vision::drawPosDest(Mat img)
 //call back for the vision func
 void Vision::visionCallback(const sensor_msgs::ImageConstPtr& msg)
 {
+  double now = ros::Time::now().toSec();
+  static double prev = 0;
+  double dt = now - prev;
+  prev = now;
+
+  ROS_INFO("Vision visionCallback: dt=%f", dt);
+
   static bool cropped = false;
   static Rect croppedRect;
     try
