@@ -17,8 +17,8 @@ priv_nh("~")
   LPF_corner_freq_theta_ = priv_nh.param<double>("LPF_corner_freq_theta", 10); // Default 10 Hz
   LPF_alpha_theta_ = exp(-1.0*LPF_corner_freq_theta_*sample_period_);
 
-  game_state_sub_ = nh_.subscribe<soccerref::GameState>("/game_state", 1, &Estimator::gameStateCallback, this);
-  vision_data_sub_ = nh_.subscribe<geometry_msgs::Pose2D>("vision_data", 1, &Estimator::visionCallback, this);
+  game_state_sub_ = nh_.subscribe<soccerref::GameState>("/game_state", 10, &Estimator::gameStateCallback, this);
+  vision_data_sub_ = nh_.subscribe<geometry_msgs::Pose2D>("vision_data", 10, &Estimator::visionCallback, this);
 
   state_pub_ = nh_.advertise<slash_dash_bang_hash::State>("state", 5);
 
@@ -38,7 +38,7 @@ void Estimator::visionCallback(const geometry_msgs::Pose2D::ConstPtr &msg)
 
     vision_data_ = poseToState(*msg);
 
-    estimateStates();
+    // estimateStates();
 }
 
 void Estimator::gameStateCallback(const soccerref::GameState::ConstPtr &msg)
@@ -154,6 +154,8 @@ int main(int argc, char **argv)
     {
         // process any callbacks
         ros::spinOnce();
+
+        estimator_node.estimateStates();
 
         // force looping at a constant rate
         loop_rate.sleep();
