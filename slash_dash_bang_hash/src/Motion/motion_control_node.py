@@ -6,8 +6,8 @@ import serial
 
 # ser = serial.Serial('COM11', 115200, timeout=None) #windows
 # ser = serial.Serial('/dev/ttyUSB0', 115200, timeout=None) #linux
-# ser = serial.Serial('/dev/ttyAMA0', 115200, timeout=None) #linux, (read note on webpage about ttyAMA0 first)
-ser = serial.Serial('/dev/ttyS0', 115200, timeout=None) #TEST
+ser = serial.Serial('/dev/ttyAMA0', 115200, timeout=None) #linux, (read note on webpage about ttyAMA0 first)
+# ser = serial.Serial('/dev/ttyS0', 115200, timeout=None) #TEST
 from geometry_msgs.msg import Twist, Pose2D, Vector3
 # from std_srvs.srv import Trigger, TriggerResponse
 
@@ -18,7 +18,7 @@ from math import cos, sin, pi
 
 # Kinematic constants
 RHO = 0.02875 # Wheel radius [m]
-S_SCALE = 0.1
+S_SCALE = 0.05
 SX1 = S_SCALE*-1.0 # Wheel spin vectors - body frame (unit vectors)
 SY1 = S_SCALE*0.0
 SX2 = S_SCALE*0.5
@@ -84,7 +84,7 @@ def _handle_velocity_command(msg):
     global vel_cmd_
     vel_cmd_.x = msg.linear.x
     vel_cmd_.y = msg.linear.y
-    vel_cmd_.z = msg.angular.z
+    vel_cmd_.z = msg.angular.z*pi/180.0
     print(msg)
     computeMotorSpeeds()
 
@@ -101,8 +101,16 @@ def computeMotorSpeeds():
                   [  0,  0, 1]])
 
     velocities = np.array([vel_cmd_.x, vel_cmd_.y, vel_cmd_.z])
-    print(velocities)
     wheel_speeds_ = np.dot(M_, R).dot(velocities)
+
+    print(wheel_speeds_)
+    max_speed = np.amax(np.array([abs(x) for x in wheel_speeds_]))
+    print(max_speed)
+
+    if (max_speed < 0.2):
+      wheel_speeds_ = np.array([0, 0, 0])
+    elif max_speed < 2.0:
+      wheel_speeds_ = np.array([x*(2.0/max_speed) for x in wheel_speeds_])
 
     sendVelocityCommands()
 
@@ -136,7 +144,10 @@ def main():
 
 
     # Set the PIDQ values for all motors
-    setPID(0, 1, 0.3, 30000)
+    #setPID(0, 1, 0.3, 30000)
+    setPID(1, 1.5, 0.3, 49000)
+    setPID(2, 1.5, 0.3, 48000)
+    setPID(3, 1.5, 0.3, 49000)
 
     # Set tick period (triggers PID control) and velocity filter corner frequency
     setT(20, 50)

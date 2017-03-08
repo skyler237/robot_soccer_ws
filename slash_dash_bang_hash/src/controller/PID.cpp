@@ -65,10 +65,20 @@ double PID::computePIDDirect(double error, double xdot, double dt)
     return 0.0;
   }
 
-  // Numerical integration
-  integrator_ += dt/2*(error + last_error_);
+  // Numerical integration -- only apply when we are close to the target
+  if(error < 0.2) {
+    integrator_ += dt/2*(error + last_error_);
+  }
+  else {
+    integrator_ = 0.0;
+  }
 
   last_error_ = error;
+
+  ROS_INFO("PIDDirect: error=%f, integrator=%f, xdot=%f", error, integrator_, xdot);
+
+  
+  ROS_INFO("Control values: P=%f, I=%f, D=%f", kp_*error, ki_*integrator_, -kd_*xdot);
 
   return kp_*error + ki_*integrator_ - kd_*xdot;
 }

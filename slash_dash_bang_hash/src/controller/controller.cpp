@@ -38,7 +38,6 @@ priv_nh("~")
   game_state_sub_ = nh_.subscribe<soccerref::GameState>("/game_state", 1, &Controller::gameStateCallback, this);
 
   motor_pub_ = nh_.advertise<geometry_msgs::Twist>("vel_command", 5);
-  //ROS_INFO("Init");
 
 }
 
@@ -57,7 +56,6 @@ void Controller::desiredPoseCallback(const StateConstPtr &msg)
 }
 
 void Controller::computeControl() {
-  ROS_INFO("C computeControl");
 
   double now = ros::Time::now().toSec();
   static double prev = 0;
@@ -73,13 +71,11 @@ void Controller::computeControl() {
   if ((gameState_.play || gameState_.reset_field))
   {
 
-    ROS_INFO("C computeControl inside");
     // Update ally_command_ and ally2_command_ variables
 
     // Compute the PID values for each state variable
 
     // Correct the "theta gap" -- choose the direction that is quickest
-    ROS_INFO("Original theta: actual=%f, desired=%f", robot_state_.theta, desired_pose_.theta);
     double theta_error = desired_pose_.theta - robot_state_.theta;
     if(fabs(theta_error) > fabs(360.0 - theta_error)) {
       theta_error = theta_error - 360.0;
@@ -87,7 +83,6 @@ void Controller::computeControl() {
     else if(fabs(theta_error) > fabs(360.0 + theta_error)) {
       theta_error = theta_error + 360.0;
     }
-    ROS_INFO("corrected theta: actual=%f, desired=%f", robot_state_.theta, desired_pose_.theta);
 
     // x_command = saturate(x_PID_.computePID(robot_state_.x, desired_pose_.x, dt), -1*max_xy_vel_, max_xy_vel_);
     // y_command = saturate(y_PID_.computePID(robot_state_.y, desired_pose_.y, dt), -1*max_xy_vel_, max_xy_vel_);
@@ -99,7 +94,6 @@ void Controller::computeControl() {
     theta_command = saturate(theta_PID_.computePIDDirect(theta_error, robot_state_.thetadot, 0.01), -1*max_omega_, max_omega_);
 
     command_ << x_command, y_command, theta_command;
-     ROS_INFO("Robot 1 Control: x_vel=%f, y_vel=%f, omega=%f", x_command, y_command, theta_command);
 
     // --- OR ---
 
@@ -150,7 +144,6 @@ void Controller::computeControl() {
 
 void Controller::publishCommand()
 {
-  ROS_INFO("C publishCommand");
 
   geometry_msgs::Twist vel;
   vel.linear.x = command_(0);
@@ -166,14 +159,12 @@ void Controller::publishCommand()
 
 void Controller::gameStateCallback(const soccerref::GameState::ConstPtr &msg)
 {
-  //ROS_INFO("C gameStateCallback");
 
     gameState_ = *msg;
 }
 
 int main(int argc, char **argv)
 {
-//  ROS_INFO("C main");
 
     ros::init(argc, argv, "home");
     ros::NodeHandle nh_;
@@ -181,7 +172,6 @@ int main(int argc, char **argv)
     Controller controller_node;
 
     ros::spin();
-    //ROS_INFO("C main 2");
 
     // ros::Rate loop_rate(30);
     // while(ros::ok())

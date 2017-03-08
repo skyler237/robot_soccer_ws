@@ -9,7 +9,8 @@
     <arg name="vel_cmds_remap" default="vel_cmds" />
     <arg name="LPF_corner_freq_xy" default="50" />
     <arg name="LPF_corner_freq_theta" default="50" />
-    <arg name="dirty_deriv_gain" default="0.10" />
+    <arg name="dirty_deriv_gain" default="0.20" />
+    <arg name="manual_destinations" default="0" />
 
     <!-- using which side of the field we are on, determine the appropriate -->
     <!-- connections to the output of the vision system -->
@@ -61,7 +62,7 @@
 
     <node name="AI" pkg="slash_dash_bang_hash" type="AI">
       <param name="robot_number" value="$(arg robot_number)" />
-      <param name="manual_destinations" value="1" />
+      <param name="manual_destinations" value="$(arg manual_destinations)" />
     </node>
 
     <node name="path_planner" pkg="slash_dash_bang_hash" type="PathPlanner" >
@@ -71,21 +72,23 @@
 
     </node>
     
-    <node name="controller" pkg="slash_dash_bang_hash" type="Controller">
+    <node name="controller" pkg="slash_dash_bang_hash" type="Controller" output="screen">
         <!-- The controller needs to know which robot state to listen to -->
         <remap from="robot_state" to="/slash_dash_bang_hash_$(arg team_side)/$(arg me)/$(arg me)_state" />
         <remap from="desired_pose" to="/slash_dash_bang_hash_$(arg team_side)/$(arg me)/$(arg me)_desired_pose" />
         <remap if="$(arg sim_mode)" from="vel_command" to="/$(arg team_side)$(arg robot_number)/command" />
 
-        <param name="x_P" value="3.0"/>
-        <param name="x_I" value="0.1"/>
+
+        <param name="tau" value="$(arg dirty_deriv_gain)"/>
+        <param name="x_P" value="2.0"/>
+        <param name="x_I" value="0.2"/>
         <param name="x_D" value="0.0"/>
-        <param name="y_P" value="3.0"/>
-        <param name="y_I" value="0.1"/>
+        <param name="y_P" value="2.0"/>
+        <param name="y_I" value="0.2"/>
         <param name="y_D" value="0.0"/>
 
 
-        <param name="theta_P" value="0.5"/>
+        <param name="theta_P" value="1.0"/>
         <param name="theta_I" value="0.1"/>
         <param name="theta_D" value="0.0"/>
 
