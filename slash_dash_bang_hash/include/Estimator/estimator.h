@@ -8,6 +8,7 @@
 #include <geometry_msgs/Twist.h>
 #include "soccerref/GameState.h"
 #include "slash_dash_bang_hash/State.h"
+#include "slash_dash_bang_hash/Pose2DStamped.h"
 #include <string.h>
 
 using namespace std;
@@ -15,6 +16,7 @@ using namespace geometry_msgs;
 using namespace Eigen;
 
 typedef boost::shared_ptr< ::slash_dash_bang_hash::State const> StateConstPtr;
+typedef boost::shared_ptr< ::slash_dash_bang_hash::Pose2DStamped const> Pose2DStampedConstPtr;
 
 #define FIELD_WIDTH 3.40  // in meters
 #define FIELD_HEIGHT 2.38
@@ -42,6 +44,7 @@ public:
 
   soccerref::GameState gameState_;
   slash_dash_bang_hash::State vision_data_;
+  std_msgs::Header vision_header_;
   slash_dash_bang_hash::State state_;
   slash_dash_bang_hash::State state_prev_;
 
@@ -56,7 +59,7 @@ public:
   void calculateVelocities();
   void publishStates();
 
-  void visionCallback(const geometry_msgs::Pose2D::ConstPtr &msg);
+  void visionCallback(const Pose2DStampedConstPtr &msg);
   void gameStateCallback(const soccerref::GameState::ConstPtr &msg);
 
   // Helper functions

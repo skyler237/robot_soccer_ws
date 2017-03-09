@@ -108,8 +108,8 @@ void colorSlider(Mat img)
         dilate( imgThresholded, imgThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) );
         erode(imgThresholded, imgThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) );
 
-        imshow("Thresholded Image", imgThresholded); //show the thresholded image
-        imshow("Original", imgOriginal); //show the original image
+        // imshow("Thresholded Image", imgThresholded); //show the thresholded image
+        // imshow("Original", imgOriginal); //show the original image
 
 
     //}
@@ -129,7 +129,7 @@ vector<Vec4f> LSD(Mat img)
   // Show found lines
    Mat drawnLines(src_gray);
    ls->drawSegments(drawnLines, lines_std);
-   imshow("Standard refinement", drawnLines);
+  //  imshow("Standard refinement", drawnLines);
 
 
   return lines_std;
@@ -225,10 +225,14 @@ void Vision::getRobotPose(Mat img)
   robot_pos.x = offsetCenter[0];
   robot_pos.y = -1.0* offsetCenter[1]; // HACK!
   robot_pos.theta = offsetCenter[2] * 180.0 / M_PI;
-  home1_pub.publish(robot_pos);
 
-  printf("the center of the bot is: %f, %f, %f\n", robot_pos.x, robot_pos.y, robot_pos.theta);
-  imshow("overhead",img);
+  slash_dash_bang_hash::Pose2DStamped stamped_pose;
+  stamped_pose.header = img_header_;
+  stamped_pose.pose = robot_pos;
+  home1_pub.publish(stamped_pose);
+
+  // printf("the center of the bot is: %f, %f, %f\n", robot_pos.x, robot_pos.y, robot_pos.theta);
+  // imshow("overhead",img);
 }
 
 
@@ -385,7 +389,11 @@ void Vision::findWhiteBall(Mat img)
   ball_pos.x = -1.0* worldCoords[0];
   ball_pos.y =  -1.0 * worldCoords[1];
   ball_pos.theta = 0;
-  ball_pub.publish(ball_pos);
+
+  slash_dash_bang_hash::Pose2DStamped stamped_pose;
+  stamped_pose.header = img_header_;
+  stamped_pose.pose = ball_pos;
+  ball_pub.publish(stamped_pose);
 }
 
 void Vision::findPinkBall(Mat img)
@@ -717,7 +725,7 @@ void Vision::drawPosDest(Mat img)
   Point desiredCenter(center[0], center[1]);
   circle(img, desiredCenter, radius, Scalar( 255, 0, 0 ));
 
-  imshow("circle", img);
+  // imshow("circle", img);
 }
 
 
@@ -730,7 +738,9 @@ void Vision::visionCallback(const sensor_msgs::ImageConstPtr& msg)
   double dt = now - prev;
   prev = now;
 
-  ROS_INFO("Vision visionCallback: dt=%f", dt);
+  img_header_ = msg->header;
+
+  ROS_INFO("Vision timestamp=%d:%d", img_header_.stamp.sec, img_header_.stamp.nsec);
 
   static bool cropped = false;
   static Rect croppedRect;
@@ -744,7 +754,7 @@ void Vision::visionCallback(const sensor_msgs::ImageConstPtr& msg)
           croppedRect = Vision::crop(img);
           cropped = true;
         }
-        imshow("original view", img);
+        // imshow("original view", img);
         img = Mat(img, croppedRect);
         getRobotPose(img);
         findPinkBall(img);
@@ -781,11 +791,11 @@ priv_nh("~")
   desired_pose_sub_ = nh_.subscribe<slash_dash_bang_hash::State>("desired_pose", 1, &Vision::setDesiredPose, this);
   destination_sub_ = nh_.subscribe<slash_dash_bang_hash::State>("destination", 1, &Vision::setDestination, this);
 
-  home1_pub = nh_.advertise<geometry_msgs::Pose2D>("/vision/home1", 5);
-  home2_pub = nh_.advertise<geometry_msgs::Pose2D>("/vision/home2", 5);
-  away1_pub = nh_.advertise<geometry_msgs::Pose2D>("/vision/away1", 5);
-  away2_pub = nh_.advertise<geometry_msgs::Pose2D>("/vision/away2", 5);
-  ball_pub = nh_.advertise<geometry_msgs::Pose2D>("/vision/ball", 5);
+  home1_pub = nh_.advertise<slash_dash_bang_hash::Pose2DStamped>("/vision/home1", 5);
+  home2_pub = nh_.advertise<slash_dash_bang_hash::Pose2DStamped>("/vision/home2", 5);
+  away1_pub = nh_.advertise<slash_dash_bang_hash::Pose2DStamped>("/vision/away1", 5);
+  away2_pub = nh_.advertise<slash_dash_bang_hash::Pose2DStamped>("/vision/away2", 5);
+  ball_pub = nh_.advertise<slash_dash_bang_hash::Pose2DStamped>("/vision/ball", 5);
 
 }
 

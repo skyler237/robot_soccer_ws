@@ -18,7 +18,7 @@ priv_nh("~")
   LPF_alpha_theta_ = exp(-1.0*LPF_corner_freq_theta_*sample_period_);
 
   game_state_sub_ = nh_.subscribe<soccerref::GameState>("/game_state", 10, &Estimator::gameStateCallback, this);
-  vision_data_sub_ = nh_.subscribe<geometry_msgs::Pose2D>("vision_data", 10, &Estimator::visionCallback, this);
+  vision_data_sub_ = nh_.subscribe<slash_dash_bang_hash::Pose2DStamped>("vision_data", 10, &Estimator::visionCallback, this);
 
   state_pub_ = nh_.advertise<slash_dash_bang_hash::State>("state", 5);
 
@@ -27,7 +27,7 @@ priv_nh("~")
 
 }
 
-void Estimator::visionCallback(const geometry_msgs::Pose2D::ConstPtr &msg)
+void Estimator::visionCallback(const Pose2DStampedConstPtr &msg)
 {
     double now = ros::Time::now().toSec();
     static double prev = 0;
@@ -36,7 +36,9 @@ void Estimator::visionCallback(const geometry_msgs::Pose2D::ConstPtr &msg)
 
     ROS_INFO("estimator visionCallback: dt=%f", dt);
 
-    vision_data_ = poseToState(*msg);
+    vision_header_ = msg->header;
+    ROS_INFO("Estimator: vision stamp: secs=%d, nsecs=%d", vision_header_.stamp.sec, vision_header_.stamp.nsec);
+    vision_data_ = poseToState(msg->pose);
 
 }
 

@@ -23,12 +23,14 @@ add_message_files(
   FILES
 	State.msg
   MotorSpeeds.msg
+  Pose2DStamped.msg
 )
 
 ## Generate added messages and services with any dependencies listed here
 generate_messages(
   DEPENDENCIES
   std_msgs  # Or other packages containing msgs
+  geometry_msgs
 )
 
 
