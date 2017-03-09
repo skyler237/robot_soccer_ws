@@ -38,6 +38,7 @@ void Estimator::visionCallback(const Pose2DStampedConstPtr &msg)
 
     vision_header_ = msg->header;
     ROS_INFO("Estimator: vision stamp: secs=%d, nsecs=%d", vision_header_.stamp.sec, vision_header_.stamp.nsec);
+    ROS_INFO("Vision lag = %f", now - vision_header_.stamp.toSec());
     vision_data_ = poseToState(msg->pose);
 
 }
