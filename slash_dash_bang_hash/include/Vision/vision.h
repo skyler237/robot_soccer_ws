@@ -68,6 +68,7 @@ public:
   ros::Publisher away1_pub;
   ros::Publisher away2_pub;
   ros::Publisher ball_pub;
+  ros::Publisher referee_ball_pub; // Need to publish Pose2D for the referee
   ros::Publisher ball_position_pub; // for publishing internally from the vision window
 
   //subscriber to the desired pose

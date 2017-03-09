@@ -394,6 +394,7 @@ void Vision::findWhiteBall(Mat img)
   stamped_pose.header = img_header_;
   stamped_pose.pose = ball_pos;
   ball_pub.publish(stamped_pose);
+  referee_ball_pub.publish(ball_pos);
 }
 
 void Vision::findPinkBall(Mat img)
@@ -440,7 +441,12 @@ void Vision::findPinkBall(Mat img)
   ball_pos.x = worldCoords[0];
   ball_pos.y = -1.0 * worldCoords[1];
   ball_pos.theta = 0;
-  ball_pub.publish(ball_pos);
+
+  slash_dash_bang_hash::Pose2DStamped stamped_pose;
+  stamped_pose.header = img_header_;
+  stamped_pose.pose = ball_pos;
+  ball_pub.publish(stamped_pose);
+  referee_ball_pub.publish(ball_pos);
 }
 
 
@@ -795,7 +801,8 @@ priv_nh("~")
   home2_pub = nh_.advertise<slash_dash_bang_hash::Pose2DStamped>("/vision/home2", 5);
   away1_pub = nh_.advertise<slash_dash_bang_hash::Pose2DStamped>("/vision/away1", 5);
   away2_pub = nh_.advertise<slash_dash_bang_hash::Pose2DStamped>("/vision/away2", 5);
-  ball_pub = nh_.advertise<slash_dash_bang_hash::Pose2DStamped>("/vision/ball", 5);
+  ball_pub = nh_.advertise<slash_dash_bang_hash::Pose2DStamped>("/vision/ball_stamped", 5);
+  referee_ball_pub = nh_.advertise<geometry_msgs::Pose2D>("/vision/ball", 5);
 
 }
 
