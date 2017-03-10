@@ -8,6 +8,7 @@
 #include <geometry_msgs/Twist.h>
 #include "soccerref/GameState.h"
 #include "slash_dash_bang_hash/State.h"
+#include "slash_dash_bang_hash/Pose2DStamped.h"
 #include <string.h>
 
 using namespace std;
@@ -15,6 +16,7 @@ using namespace geometry_msgs;
 using namespace Eigen;
 
 typedef boost::shared_ptr< ::slash_dash_bang_hash::State const> StateConstPtr;
+typedef boost::shared_ptr< ::slash_dash_bang_hash::Pose2DStamped const> Pose2DStampedConstPtr;
 
 #define FIELD_WIDTH 3.40  // in meters
 #define FIELD_HEIGHT 2.38
@@ -23,6 +25,7 @@ typedef boost::shared_ptr< ::slash_dash_bang_hash::State const> StateConstPtr;
 class Estimator {
 public:
    Estimator();
+   void estimateStates();
 
  private:
   ros::NodeHandle nh_;
@@ -41,21 +44,27 @@ public:
 
   soccerref::GameState gameState_;
   slash_dash_bang_hash::State vision_data_;
+  std_msgs::Header vision_header_;
   slash_dash_bang_hash::State state_;
   slash_dash_bang_hash::State state_prev_;
 
+  Estimator::samplesQueue samples_;
+
+  bool new_vision_data_;
   double sample_period_;
   double LPF_corner_freq_xy_;
   double LPF_alpha_xy_;
   double LPF_corner_freq_theta_;
   double LPF_alpha_theta_;
+  double xy_vel_damping_coeff_;
+  double theta_vel_damping_coeff_;
 
-  void estimateStates();
+
   void lowPassFilterStates();
   void calculateVelocities();
   void publishStates();
 
-  void visionCallback(const geometry_msgs::Pose2D::ConstPtr &msg);
+  void visionCallback(const Pose2DStampedConstPtr &msg);
   void gameStateCallback(const soccerref::GameState::ConstPtr &msg);
 
   // Helper functions

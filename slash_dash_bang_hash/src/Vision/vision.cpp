@@ -108,8 +108,8 @@ void colorSlider(Mat img)
         dilate( imgThresholded, imgThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) );
         erode(imgThresholded, imgThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) );
 
-        imshow("Thresholded Image", imgThresholded); //show the thresholded image
-        imshow("Original", imgOriginal); //show the original image
+        // imshow("Thresholded Image", imgThresholded); //show the thresholded image
+        // imshow("Original", imgOriginal); //show the original image
 
 
     //}
@@ -129,7 +129,7 @@ vector<Vec4f> LSD(Mat img)
   // Show found lines
    Mat drawnLines(src_gray);
    ls->drawSegments(drawnLines, lines_std);
-   imshow("Standard refinement", drawnLines);
+  //  imshow("Standard refinement", drawnLines);
 
 
   return lines_std;
@@ -173,12 +173,6 @@ Vector3d Vision::convertToWorldCoord(Vector3d pixelCoord, int offSetX, int offSe
   pixelCoord[1] -= FIELD_HEIGHT / 2;
   return pixelCoord;
 }
-
-
-
-
-
-
 
 //get the robot position and angle
 void Vision::getRobotPose(Mat img)
@@ -224,17 +218,21 @@ void Vision::getRobotPose(Mat img)
   Vector3d offsetCenter = findCenterRobot(croppedImg);
 
   geometry_msgs::Pose2D robot_pos;
-  printf("center of the Bot lines: %d, %d\n", offsetCenter[0], offsetCenter[1]);
+  //printf("center of the Bot lines: %d, %d\n", offsetCenter[0], offsetCenter[1]);
 
   offsetCenter = convertToWorldCoord(offsetCenter, croppedRectangle.x, croppedRectangle.y, img.cols, img.rows);
 
   robot_pos.x = offsetCenter[0];
   robot_pos.y = -1.0* offsetCenter[1]; // HACK!
   robot_pos.theta = offsetCenter[2] * 180.0 / M_PI;
-  home1_pub.publish(robot_pos);
 
-  printf("the center of the bot is: %f, %f, %f\n", robot_pos.x, robot_pos.y, robot_pos.theta);
-  imshow("overhead",img);
+  slash_dash_bang_hash::Pose2DStamped stamped_pose;
+  stamped_pose.header = img_header_;
+  stamped_pose.pose = robot_pos;
+  home1_pub.publish(stamped_pose);
+
+  // printf("the center of the bot is: %f, %f, %f\n", robot_pos.x, robot_pos.y, robot_pos.theta);
+  // imshow("overhead",img);
 }
 
 
@@ -381,17 +379,22 @@ void Vision::findWhiteBall(Mat img)
           }
       }
   }
-  printf("the ball location in pixels: %d, %d\n", x, y);
+  //printf("the ball location in pixels: %d, %d\n", x, y);
   Vector3d coordinates(x, y , 0);
   Vector3d worldCoords;
-  worldCoords = convertToWorldCoord(coordinates, 0, 0, img.cols, img. rows);
-  printf("the ball location in world: %f, %f\n", worldCoords[0], worldCoords[1]);
+  worldCoords = convertToWorldCoord(coordinates, 0, 0, img.cols, img.rows);
+  //printf("the ball location in world: %f, %f\n", worldCoords[0], worldCoords[1]);
   geometry_msgs::Pose2D ball_pos;
 
   ball_pos.x = -1.0* worldCoords[0];
   ball_pos.y =  -1.0 * worldCoords[1];
   ball_pos.theta = 0;
-  ball_pub.publish(ball_pos);
+
+  slash_dash_bang_hash::Pose2DStamped stamped_pose;
+  stamped_pose.header = img_header_;
+  stamped_pose.pose = ball_pos;
+  ball_pub.publish(stamped_pose);
+  referee_ball_pub.publish(ball_pos);
 }
 
 void Vision::findPinkBall(Mat img)
@@ -428,17 +431,22 @@ void Vision::findPinkBall(Mat img)
           }
       }
   }
-  printf("the ball location in pixels: %d, %d\n", x, y);
+  //printf("the ball location in pixels: %d, %d\n", x, y);
   Vector3d coordinates(x, y , 0);
   Vector3d worldCoords;
-  worldCoords = convertToWorldCoord(coordinates, 0, 0, img.cols, img. rows);
-  printf("the ball location in world: %f, %f\n", worldCoords[0], worldCoords[1]);
+  worldCoords = convertToWorldCoord(coordinates, 0, 0, img.cols, img.rows);
+  //printf("the ball location in world: %f, %f\n", worldCoords[0], worldCoords[1]);
   geometry_msgs::Pose2D ball_pos;
 
   ball_pos.x = worldCoords[0];
   ball_pos.y = -1.0 * worldCoords[1];
   ball_pos.theta = 0;
-  ball_pub.publish(ball_pos);
+
+  slash_dash_bang_hash::Pose2DStamped stamped_pose;
+  stamped_pose.header = img_header_;
+  stamped_pose.pose = ball_pos;
+  ball_pub.publish(stamped_pose);
+  referee_ball_pub.publish(ball_pos);
 }
 
 
@@ -612,6 +620,7 @@ Rect Vision::crop(Mat img)
 void Vision::setDestination(const StateConstPtr &msg)
 {
     destination_ = *msg;
+
 }
 
 void Vision::setDesiredPose(const StateConstPtr &msg)
@@ -619,15 +628,110 @@ void Vision::setDesiredPose(const StateConstPtr &msg)
   desired_pose_ = *msg;
 }
 
+// ============= This code could be used to get input from the OpenCV screen for testing.
+// void Vision::mouseCallback(int event, int x, int y, int flags, void* userdata) {
+//     static bool mouse_left_down = false;
+//
+//     if (event == EVENT_LBUTTONDOWN) {
+//         mouse_left_down = true;
+//         Vector2d point_meters = imageToWorldCoordinates(Vector2d(x, y));
+//         char buffer[50];
+//         sprintf(buffer, "Location: (%.3f m, %.3f m)", point_meters(0), point_meters(1));
+//         displayStatusBar(GUI_NAME, buffer, 10000);
+//
+//     } else if (event == EVENT_MOUSEMOVE) {
+//         if (mouse_left_down) sendBallMessage(x, y);
+//
+//     } else if (event == EVENT_LBUTTONUP) {
+//         sendBallMessage(x, y);
+//         mouse_left_down = false;
+//     }
+//
+// }
+//
+// void Vision::sendBallMessage(int x, int y) {
+//     // Expects x, y in pixels
+//
+//     // Convert pixels to meters for sending  simulated ball position from mouse clicks
+//     float x_meters, y_meters;
+//
+//     // shift data by half the pixels so (0, 0) is in center
+//     x_meters = x - (CAMERA_WIDTH/2.0);
+//     y_meters = y - (CAMERA_HEIGHT/2.0);
+//
+//     // Multiply by aspect-ratio scaling factor
+//     x_meters = x_meters * (FIELD_WIDTH/FIELD_WIDTH_PIXELS);
+//     y_meters = y_meters * (FIELD_HEIGHT/FIELD_HEIGHT_PIXELS);
+//
+//     // mirror y over y-axis
+//     y_meters = -1*y_meters;
+//
+//     // cout << "x: " << x_meters << ", y: " << y_meters << endl;
+//
+//     geometry_msgs::Vector3 msg;
+//     msg.x = x_meters;
+//     msg.y = y_meters;
+//     msg.z = 0;
+//     ball_position_pub.publish(msg);
+// }
+//
+//
+// // Alternate function to convertToWorldCoord
+// Vector2d imageToWorldCoordinates(Vector2d image_point, double FIELD_WIDTH, double FIELD_HEIGHT, int cols, int rows)
+// {
+//     Vector2d world_point = image_point;
+//     world_point[0] += FIELD_WIDTH / 2.0;
+//     world_point[1] += FIELD_HEIGHT / 2.0;
+//     world_point[0] /= FIELD_WIDTH;
+//     world_point[1] /= FIELD_HEIGHT;
+//     world_point[0] *= cols;
+//     world_point[1] *= rows;
+//
+//     return world_point;
+// }
+
+
 //draw desired position and the desired destination
 void Vision::drawPosDest(Mat img)
 {
+  //extract the point from here
+  Vector2d center;
+  center[0] = destination_.x;
+  center[1] = destination_.y;
+  //convert world to pixel
+
+
+  center[0] += (double)(FIELD_WIDTH / 2.0);
+  center[1] += (double)(FIELD_HEIGHT / 2.0);
+  center[0] /= (double)(FIELD_WIDTH);
+  center[1] /= (double)FIELD_HEIGHT;
+  center[0] *= (double)img.cols;
+  center[1] *= (double)img.rows;
+
+  int radius = 3;
+
+
+  Point destinationCenter(center[0], center[1]);
+  circle(img, destinationCenter, radius, Scalar( 0, 0, 255 ));
 
   //extract the point from here
-  Point center(desired_pose_.x, desired_pose_.y);
-  int radius = 5;
-  circle(img, center, radius, Scalar( 0, 0, 255 ));
-  imshow("circle", img);
+  center[0] = desired_pose_.x;
+  center[1] = desired_pose_.y;
+  //convert world to pixel
+
+  radius = 5;
+
+  center[0] += (double)(FIELD_WIDTH / 2.0);
+  center[1] += (double)(FIELD_HEIGHT / 2.0);
+  center[0] /= (double)(FIELD_WIDTH);
+  center[1] /= (double)FIELD_HEIGHT;
+  center[0] *= (double)img.cols;
+  center[1] *= (double)img.rows;
+
+  Point desiredCenter(center[0], center[1]);
+  circle(img, desiredCenter, radius, Scalar( 255, 0, 0 ));
+
+  // imshow("circle", img);
 }
 
 
@@ -635,6 +739,15 @@ void Vision::drawPosDest(Mat img)
 //call back for the vision func
 void Vision::visionCallback(const sensor_msgs::ImageConstPtr& msg)
 {
+  double now = ros::Time::now().toSec();
+  static double prev = 0;
+  double dt = now - prev;
+  prev = now;
+
+  img_header_ = msg->header;
+
+  ROS_INFO("Vision timestamp=%d:%d", img_header_.stamp.sec, img_header_.stamp.nsec);
+
   static bool cropped = false;
   static Rect croppedRect;
     try
@@ -647,7 +760,7 @@ void Vision::visionCallback(const sensor_msgs::ImageConstPtr& msg)
           croppedRect = Vision::crop(img);
           cropped = true;
         }
-        imshow("original view", img);
+        // imshow("original view", img);
         img = Mat(img, croppedRect);
         getRobotPose(img);
         findPinkBall(img);
@@ -672,6 +785,11 @@ priv_nh("~")
   ros::NodeHandle priv_nh("~");
   tau_ = priv_nh.param<double>("dirty_deriv_gain", 0.05);
 
+  // For mouse click input
+  // // Create OpenCV Window and add a mouse callback for clicking
+  // namedWindow(GUI_NAME, CV_WINDOW_AUTOSIZE);
+  // setMouseCallback(GUI_NAME, mouseCallback, NULL);
+
   // Subscribe to camera
   image_transport::ImageTransport it(nh_);
 
@@ -679,11 +797,12 @@ priv_nh("~")
   desired_pose_sub_ = nh_.subscribe<slash_dash_bang_hash::State>("desired_pose", 1, &Vision::setDesiredPose, this);
   destination_sub_ = nh_.subscribe<slash_dash_bang_hash::State>("destination", 1, &Vision::setDestination, this);
 
-  home1_pub = nh_.advertise<geometry_msgs::Pose2D>("/vision/home1", 5);
-  home2_pub = nh_.advertise<geometry_msgs::Pose2D>("/vision/home2", 5);
-  away1_pub = nh_.advertise<geometry_msgs::Pose2D>("/vision/away1", 5);
-  away2_pub = nh_.advertise<geometry_msgs::Pose2D>("/vision/away2", 5);
-  ball_pub = nh_.advertise<geometry_msgs::Pose2D>("/vision/ball", 5);
+  home1_pub = nh_.advertise<slash_dash_bang_hash::Pose2DStamped>("/vision/home1", 5);
+  home2_pub = nh_.advertise<slash_dash_bang_hash::Pose2DStamped>("/vision/home2", 5);
+  away1_pub = nh_.advertise<slash_dash_bang_hash::Pose2DStamped>("/vision/away1", 5);
+  away2_pub = nh_.advertise<slash_dash_bang_hash::Pose2DStamped>("/vision/away2", 5);
+  ball_pub = nh_.advertise<slash_dash_bang_hash::Pose2DStamped>("/vision/ball_stamped", 5);
+  referee_ball_pub = nh_.advertise<geometry_msgs::Pose2D>("/vision/ball", 5);
 
 }
 

@@ -5,11 +5,13 @@
 #include "geometry_msgs/Vector3.h"
 #include <image_transport/image_transport.h>
 #include <stdio.h>
+#include <stdint.h>
 
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <cv_bridge/cv_bridge.h>
 #include "slash_dash_bang_hash/State.h"
+#include "slash_dash_bang_hash/Pose2DStamped.h"
 
 
 #include <cmath>
@@ -66,6 +68,7 @@ public:
   ros::Publisher away1_pub;
   ros::Publisher away2_pub;
   ros::Publisher ball_pub;
+  ros::Publisher referee_ball_pub; // Need to publish Pose2D for the referee
   ros::Publisher ball_position_pub; // for publishing internally from the vision window
 
   //subscriber to the desired pose
@@ -76,6 +79,9 @@ public:
   slash_dash_bang_hash::State desired_pose_;
   //destination, end goal
   slash_dash_bang_hash::State destination_;
+
+  // Used to store image time stamps
+  std_msgs::Header img_header_;
 
 
   // Use variables to store position of objects. These variables are very
