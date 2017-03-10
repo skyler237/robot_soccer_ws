@@ -29,11 +29,10 @@ void samplesQueue::addSample(State sample) {
 // TODO: fix this here -- add estimator correction!
 State samplesQueue::updateSamples(State update, int samples_old, double dt) {
   samples_old = saturate(samples_old, 0, sample_cnt_); // Don't try to update past the data we have stored
-  int update_index = index_ - samples_old;
-  if(update_index < 0) {
-    update_index += size_;
-  }
-  samples_[update_index] = update;
+  int update_index = ((index_ - samples_old) + size_) % size_; // Go back the right number of samples, but with wrap around
+
+  // Correct state here
+  samples_[update_index] = Estimator::correctStateWithMeasurementsOnly(update);
 
   int curr_index = update_index;
   int next_index;

@@ -139,6 +139,27 @@ State Estimator::correctState(State prediction, State measurement, double meas_l
   return corrected_state;
 }
 
+State Estimator::correctStateWithMeasurementsOnly(State measurement)
+{
+  double now = ros::Time::now().toSec();
+  static double prev = 0;
+  double dt = now - prev;
+  prev = now;
+
+  static State prev_measurement = measurement;
+  State corrected_state = prediction;
+
+  // Update velocities
+  corrected_state.xdot = tustinDerivative(measurement.x, prev_measurement.xhat, prev_measurement.xdot, tau_, dt);
+  corrected_state.ydot = tustinDerivative(measurement.y, prev_measurement.yhat, prev_measurement.ydot, tau_, dt);
+  corrected_state.thetadot = tustinDerivative(measurement.theta, prev_measurement.thetahat, prev_measurement.thetadot, tau_, dt);
+
+  // Re-predict states
+  corrected_state = predictState(corrected_state, dt);
+
+  return corrected_state;
+}
+
 void Estimator::publishStates()
 {
   state_prev_ = state_;
