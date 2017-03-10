@@ -62,11 +62,15 @@ public:
   double LPF_corner_freq_theta_;
   double LPF_alpha_theta_;
 
-
+  // Estimator implementations
+  void LPF_Estimator();
+  void predictAndCorrectEstimator();
 
   void lowPassFilterStates();
   void calculateVelocities();
   void publishStates();
+
+
 
   void visionCallback(const Pose2DStampedConstPtr &msg);
   void gameStateCallback(const soccerref::GameState::ConstPtr &msg);

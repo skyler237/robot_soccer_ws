@@ -103,8 +103,8 @@ vector<Vec4f> LSD(Mat img)
   // Show found lines
    Mat drawnLines(src_gray);
    ls->drawSegments(drawnLines, lines_std);
-  //  imshow("Standard refinement", drawnLines);
 
+   //  imshow("Standard refinement", drawnLines);
 
   return lines_std;
 

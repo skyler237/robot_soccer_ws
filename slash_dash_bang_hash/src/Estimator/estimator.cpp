@@ -67,6 +67,19 @@ void Estimator::gameStateCallback(const soccerref::GameState::ConstPtr &msg)
 
 void Estimator::estimateStates()
 {
+  predictAndCorrectEstimator();
+  // LPF_Estimator();
+
+  publishStates();
+}
+
+void Estimator::LPF_Estimator() {
+  state_ = vision_data_;
+  lowPassFilterStates();
+  calculateVelocities();
+}
+
+void Estimator::predictAndCorrectEstimator() {
   double now = ros::Time::now().toSec();
   static double prev = 0;
   double dt = now - prev;
@@ -105,10 +118,9 @@ void Estimator::estimateStates()
     samples_.addSample(state_);
 
   }
-  // calculateVelocities();
-
-  publishStates();
 }
+
+
 
 State Estimator::predictState(State state,  double dt)
 {
