@@ -109,6 +109,8 @@ public:
   void drawPosDest(Mat img);
   void setDesiredPose(const StateConstPtr &msg);
   void setDestination(const StateConstPtr &msg);
+  static Point2d getCenterOfMass(Moments moment);
+  static bool compareMomentAreas(Moments moment1, Moments moment2);
 
 
 

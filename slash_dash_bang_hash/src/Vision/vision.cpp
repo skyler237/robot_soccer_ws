@@ -62,12 +62,8 @@ Mat Vision::smoothing(Mat img, int radius)
 
 void colorSlider(Mat img)
 {
-
     namedWindow("Control", CV_WINDOW_AUTOSIZE); //create a window called "Control"
-
-
     //Create trackbars in "Control" window
-
     cvCreateTrackbar("LowH", "Control", &iLowH, 179); //Hue (0 - 179)
     cvCreateTrackbar("HighH", "Control", &iHighH, 179);
 
@@ -76,43 +72,21 @@ void colorSlider(Mat img)
 
     cvCreateTrackbar("LowV", "Control", &iLowV, 255); //Value (0 - 255)
     cvCreateTrackbar("HighV", "Control", &iHighV, 255);
-
-/*
-    cvCreateTrackbar("redLow", "Control", &iLowH, 255); //Hue (0 - 179)
-    cvCreateTrackbar("redHigh", "Control", &iHighH, 255);
-
-    cvCreateTrackbar("greenLow", "Control", &iLowS, 255); //Saturation (0 - 255)
-    cvCreateTrackbar("greenHigh", "Control", &iHighS, 255);
-
-    cvCreateTrackbar("blueLow", "Control", &iLowV, 255); //Value (0 - 255)
-    cvCreateTrackbar("blueHigh", "Control", &iHighV, 255);
-*/
-
     Mat imgOriginal;
     imgOriginal = img;
-    //while (true)
-    //{
-
-        Mat imgHSV;
-        cvtColor(imgOriginal, imgHSV, COLOR_BGR2HSV); //Convert the captured frame from BGR to HSV
-
-        Mat imgThresholded;
-
-        inRange(imgHSV, Scalar(iLowH, iLowS, iLowV), Scalar(iHighH, iHighS, iHighV), imgThresholded); //Threshold the image
-        //inRange(imgOriginal, Scalar(iLowH, iLowS, iLowV), Scalar(iHighH, iHighS, iHighV), imgThresholded);
-        //morphological opening (remove small objects from the foreground)
-        erode(imgThresholded, imgThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) );
-        dilate( imgThresholded, imgThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) );
-
-        //morphological closing (fill small holes in the foreground)
-        dilate( imgThresholded, imgThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) );
-        erode(imgThresholded, imgThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) );
-
-        // imshow("Thresholded Image", imgThresholded); //show the thresholded image
-        // imshow("Original", imgOriginal); //show the original image
 
 
-    //}
+    Mat imgHSV;
+    cvtColor(imgOriginal, imgHSV, COLOR_BGR2HSV); //Convert the captured frame from BGR to HSV
+
+    Mat imgThresholded;
+
+    inRange(imgHSV, Scalar(iLowH, iLowS, iLowV), Scalar(iHighH, iHighS, iHighV), imgThresholded); //Threshold the image
+    erode(imgThresholded, imgThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) );
+    dilate( imgThresholded, imgThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) );
+
+    dilate( imgThresholded, imgThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) );
+    erode(imgThresholded, imgThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) );
 }
 
 
@@ -171,46 +145,14 @@ Vector3d Vision::convertToWorldCoord(Vector3d pixelCoord, int offSetX, int offSe
   pixelCoord[1] *= FIELD_HEIGHT;
   pixelCoord[0] -= FIELD_WIDTH / 2;
   pixelCoord[1] -= FIELD_HEIGHT / 2;
+  //reflect the y coordinates
+  pixelCoord[1] *= -1;
   return pixelCoord;
 }
 
 //get the robot position and angle
 void Vision::getRobotPose(Mat img)
 {
-
-
-  //blur this image
-  // Mat blurImg = smoothing(img, 5);
-  // Mat imgHSV;
-  // cvtColor(blurImg, imgHSV, COLOR_BGR2HSV); //Convert the captured frame from BGR to HSV
-  // vector<Mat> channels;
-  // split(imgHSV, channels);
-  //
-  // int x = 0;
-  // int y = 0;
-  // int count = 0;
-  // // search through the image to find yellow
-  // for (int i = 0; i < imgHSV.cols - 1; i++)
-  // {
-  //     for (int j = 0; j < imgHSV.rows - 1; j++)
-  //     {
-  //       int hue = channels[0].at<uchar>(j,i);
-  //       int sat = channels[1].at<uchar>(j,i);
-  //         if( isInYellowRange(hue, sat))
-  //         {
-  //           x += i;
-  //           y += j;
-  //           count++;
-  //         }
-  //
-  //       }
-  // }
-  // x /= count;
-  // y /= count;
-  // printf("center of the Bot average: %d, %d\n", x, y);
-
-
-
   //crop so we have just the mini robot location
   Rect croppedRectangle;
   croppedRectangle = findYellowRobot(img);
@@ -223,7 +165,7 @@ void Vision::getRobotPose(Mat img)
   offsetCenter = convertToWorldCoord(offsetCenter, croppedRectangle.x, croppedRectangle.y, img.cols, img.rows);
 
   robot_pos.x = offsetCenter[0];
-  robot_pos.y = -1.0* offsetCenter[1]; // HACK!
+  robot_pos.y = offsetCenter[1];
   robot_pos.theta = offsetCenter[2] * 180.0 / M_PI;
 
   slash_dash_bang_hash::Pose2DStamped stamped_pose;
@@ -232,21 +174,8 @@ void Vision::getRobotPose(Mat img)
   home1_pub.publish(stamped_pose);
 
   // printf("the center of the bot is: %f, %f, %f\n", robot_pos.x, robot_pos.y, robot_pos.theta);
-  // imshow("overhead",img);
 }
 
-
-
-
-
-
-void thresholdImage(Mat& imgHSV, Mat& imgGray, Scalar color[])
-{
-    inRange(imgHSV, color[0], color[1], imgGray);
-
-    erode(imgGray, imgGray, getStructuringElement(MORPH_ELLIPSE, Size(2, 2)));
-    dilate(imgGray, imgGray, getStructuringElement(MORPH_ELLIPSE, Size(2, 2)));
-}
 
 //returns index of longest line
 int findLongestLine(vector<Vec4f> lines)
@@ -269,6 +198,54 @@ int findLongestLine(vector<Vec4f> lines)
 //expects a cropped image of the robot
 Vector3d Vision::findCenterRobot(Mat img)
 {
+
+  // Mat imgHSV;
+  // cvtColor(img, imgHSV, COLOR_BGR2HSV); //Convert the captured frame from BGR to HSV
+  // //Threshold the image
+  // Mat imgThresholded;
+  // inRange(imgHSV, Scalar(YELLOW_MIN, SATURATE_LOW, 0), Scalar(YELLOW_MAX, SATURATE_HIGH, 255), imgThresholded); //Threshold the image
+  //
+  // erode(imgThresholded, imgThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) );
+  // dilate( imgThresholded, imgThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) );
+  //
+  // dilate( imgThresholded, imgThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) );
+  // erode(imgThresholded, imgThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) );
+  //
+  //
+  // vector< vector<Point> > contours;
+  // vector<Moments> mm;
+  // vector<Vec4i> hierarchy;
+  // findContours(imgThresholded, contours, hierarchy, CV_RETR_CCOMP, CV_CHAIN_APPROX_SIMPLE);
+  //
+  // Vector3d ret(0, 0, 0);
+  // if (hierarchy.size() != 2)
+  //        return ret;
+  //
+  // for(int i = 0; i < hierarchy.size(); i++)
+  //     mm.push_back(moments((Mat)contours[i]));
+  //
+  //
+  // std::sort(mm.begin(), mm.end(), compareMomentAreas);
+  //
+  // Moments mmLarge = mm[mm.size() - 1];
+  // Moments mmSmall = mm[mm.size() - 2];
+  //
+  // Point2d centerLarge = getCenterOfMass(mmLarge);
+  // Point2d centerSmall = getCenterOfMass(mmSmall);
+  //
+  // Point2d robotCenter = (centerLarge + centerSmall) * (1.0 / 2);
+  // Point2d diff = centerSmall - centerLarge;
+  // double angle = atan2(diff.y, diff.x);
+  //
+  // //convert angle to degrees
+  // angle = angle *180/M_PI;
+  // printf("Center of the bot pixel %d, %d\n", robotCenter.x, robotCenter.y);
+
+
+
+///////////////////////////////////////////////////////////////////////
+/////////////////////////////////OLD CODE//////////////////////////////
+///////////////////////////////////////////////////////////////////////
   vector<Vec4f> lines = LSD(img);
   Ptr<LineSegmentDetector> ls = createLineSegmentDetector(LSD_REFINE_STD);
 
@@ -414,6 +391,7 @@ void Vision::findPinkBall(Mat img)
 
   int x = 0;
   int y = 0;
+  int count = 0;
   // search through the image to find yellow
   for (int i = 0; i < imgHSV.cols; i++)
   {
@@ -425,12 +403,17 @@ void Vision::findPinkBall(Mat img)
           if( isInPinkRange(hue, sat, val) && blurChannels[1].at<uchar>(j,i) < PINK_GREEN_MAX)
           {
             //this should be where the ball is
-            x = i;
-            y = j;
-            //TODO:find the center of the ball
+            x += i;
+            y += j;
+            count ++;
           }
       }
   }
+  x /= count;
+  y /= count;
+
+
+
   //printf("the ball location in pixels: %d, %d\n", x, y);
   Vector3d coordinates(x, y , 0);
   Vector3d worldCoords;
@@ -746,7 +729,7 @@ void Vision::visionCallback(const sensor_msgs::ImageConstPtr& msg)
 
   img_header_ = msg->header;
 
-  ROS_INFO("Vision timestamp=%d:%d", img_header_.stamp.sec, img_header_.stamp.nsec);
+  //ROS_INFO("Vision timestamp=%d:%d", img_header_.stamp.sec, img_header_.stamp.nsec);
 
   static bool cropped = false;
   static Rect croppedRect;
@@ -763,6 +746,7 @@ void Vision::visionCallback(const sensor_msgs::ImageConstPtr& msg)
         // imshow("original view", img);
         img = Mat(img, croppedRect);
         getRobotPose(img);
+
         findPinkBall(img);
         Mat blurImg = Vision::smoothing(img, 5);
         colorSlider(blurImg);
@@ -807,13 +791,49 @@ priv_nh("~")
 }
 
 
-
-
-
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "home");
     Vision Vision_node;
     ros::spin();
-
 }
+
+
+Point2d Vision::getCenterOfMass(Moments moment)
+{
+    double m10 = moment.m10;
+    double m01 = moment.m01;
+    double mass = moment.m00;
+    double x = m10 / mass;
+    double y = m01 / mass;
+    return Point2d(x, y);
+}
+
+bool Vision::compareMomentAreas(Moments moment1, Moments moment2)
+{
+    double area1 = moment1.m00;
+    double area2 = moment2.m00;
+    return area1 < area2;
+}
+
+
+
+// void mouseCallback(int event, int x, int y, int flags, void* userdata) {
+//     static bool mouse_left_down = false;
+//
+//     if (event == EVENT_LBUTTONDOWN) {
+//         mouse_left_down = true;
+//         Point2d point_meters = imageToWorldCoordinates(Point2d(x, y));
+//         char buffer[50];
+//         sprintf(buffer, "Location: (%.3f m, %.3f m)", point_meters.x, point_meters.y);
+//         displayStatusBar(GUI_NAME, buffer, 10000);
+//
+//     } else if (event == EVENT_MOUSEMOVE) {
+//         if (mouse_left_down) sendBallMessage(x, y);
+//
+//     } else if (event == EVENT_LBUTTONUP) {
+//         sendBallMessage(x, y);
+//         mouse_left_down = false;
+//     }
+//
+// }

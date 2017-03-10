@@ -14,7 +14,7 @@ public:
   samplesQueue(int queue_size);
 
   void addSample(State sample);
-  State updateSamples(State update, int samples_old);
+  State updateSamples(State update, int samples_old, double dt);
 
 private:
   State samples_[MAX_QUEUE_SIZE]; // Array of States to keep track of samples

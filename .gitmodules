@@ -1,0 +1,3 @@
+[submodule "soccersim"]
+	path = soccersim
+	url = https://github.com/embeddedprogrammer/soccersim.git

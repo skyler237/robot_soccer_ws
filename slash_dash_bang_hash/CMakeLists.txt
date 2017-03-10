@@ -16,6 +16,7 @@ find_package(catkin REQUIRED
   # OpenCV
 	)
 
+  # Eigen vector computation optimization
   set(CMAKE_CXX_FLAGS "-std=c++0x -fopenmp -O3")
 
 ## Generate messages in the 'msg' folder
@@ -55,10 +56,13 @@ include_directories(
 
 ## Declare a C++ executable
 add_executable(Estimator
+    include/Estimator/samplesQueue.h
+    src/Estimator/samplesQueue.cpp
     include/Estimator/estimator.h
     src/Estimator/estimator.cpp
     include/Utilities/utilities.h
-    src/Utilities/utilities.cpp)
+    src/Utilities/utilities.cpp
+  )
 target_link_libraries(Estimator ${catkin_LIBRARIES})
 
 add_executable(AI

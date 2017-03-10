@@ -9,6 +9,7 @@
 #include "soccerref/GameState.h"
 #include "slash_dash_bang_hash/State.h"
 #include "slash_dash_bang_hash/Pose2DStamped.h"
+#include "Estimator/samplesQueue.h"
 #include <string.h>
 
 using namespace std;
@@ -22,17 +23,21 @@ typedef boost::shared_ptr< ::slash_dash_bang_hash::Pose2DStamped const> Pose2DSt
 #define FIELD_HEIGHT 2.38
 #define ROBOT_RADIUS 0.10
 
+using namespace slash_dash_bang_hash;
+
 class Estimator {
 public:
    Estimator();
    void estimateStates();
+   static State correctStateWithMeasurementsOnly(State measurement);
+   static State correctState(State prediction, State measurement, double dt);
+   static State predictState(State state, double dt);
 
  private:
   ros::NodeHandle nh_;
   ros::NodeHandle priv_nh;
   string team_;
   Vector2d goal_;
-  double tau_; // Dirty derivative gain
 
   // Publishers and Subscribers
   ros::Subscriber vision_data_sub_;
@@ -48,7 +53,7 @@ public:
   slash_dash_bang_hash::State state_;
   slash_dash_bang_hash::State state_prev_;
 
-  Estimator::samplesQueue samples_;
+  samplesQueue samples_;
 
   bool new_vision_data_;
   double sample_period_;
@@ -56,8 +61,7 @@ public:
   double LPF_alpha_xy_;
   double LPF_corner_freq_theta_;
   double LPF_alpha_theta_;
-  double xy_vel_damping_coeff_;
-  double theta_vel_damping_coeff_;
+
 
 
   void lowPassFilterStates();

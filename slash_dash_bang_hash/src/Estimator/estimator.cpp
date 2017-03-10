@@ -1,6 +1,9 @@
 #include "Estimator/estimator.h"
-#include "Estimator/samplesQueue.h"
 #include "Utilities/utilities.h"
+
+static double xy_vel_damping_coeff_;
+static double theta_vel_damping_coeff_;
+static double tau_; // Dirty derivative gain
 
 
 Estimator::Estimator() :
@@ -19,9 +22,9 @@ priv_nh("~")
   LPF_alpha_theta_ = priv_nh.param<double>("LPF_alpha_theta", exp(-1.0*LPF_corner_freq_theta_*sample_period_));
   xy_vel_damping_coeff_ = priv_nh.param<double>("xy_vel_damping_coeff", 0.9);
   theta_vel_damping_coeff_ = priv_nh.param<double>("theta_vel_damping_coeff", 0.9);
-  queue_size = priv_nh.param<int>("sample_queue_size", 20);
+  int queue_size = priv_nh.param<int>("sample_queue_size", 20);
 
-  samples_ = Estimator::samplesQueue(queue_size);
+  samples_ = samplesQueue(queue_size);
 
   game_state_sub_ = nh_.subscribe<soccerref::GameState>("/game_state", 10, &Estimator::gameStateCallback, this);
   vision_data_sub_ = nh_.subscribe<slash_dash_bang_hash::Pose2DStamped>("vision_data", 10, &Estimator::visionCallback, this);
@@ -107,7 +110,7 @@ void Estimator::estimateStates()
   publishStates();
 }
 
-State Estimator::predictState(State state, double dt)
+State Estimator::predictState(State state,  double dt)
 {
   State pred_state;
 
@@ -124,7 +127,7 @@ State Estimator::predictState(State state, double dt)
   return pred_state;
 }
 
-State Estimator::correctState(State prediction, State measurement, double meas_lag, double dt)
+State Estimator::correctState(State prediction, State measurement, double dt)
 {
   State corrected_state = prediction;
 
@@ -147,7 +150,7 @@ State Estimator::correctStateWithMeasurementsOnly(State measurement)
   prev = now;
 
   static State prev_measurement = measurement;
-  State corrected_state = prediction;
+  State corrected_state = prev_measurement;
 
   // Update velocities
   corrected_state.xdot = tustinDerivative(measurement.x, prev_measurement.xhat, prev_measurement.xdot, tau_, dt);

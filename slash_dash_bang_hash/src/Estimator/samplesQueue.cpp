@@ -38,7 +38,7 @@ State samplesQueue::updateSamples(State update, int samples_old, double dt) {
   int next_index;
   for(int i = 0; i < samples_old; i++) {
     next_index = (curr_index + 1)%size_; // Get next index with wrap around
-    samples_[next_index] = Estimator::predictState(samples[curr_index], dt);
+    samples_[next_index] = Estimator::predictState(samples_[curr_index], dt);
     curr_index = next_index;
   }
   return samples_[curr_index];
