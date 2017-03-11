@@ -116,17 +116,6 @@ vector<Vec4f> LSD(Mat img)
 
 }
 
-//returns true is given hue and saturation are yellow and not gray
-bool Vision::isInYellowRange(int hue, int sat)
-{
-  return (hue > YELLOW_MIN && hue < YELLOW_MAX && sat > SATURATE_LOW && sat < SATURATE_HIGH);
-}
-//returns true is given hue and saturation are white and not gray
-bool Vision::isInwhiteRange(int hue, int sat, int val)
-{
-  return (hue > WHITE_MIN && hue < WHITE_MAX && val > WHITE_VAL_LOW && val < WHITE_VAL_HIGH);
-}
-
 //returns true is given hue and saturation are white and not gray
 bool Vision::isInPinkRange(int hue, int sat, int val)
 {
@@ -305,89 +294,6 @@ Vector3d Vision::findCenterRobot(Mat img, robot_color robotColor)
   //convert angle to degrees
   angle = angle *180/M_PI;
   printf("Center of the bot pixel %f, %f, %f\n", centerLarge.x, centerLarge.y, angle);
-
-
-
-///////////////////////////////////////////////////////////////////////
-/////////////////////////////////OLD CODE//////////////////////////////
-///////////////////////////////////////////////////////////////////////
-  // vector<Vec4f> lines = LSD(img);
-  // Ptr<LineSegmentDetector> ls = createLineSegmentDetector(LSD_REFINE_STD);
-  //
-  // //find four lines that all have a similar point -- this is the center of the robot
-  // //should be between a majority of the lines
-  // //the points should be within 3px in any direction of each other
-  //
-  //  int N = lines.size();
-  //  //if we haven't found any lines then we should return 0,0,0
-  //  if(N <= 0)
-  //  {
-  //    Vector3d ret(0,0,0);
-  //    return ret;
-  //  }
-  //
-  //  int indexY = 0;
-  //  int indexX = 0;
-  //  int indexL = 0;
-  //  bool centerFound = false;
-  //
-  //
-  //
-  //  //find the longest line and go for it
-  //  int longestIndex = findLongestLine(lines);
-  // const Vec4f v = lines.at(longestIndex);
-  //
-  //  Vector2d center(v[0], v[1]);
-  //
-  //  center[0] = (center[0] + v[2]) / 2;
-  //  center[1] = (center[1] + v[3]) / 2;
-  //
-  //  //printf("the center of the bot is: %f, %f\n", center[0], center[1]);
-  //
-  //   //forward facing is the one with more black pixels
-  //   //look at both points and determine which one has more black
-  //   //in a 2 by 2 box
-  //
-  //   Mat imgHSV;
-  //   cvtColor(img, imgHSV, COLOR_BGR2HSV); //Convert the captured frame from BGR to HSV
-  //   vector<Mat> channels;
-  //   split(imgHSV, channels);
-  //
-  //
-  //
-  //   int ln_1 = 0;
-  //   int ln_2 = 0;
-  //   for(int i = 0 ; i < N; i++)
-  //   {
-  //     const Vec4f v2 = lines.at(i);
-  //     ln_1 += Distance(v[0], v[1], v2[0], v2[1]);
-  //     ln_1 += Distance(v[0], v[1], v2[2], v2[3]);
-  //
-  //   }
-  //   for(int i = 0 ; i < N; i++)
-  //   {
-  //     const Vec4f v2 = lines.at(i);
-  //     ln_2 += Distance(v[2], v[3], v2[0], v2[1]);
-  //     ln_2 += Distance(v[2], v[3], v2[2], v2[3]);
-  //   }
-  //   Vector2d frontPoint(v[0], v[1]);
-  //   if(ln_1 > ln_2)
-  //   {
-  //     //count one is the front
-  //     frontPoint[0] = v[2];
-  //     frontPoint[1] = v[3];
-  //   }
-  //
-  //   //printf("front point %f, %f\n", frontPoint[0], frontPoint[1]);
-  //
-  //   frontPoint[0] -= center[0];
-  //   frontPoint[1] -= center[1];
-  //
-  // float angle =  atan2(-frontPoint[1], frontPoint[0]);
-  // //printf("angle %f\n", angle);
-  // Vector3d ret(center[0], center[1], angle);
-  //
-  // return ret;
 
 }
 
