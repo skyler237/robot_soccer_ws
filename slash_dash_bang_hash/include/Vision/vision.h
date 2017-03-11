@@ -38,17 +38,6 @@ typedef boost::shared_ptr< ::slash_dash_bang_hash::State const> StateConstPtr;
 #define CAMERA_WIDTH            640.0
 #define CAMERA_HEIGHT           480.0
 
-#define FIELD_WIDTH 3.40  // in meters
-#define FIELD_HEIGHT 2.38
-
-
-// These colours need to match the Gazebo materials
-Scalar red[]    = {Scalar(0,   128, 128), Scalar(10,  255, 255)};
-Scalar yellow[] = {Scalar(20,  128, 128), Scalar(30,  255, 255)};
-Scalar green[]  = {Scalar(55,  128, 128), Scalar(65,  255, 255)};
-Scalar blue[]   = {Scalar(115, 128, 128), Scalar(125, 255, 255)};
-Scalar purple[] = {Scalar(145, 128, 128), Scalar(155, 255, 255)};
-
 
 class Vision {
 public:
@@ -92,12 +81,15 @@ public:
   geometry_msgs::Pose2D poseAway2;
   geometry_msgs::Pose2D poseBall;
 
+
+  enum robot_color { red, green, blue, yellow, purple, pink };
+
+
+
   //Vision functions
-  //find a box with our yellow robot
   Rect findYellowRobot(Mat img);
   bool isInYellowRange(int hue, int sat);
   void getRobotPose(Mat img);
-  Vector3d findCenterRobot(Mat img);
   void visionCallback(const sensor_msgs::ImageConstPtr& msg);
   Rect crop(Mat img);
   Mat smoothing(Mat img, int radius);
@@ -111,6 +103,10 @@ public:
   void setDestination(const StateConstPtr &msg);
   static Point2d getCenterOfMass(Moments moment);
   static bool compareMomentAreas(Moments moment1, Moments moment2);
+  int findLongestLine(vector<Vec4f> lines);
+  Point2d imageToWorldCoordinates(Point2d point_i, Mat img);
+  Mat thresholdImage(Mat img, robot_color robotColor);
+  Vector3d findCenterRobot(Mat img, robot_color robotColor);
 
 
 

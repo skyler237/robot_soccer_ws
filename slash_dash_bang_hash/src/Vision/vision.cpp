@@ -1,15 +1,28 @@
 #include "Vision/vision.h"
 #include "Utilities/utilities.h"
 
-
-
-#define YELLOW_MIN 19
-#define YELLOW_MAX 36
-#define SATURATE_LOW 40
+//saturation values can remain constant
+#define SATURATE_LOW 0
 #define SATURATE_HIGH 255
+
+
+#define YELLOW_MIN 27
+#define YELLOW_MAX 37
+#define YELLOW_VAL_MIN 218
+#define YELLOW_VAL_MAX 255
+
+
+#define GREEN_MIN 43
+#define GREEN_MAX 81
+
+#define BLUE_MIN 77
+#define BLUE_MAX 100
+#define BLUE_VAL_LOW 218
+#define BLUE_VAL_HIGH 240
 
 #define WHITE_MIN 0
 #define WHITE_MAX 23
+
 #define WHITE_VAL_LOW 205
 #define WHITE_VAL_HIGH 240
 
@@ -38,14 +51,6 @@ int iHighS = 255;
 
 int iLowV = 0;
 int iHighV = 255;
-
-int averageBlue = 0;
-int averageRed = 0;
-int averageGreen = 0;
-int averageVal = 0;
-
-//export ROS_MASTER_URI=http://192.168.1.160:11311
-//export ROS_IP=myip10.0.2.15
 
 
 
@@ -87,6 +92,7 @@ void colorSlider(Mat img)
 
     dilate( imgThresholded, imgThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) );
     erode(imgThresholded, imgThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) );
+    imshow("changed", imgThresholded);
 }
 
 
@@ -155,9 +161,7 @@ void Vision::getRobotPose(Mat img)
 {
   //crop so we have just the mini robot location
   Rect croppedRectangle;
-  croppedRectangle = findYellowRobot(img);
-  Mat croppedImg = Mat(img, croppedRectangle);
-  Vector3d offsetCenter = findCenterRobot(croppedImg);
+  Vector3d offsetCenter = findCenterRobot(img, robot_color::yellow);
 
   geometry_msgs::Pose2D robot_pos;
   //printf("center of the Bot lines: %d, %d\n", offsetCenter[0], offsetCenter[1]);
@@ -178,7 +182,7 @@ void Vision::getRobotPose(Mat img)
 
 
 //returns index of longest line
-int findLongestLine(vector<Vec4f> lines)
+int Vision::findLongestLine(vector<Vec4f> lines)
 {
 
   int indexOfLongestLine = 0;
@@ -195,183 +199,201 @@ int findLongestLine(vector<Vec4f> lines)
   return indexOfLongestLine;
 }
 
-//expects a cropped image of the robot
-Vector3d Vision::findCenterRobot(Mat img)
+Point2d Vision::imageToWorldCoordinates(Point2d point_i, Mat img)
+{
+    Point2d centerOfField(CAMERA_WIDTH/2, CAMERA_HEIGHT/2);
+    Point2d center_w = (point_i - centerOfField);
+
+    // You have to split up the pixel to meter conversion
+    // because it is a rect, not a square!
+    center_w.x *= (FIELD_WIDTH/img.cols);
+    center_w.y *= (FIELD_HEIGHT/img.rows);
+
+    // Reflect y
+    center_w.y = -center_w.y;
+
+    return center_w;
+}
+
+Mat Vision::thresholdImage(Mat img, robot_color robotColor)
 {
 
-  // Mat imgHSV;
-  // cvtColor(img, imgHSV, COLOR_BGR2HSV); //Convert the captured frame from BGR to HSV
-  // //Threshold the image
-  // Mat imgThresholded;
-  // inRange(imgHSV, Scalar(YELLOW_MIN, SATURATE_LOW, 0), Scalar(YELLOW_MAX, SATURATE_HIGH, 255), imgThresholded); //Threshold the image
-  //
-  // erode(imgThresholded, imgThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) );
-  // dilate( imgThresholded, imgThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) );
-  //
-  // dilate( imgThresholded, imgThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) );
-  // erode(imgThresholded, imgThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) );
-  //
-  //
-  // vector< vector<Point> > contours;
-  // vector<Moments> mm;
-  // vector<Vec4i> hierarchy;
-  // findContours(imgThresholded, contours, hierarchy, CV_RETR_CCOMP, CV_CHAIN_APPROX_SIMPLE);
-  //
-  // Vector3d ret(0, 0, 0);
-  // if (hierarchy.size() != 2)
-  //        return ret;
-  //
-  // for(int i = 0; i < hierarchy.size(); i++)
-  //     mm.push_back(moments((Mat)contours[i]));
-  //
-  //
-  // std::sort(mm.begin(), mm.end(), compareMomentAreas);
-  //
-  // Moments mmLarge = mm[mm.size() - 1];
-  // Moments mmSmall = mm[mm.size() - 2];
-  //
-  // Point2d centerLarge = getCenterOfMass(mmLarge);
-  // Point2d centerSmall = getCenterOfMass(mmSmall);
-  //
-  // Point2d robotCenter = (centerLarge + centerSmall) * (1.0 / 2);
-  // Point2d diff = centerSmall - centerLarge;
-  // double angle = atan2(diff.y, diff.x);
-  //
-  // //convert angle to degrees
-  // angle = angle *180/M_PI;
-  // printf("Center of the bot pixel %d, %d\n", robotCenter.x, robotCenter.y);
+  Mat imgHSV;
+  cvtColor(img, imgHSV, COLOR_BGR2HSV); //Convert the captured frame from BGR to HSV
+  int saturateMin =  SATURATE_LOW;
+  int saturateMax = SATURATE_HIGH;
+  int valueMin, valueMax;
+  int hueMin, hueMax;
+  switch (robotColor) {
+    case robot_color::yellow:                         //will also work for orange
+      valueMin = YELLOW_VAL_MIN;
+      valueMax = YELLOW_VAL_MAX;
+      hueMin = YELLOW_MIN;
+      hueMax = YELLOW_MAX;
+    break;
+    case robot_color::purple:
+      valueMin = YELLOW_VAL_MIN;
+      valueMax = YELLOW_VAL_MAX;
+      hueMin = YELLOW_MIN;
+      hueMax = YELLOW_MAX;
+    break;
+    case robot_color::red:
+      valueMin = YELLOW_VAL_MIN;
+      valueMax = YELLOW_VAL_MAX;
+      hueMin = YELLOW_MIN;
+      hueMax = YELLOW_MAX;
+    break;
+    case robot_color::blue:
+      valueMin = BLUE_VAL_MIN;
+      valueMax = BLUE_VAL_MIN;
+      hueMin = BLUE_MIN;
+      hueMax = BLUE_MIN;
+    break;
+    case robot_color::green:                            //the color of the field
+      valueMin = YELLOW_VAL_MIN;
+      valueMax = YELLOW_VAL_MAX;
+      hueMin = YELLOW_MIN;
+      hueMax = YELLOW_MAX;
+    break;
+  }
+
+  Mat imgThresholded;
+  inRange(imgHSV, Scalar(hueMin, saturateMin, valueMin), Scalar(hueMax, saturateMax, valueMax), imgThresholded); //Threshold the image
+
+  dilate( imgThresholded, imgThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) );
+  erode(imgThresholded, imgThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) );
+
+  dilate( imgThresholded, imgThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) );
+  erode(imgThresholded, imgThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) );
+
+  return imgThresholded;
+}
+
+
+//expects a cropped image of the robot
+Vector3d Vision::findCenterRobot(Mat img, robot_color robotColor)
+{
+  //Threshold the image
+  Mat imgThresholded = thresholdImage(img, robotColor);
+
+
+  vector< vector<Point> > contours;
+  vector<Moments> mm;
+  vector<Vec4i> hierarchy;
+  findContours(imgThresholded, contours, hierarchy, CV_RETR_CCOMP, CV_CHAIN_APPROX_SIMPLE);
+
+  Vector3d ret(0, 0, 0);
+  printf("hierarchy size: %d\n", hierarchy.size());
+  if (hierarchy.size() < 2)
+         return ret;
+
+  for(int i = 0; i < hierarchy.size(); i++)
+      mm.push_back(moments((Mat)contours[i]));
+
+  std::sort(mm.begin(), mm.end(), compareMomentAreas);
+
+  Moments mmLarge = mm[mm.size() - 1];
+  Moments mmSmall = mm[mm.size() - 2];
+
+  Point2d centerLarge = imageToWorldCoordinates(getCenterOfMass(mmLarge), img);
+  Point2d centerSmall = imageToWorldCoordinates(getCenterOfMass(mmSmall), img);
+
+  Point2d robotCenter = (centerLarge + centerSmall) * (1.0 / 2);
+  Point2d diff = centerSmall - centerLarge;
+  double angle = atan2(diff.y, diff.x);
+
+  //convert angle to degrees
+  angle = angle *180/M_PI;
+  printf("Center of the bot pixel %f, %f, %f\n", centerLarge.x, centerLarge.y, angle);
 
 
 
 ///////////////////////////////////////////////////////////////////////
 /////////////////////////////////OLD CODE//////////////////////////////
 ///////////////////////////////////////////////////////////////////////
-  vector<Vec4f> lines = LSD(img);
-  Ptr<LineSegmentDetector> ls = createLineSegmentDetector(LSD_REFINE_STD);
-
-  //find four lines that all have a similar point -- this is the center of the robot
-  //should be between a majority of the lines
-  //the points should be within 3px in any direction of each other
-
-   int N = lines.size();
-   //if we haven't found any lines then we should return 0,0,0
-   if(N <= 0)
-   {
-     Vector3d ret(0,0,0);
-     return ret;
-   }
-
-   int indexY = 0;
-   int indexX = 0;
-   int indexL = 0;
-   bool centerFound = false;
-
-
-
-   //find the longest line and go for it
-   int longestIndex = findLongestLine(lines);
-  const Vec4f v = lines.at(longestIndex);
-
-   Vector2d center(v[0], v[1]);
-
-   center[0] = (center[0] + v[2]) / 2;
-   center[1] = (center[1] + v[3]) / 2;
-
-   //printf("the center of the bot is: %f, %f\n", center[0], center[1]);
-
-    //forward facing is the one with more black pixels
-    //look at both points and determine which one has more black
-    //in a 2 by 2 box
-
-    Mat imgHSV;
-    cvtColor(img, imgHSV, COLOR_BGR2HSV); //Convert the captured frame from BGR to HSV
-    vector<Mat> channels;
-    split(imgHSV, channels);
-
-
-
-    int ln_1 = 0;
-    int ln_2 = 0;
-    for(int i = 0 ; i < N; i++)
-    {
-      const Vec4f v2 = lines.at(i);
-      ln_1 += Distance(v[0], v[1], v2[0], v2[1]);
-      ln_1 += Distance(v[0], v[1], v2[2], v2[3]);
-
-    }
-    for(int i = 0 ; i < N; i++)
-    {
-      const Vec4f v2 = lines.at(i);
-      ln_2 += Distance(v[2], v[3], v2[0], v2[1]);
-      ln_2 += Distance(v[2], v[3], v2[2], v2[3]);
-    }
-    Vector2d frontPoint(v[0], v[1]);
-    if(ln_1 > ln_2)
-    {
-      //count one is the front
-      frontPoint[0] = v[2];
-      frontPoint[1] = v[3];
-    }
-
-    //printf("front point %f, %f\n", frontPoint[0], frontPoint[1]);
-
-    frontPoint[0] -= center[0];
-    frontPoint[1] -= center[1];
-
-  float angle =  atan2(-frontPoint[1], frontPoint[0]);
-  //printf("angle %f\n", angle);
-  Vector3d ret(center[0], center[1], angle);
-
-  return ret;
+  // vector<Vec4f> lines = LSD(img);
+  // Ptr<LineSegmentDetector> ls = createLineSegmentDetector(LSD_REFINE_STD);
+  //
+  // //find four lines that all have a similar point -- this is the center of the robot
+  // //should be between a majority of the lines
+  // //the points should be within 3px in any direction of each other
+  //
+  //  int N = lines.size();
+  //  //if we haven't found any lines then we should return 0,0,0
+  //  if(N <= 0)
+  //  {
+  //    Vector3d ret(0,0,0);
+  //    return ret;
+  //  }
+  //
+  //  int indexY = 0;
+  //  int indexX = 0;
+  //  int indexL = 0;
+  //  bool centerFound = false;
+  //
+  //
+  //
+  //  //find the longest line and go for it
+  //  int longestIndex = findLongestLine(lines);
+  // const Vec4f v = lines.at(longestIndex);
+  //
+  //  Vector2d center(v[0], v[1]);
+  //
+  //  center[0] = (center[0] + v[2]) / 2;
+  //  center[1] = (center[1] + v[3]) / 2;
+  //
+  //  //printf("the center of the bot is: %f, %f\n", center[0], center[1]);
+  //
+  //   //forward facing is the one with more black pixels
+  //   //look at both points and determine which one has more black
+  //   //in a 2 by 2 box
+  //
+  //   Mat imgHSV;
+  //   cvtColor(img, imgHSV, COLOR_BGR2HSV); //Convert the captured frame from BGR to HSV
+  //   vector<Mat> channels;
+  //   split(imgHSV, channels);
+  //
+  //
+  //
+  //   int ln_1 = 0;
+  //   int ln_2 = 0;
+  //   for(int i = 0 ; i < N; i++)
+  //   {
+  //     const Vec4f v2 = lines.at(i);
+  //     ln_1 += Distance(v[0], v[1], v2[0], v2[1]);
+  //     ln_1 += Distance(v[0], v[1], v2[2], v2[3]);
+  //
+  //   }
+  //   for(int i = 0 ; i < N; i++)
+  //   {
+  //     const Vec4f v2 = lines.at(i);
+  //     ln_2 += Distance(v[2], v[3], v2[0], v2[1]);
+  //     ln_2 += Distance(v[2], v[3], v2[2], v2[3]);
+  //   }
+  //   Vector2d frontPoint(v[0], v[1]);
+  //   if(ln_1 > ln_2)
+  //   {
+  //     //count one is the front
+  //     frontPoint[0] = v[2];
+  //     frontPoint[1] = v[3];
+  //   }
+  //
+  //   //printf("front point %f, %f\n", frontPoint[0], frontPoint[1]);
+  //
+  //   frontPoint[0] -= center[0];
+  //   frontPoint[1] -= center[1];
+  //
+  // float angle =  atan2(-frontPoint[1], frontPoint[0]);
+  // //printf("angle %f\n", angle);
+  // Vector3d ret(center[0], center[1], angle);
+  //
+  // return ret;
 
 }
 
 //find white ball
 void Vision::findWhiteBall(Mat img)
 {
-
-  //blur this image
-  Mat blurImg = smoothing(img, 5);
-  Mat imgHSV;
-  cvtColor(blurImg, imgHSV, COLOR_BGR2HSV); //Convert the captured frame from BGR to HSV
-  vector<Mat> channels;
-  split(imgHSV, channels);
-
-  int x = 0;
-  int y = 0;
-  // search through the image to find yellow
-  for (int i = 0; i < imgHSV.cols; i++)
-  {
-      for (int j = 0; j < imgHSV.rows; j++)
-      {
-        int hue = channels[0].at<uchar>(j,i);
-        int sat = channels[1].at<uchar>(j,i);
-        int val = channels[2].at<uchar>(j, i);
-          if( isInwhiteRange(hue, sat, val))
-          {
-            //this should be where the ball is
-            x = i;
-            y = j;
-            //TODO:find the center of the ball
-          }
-      }
-  }
-  //printf("the ball location in pixels: %d, %d\n", x, y);
-  Vector3d coordinates(x, y , 0);
-  Vector3d worldCoords;
-  worldCoords = convertToWorldCoord(coordinates, 0, 0, img.cols, img.rows);
-  //printf("the ball location in world: %f, %f\n", worldCoords[0], worldCoords[1]);
-  geometry_msgs::Pose2D ball_pos;
-
-  ball_pos.x = -1.0* worldCoords[0];
-  ball_pos.y =  -1.0 * worldCoords[1];
-  ball_pos.theta = 0;
-
-  slash_dash_bang_hash::Pose2DStamped stamped_pose;
-  stamped_pose.header = img_header_;
-  stamped_pose.pose = ball_pos;
-  ball_pub.publish(stamped_pose);
-  referee_ball_pub.publish(ball_pos);
 }
 
 void Vision::findPinkBall(Mat img)
@@ -483,11 +505,6 @@ Rect Vision::findYellowRobot(Mat img)
         break;
       }
   }
-
-
-
-
-
 
   Rect croppedRectangle;
   croppedRectangle.x = max(0, x - 50);
@@ -743,9 +760,9 @@ void Vision::visionCallback(const sensor_msgs::ImageConstPtr& msg)
           croppedRect = Vision::crop(img);
           cropped = true;
         }
-        // imshow("original view", img);
         img = Mat(img, croppedRect);
         getRobotPose(img);
+        imshow("original view", img);
 
         findPinkBall(img);
         Mat blurImg = Vision::smoothing(img, 5);
@@ -815,25 +832,3 @@ bool Vision::compareMomentAreas(Moments moment1, Moments moment2)
     double area2 = moment2.m00;
     return area1 < area2;
 }
-
-
-
-// void mouseCallback(int event, int x, int y, int flags, void* userdata) {
-//     static bool mouse_left_down = false;
-//
-//     if (event == EVENT_LBUTTONDOWN) {
-//         mouse_left_down = true;
-//         Point2d point_meters = imageToWorldCoordinates(Point2d(x, y));
-//         char buffer[50];
-//         sprintf(buffer, "Location: (%.3f m, %.3f m)", point_meters.x, point_meters.y);
-//         displayStatusBar(GUI_NAME, buffer, 10000);
-//
-//     } else if (event == EVENT_MOUSEMOVE) {
-//         if (mouse_left_down) sendBallMessage(x, y);
-//
-//     } else if (event == EVENT_LBUTTONUP) {
-//         sendBallMessage(x, y);
-//         mouse_left_down = false;
-//     }
-//
-// }

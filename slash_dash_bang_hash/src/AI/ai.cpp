@@ -65,7 +65,8 @@ void AI::computeDestination() {
         // ally1_destination_ = play_rushGoal(ally1_state_, ball_state_);
         // ally1_destination_ = play_standardOffense();
         // ally1_destination_ = play_skillsTournament(ally1_state_);
-        ally1_destination_ = play_playsTournament(ally1_state_);
+        // ally1_destination_ = play_playsTournament(ally1_state_);
+        ally1_destination_ = play_onePlayer(ally1_state_);
 
         // checkForKick(1);
         //ROS_INFO("Ally1_destination: x=%f, y=%f", ally1_destination_.x, ally1_destination_.y);
@@ -305,6 +306,24 @@ State AI::play_skillsTournament(State robot_state) {
 
 State AI::play_playsTournament(State robot_state) {
   int play_state = gameState_.home_score % 2;
+
+  switch (play_state) {
+    case 0:
+      return play_rushGoal(robot_state, ball_state_);
+
+    case 1:
+      return play_basicDefense(robot_state, ball_state_);
+  }
+}
+
+State AI::play_onePlayer(State robot_state) {
+  int play_state;
+  if(ball_state_.x > -0.3) {
+    play_state = 0; // Rush goal
+  }
+  else {
+    play_state = 1;
+  }
 
   switch (play_state) {
     case 0:
