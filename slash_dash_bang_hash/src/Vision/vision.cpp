@@ -297,11 +297,6 @@ Vector3d Vision::findCenterRobot(Mat img, robot_color robotColor)
 
 }
 
-//find white ball
-void Vision::findWhiteBall(Mat img)
-{
-}
-
 void Vision::findPinkBall(Mat img)
 {
 
@@ -358,68 +353,6 @@ void Vision::findPinkBall(Mat img)
   stamped_pose.pose = ball_pos;
   ball_pub.publish(stamped_pose);
   referee_ball_pub.publish(ball_pos);
-}
-
-
-
-//find the first yellow pixel that works and creates a rectangle that will contain the robot
-Rect Vision::findYellowRobot(Mat img)
-{
-  //blur this image
-  Mat blurImg = smoothing(img, 5);
-  Mat imgHSV;
-  cvtColor(blurImg, imgHSV, COLOR_BGR2HSV); //Convert the captured frame from BGR to HSV
-  vector<Mat> channels;
-  split(imgHSV, channels);
-
-  int x = 0;
-  int y = 0;
-  // search through the image to find yellow
-  for (int i = 0; i < imgHSV.cols - 1; i++)
-  {
-      for (int j = 0; j < imgHSV.rows - 1; j++)
-      {
-        int hue = channels[0].at<uchar>(j,i);
-        int sat = channels[1].at<uchar>(j,i);
-          if( isInYellowRange(hue, sat))
-          {
-            //this means we have found yellow and want to create a box from this point
-            int count = 0;
-            //from here we want to do a search around the immediate block
-            for(int k = max(0, i - 8); k < min(imgHSV.cols - 1, i + 8); k++)
-            {
-              for(int l = max(0, j - 8); l < min(imgHSV.rows - 1, j + 8); l++)
-              {
-                hue = channels[0].at<uchar>(l, k);
-                sat = channels[1].at<uchar>(l,k);
-                if( isInYellowRange(hue, sat))
-                {
-                  count++;
-                }
-              }
-            }
-            if(count > 50)
-            {
-              x = i;
-              y = j;
-              break;
-            }
-          }
-      }
-      if(x > 0 && y > 0)
-      {
-        break;
-      }
-  }
-
-  Rect croppedRectangle;
-  croppedRectangle.x = max(0, x - 50);
-  croppedRectangle.y = max(0, y - 50);
-  croppedRectangle.width = min(imgHSV.cols - croppedRectangle.x, 100);
-  croppedRectangle.height = min(imgHSV.rows - croppedRectangle.y, 100);
-
-  return croppedRectangle;
-
 }
 
 
