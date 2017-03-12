@@ -15,10 +15,20 @@
 #define GREEN_MIN 43
 #define GREEN_MAX 81
 
-#define BLUE_MIN 77
-#define BLUE_MAX 100
+#define BLUE_MIN 90
+#define BLUE_MAX 110
 #define BLUE_VAL_LOW 218
 #define BLUE_VAL_HIGH 240
+
+#define RED_MIN 0
+#define RED_MAX 10
+#define RED_VAL_LOW 218
+#define RED_VAL_HIGH 240
+
+#define PURPLE_MIN 121
+#define PURPLE_MAX 136
+#define PURPLE_VAL_LOW 218
+#define PURPLE_VAL_HIGH 240
 
 #define WHITE_MIN 0
 #define WHITE_MAX 23
@@ -148,23 +158,40 @@ Vector3d Vision::convertToWorldCoord(Vector3d pixelCoord, int offSetX, int offSe
 //get the robot position and angle
 void Vision::getRobotPose(Mat img)
 {
-  //crop so we have just the mini robot location
-  Rect croppedRectangle;
-  Vector3d offsetCenter = findCenterRobot(img, robot_color::yellow);
+    //crop so we have just the mini robot location
+    //Vector3d offsetCenter = findCenterRobot(img, robot_color::red);
 
-  geometry_msgs::Pose2D robot_pos;
-  //printf("center of the Bot lines: %d, %d\n", offsetCenter[0], offsetCenter[1]);
+    geometry_msgs::Pose2D robot_pos;
+    //printf("center of the Bot lines: %d, %d\n", offsetCenter[0], offsetCenter[1]);
 
-  offsetCenter = convertToWorldCoord(offsetCenter, croppedRectangle.x, croppedRectangle.y, img.cols, img.rows);
 
-  robot_pos.x = offsetCenter[0];
-  robot_pos.y = offsetCenter[1];
-  robot_pos.theta = offsetCenter[2] * 180.0 / M_PI;
+    // robot_pos.x = offsetCenter[0];
+    // robot_pos.y = offsetCenter[1];
+    // //robot_pos.theta = offsetCenter[2] * 180.0 / M_PI;
+    // robot_pos.theta = offsetCenter[2];
 
-  slash_dash_bang_hash::Pose2DStamped stamped_pose;
-  stamped_pose.header = img_header_;
-  stamped_pose.pose = robot_pos;
-  home1_pub.publish(stamped_pose);
+    slash_dash_bang_hash::Pose2DStamped stamped_pose;
+    // stamped_pose.header = img_header_;
+    // stamped_pose.pose = robot_pos;
+    // printf("robot home %f, %f, %f\n", robot_pos.x, robot_pos.y, robot_pos.theta);
+    //
+    // home1_pub.publish(stamped_pose);
+
+
+
+    //now get the away1
+    Vector3d offsetCenter = findCenterRobot(img, robot_color::blue);
+
+    robot_pos.x = offsetCenter[0];
+    robot_pos.y = offsetCenter[1];
+    robot_pos.theta = offsetCenter[2] * 180.0 / M_PI;
+
+    stamped_pose.header = img_header_;
+    stamped_pose.pose = robot_pos;
+    printf("robot away %f, %f, %f\n", robot_pos.x, robot_pos.y, robot_pos.theta);
+
+    away1_pub.publish(stamped_pose);
+
 
   // printf("the center of the bot is: %f, %f, %f\n", robot_pos.x, robot_pos.y, robot_pos.theta);
 }
@@ -221,28 +248,24 @@ Mat Vision::thresholdImage(Mat img, robot_color robotColor)
       hueMax = YELLOW_MAX;
     break;
     case robot_color::purple:
-      valueMin = YELLOW_VAL_MIN;
-      valueMax = YELLOW_VAL_MAX;
-      hueMin = YELLOW_MIN;
-      hueMax = YELLOW_MAX;
+      valueMin = PURPLE_VAL_LOW;
+      valueMax = PURPLE_VAL_HIGH;
+      hueMin = PURPLE_MIN;
+      hueMax = PURPLE_MAX;
     break;
     case robot_color::red:
-      valueMin = YELLOW_VAL_MIN;
-      valueMax = YELLOW_VAL_MAX;
-      hueMin = YELLOW_MIN;
-      hueMax = YELLOW_MAX;
+      valueMin = RED_VAL_LOW;
+      valueMax = RED_VAL_HIGH;
+      hueMin = RED_MIN;
+      hueMax = RED_MAX;
     break;
     case robot_color::blue:
-      valueMin = BLUE_VAL_MIN;
-      valueMax = BLUE_VAL_MIN;
+      valueMin = BLUE_VAL_LOW;
+      valueMax = BLUE_VAL_HIGH;
       hueMin = BLUE_MIN;
       hueMax = BLUE_MIN;
     break;
     case robot_color::green:                            //the color of the field
-      valueMin = YELLOW_VAL_MIN;
-      valueMax = YELLOW_VAL_MAX;
-      hueMin = YELLOW_MIN;
-      hueMax = YELLOW_MAX;
     break;
   }
 
@@ -272,7 +295,7 @@ Vector3d Vision::findCenterRobot(Mat img, robot_color robotColor)
   findContours(imgThresholded, contours, hierarchy, CV_RETR_CCOMP, CV_CHAIN_APPROX_SIMPLE);
 
   Vector3d ret(0, 0, 0);
-  printf("hierarchy size: %d\n", hierarchy.size());
+  //printf("hierarchy size: %d\n", hierarchy.size());
   if (hierarchy.size() < 2)
          return ret;
 
@@ -293,8 +316,11 @@ Vector3d Vision::findCenterRobot(Mat img, robot_color robotColor)
 
   //convert angle to degrees
   angle = angle *180/M_PI;
-  printf("Center of the bot pixel %f, %f, %f\n", centerLarge.x, centerLarge.y, angle);
+  //printf("Center of the bot world %f, %f, %f\n", diff.x, diff.y, angle);
+  Vector3d pose(diff.x, diff.y, angle);
 
+
+  return pose;
 }
 
 void Vision::findPinkBall(Mat img)
