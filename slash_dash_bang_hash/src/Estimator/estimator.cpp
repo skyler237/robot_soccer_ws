@@ -1,9 +1,9 @@
 #include "Estimator/estimator.h"
 #include "Utilities/utilities.h"
 
-static double xy_vel_damping_coeff_;
-static double theta_vel_damping_coeff_;
-static double tau_; // Dirty derivative gain
+static double xy_vel_damping_coeff_ = 0.9;
+static double theta_vel_damping_coeff_ = 0.9;
+static double tau_ = 0.2; // Dirty derivative gain
 
 
 Estimator::Estimator() :
