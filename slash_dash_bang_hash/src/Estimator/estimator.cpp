@@ -43,12 +43,14 @@ void Estimator::visionCallback(const Pose2DStampedConstPtr &msg)
     double dt = now - prev;
     prev = now;
 
-    ROS_INFO("estimator visionCallback: dt=%f", dt);
+    // ROS_INFO("estimator visionCallback: dt=%f", dt);
 
     vision_header_ = msg->header;
-    ROS_INFO("Estimator: vision stamp: secs=%d, nsecs=%d", vision_header_.stamp.sec, vision_header_.stamp.nsec);
-    ROS_INFO("Vision lag = %f", now - vision_header_.stamp.toSec());
+    // ROS_INFO("Estimator: vision stamp: secs=%d, nsecs=%d", vision_header_.stamp.sec, vision_header_.stamp.nsec);
+    // ROS_INFO("Vision lag = %f", now - vision_header_.stamp.toSec());
     vision_data_ = poseToState(msg->pose);
+
+    printVector(stateToVector(vision_data_), "Vision data");
 
     new_vision_data_ = true;
 
@@ -61,7 +63,7 @@ void Estimator::gameStateCallback(const soccerref::GameState::ConstPtr &msg)
     double dt = now - prev;
     prev = now;
 
-    ROS_INFO("gameStateCallback: dt=%f", dt);
+    // ROS_INFO("gameStateCallback: dt=%f", dt);
     gameState_ = *msg;
 }
 
@@ -69,6 +71,8 @@ void Estimator::estimateStates()
 {
   predictAndCorrectEstimator();
   // LPF_Estimator();
+
+  printVector(stateToVector(state_), "Vision data (after estimator)");
 
   publishStates();
 }
