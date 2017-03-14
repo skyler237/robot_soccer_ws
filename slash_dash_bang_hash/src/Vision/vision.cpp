@@ -174,8 +174,8 @@ void Vision::getRobotPose(Mat img)
     stamped_pose.header = img_header_;
     stamped_pose.pose = robot_pos;
     //printf("  World coordinates: %f, %f, %f\n", robot_pos.x, robot_pos.y, robot_pos.theta);
-
-    home1_pub.publish(stamped_pose);
+    if(robot_pos.x != NULL && robot_pos.y != NULL && robot_pos.theta != NULL)
+      home1_pub.publish(stamped_pose);
 
     printf("Away robot:\n");
 
@@ -189,8 +189,8 @@ void Vision::getRobotPose(Mat img)
     stamped_pose.header = img_header_;
     stamped_pose.pose = robot_pos;
     printf("  World coordinates %f, %f, %f\n", robot_pos.x, robot_pos.y, robot_pos.theta);
-
-    away1_pub.publish(stamped_pose);
+    if(robot_pos.x != NULL && robot_pos.y != NULL && robot_pos.theta != NULL)
+      away1_pub.publish(stamped_pose);
 
 
 
