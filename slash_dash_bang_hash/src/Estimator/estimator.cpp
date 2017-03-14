@@ -22,7 +22,12 @@ priv_nh("~")
   LPF_alpha_theta_ = priv_nh.param<double>("LPF_alpha_theta", exp(-1.0*LPF_corner_freq_theta_*sample_period_));
   xy_vel_damping_coeff_ = priv_nh.param<double>("xy_vel_damping_coeff", 0.9);
   theta_vel_damping_coeff_ = priv_nh.param<double>("theta_vel_damping_coeff", 0.9);
-  int queue_size = priv_nh.param<int>("sample_queue_size", 20);
+  sampleQ_size_ = priv_nh.param<int>("sample_queue_size", 20);
+  sampleQ_cnt_ = 0;
+  sampleQ_index_ = 0;
+
+
+
 
   game_state_sub_ = nh_.subscribe<soccerref::GameState>("/game_state", 10, &Estimator::gameStateCallback, this);
   vision_data_sub_ = nh_.subscribe<slash_dash_bang_hash::Pose2DStamped>("vision_data", 10, &Estimator::visionCallback, this);
@@ -111,7 +116,7 @@ void Estimator::predictAndCorrectEstimator() {
     // Go back and update from the right sample
     if(samples_old_ < sampleQ_cnt_) {
       state_ = updateSamples(vision_data_, samples_old_, dt);
-      state_ = lowPassFilterStates(state_prev_, vision_data_, LPF_alpha_xy_, LPF_alpha_theta_);      
+      state_ = lowPassFilterStates(state_prev_, vision_data_, LPF_alpha_xy_, LPF_alpha_theta_);
     }
   }
   else {
