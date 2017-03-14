@@ -9,7 +9,6 @@
 #include "soccerref/GameState.h"
 #include "slash_dash_bang_hash/State.h"
 #include "slash_dash_bang_hash/Pose2DStamped.h"
-#include "Estimator/samplesQueue.h"
 #include <string.h>
 
 using namespace std;
@@ -23,15 +22,14 @@ typedef boost::shared_ptr< ::slash_dash_bang_hash::Pose2DStamped const> Pose2DSt
 #define FIELD_HEIGHT 2.38
 #define ROBOT_RADIUS 0.10
 
+#define MAX_QUEUE_SIZE 30
+
 using namespace slash_dash_bang_hash;
 
 class Estimator {
 public:
-   Estimator();
-   void estimateStates();
-   static State correctStateWithMeasurementsOnly(State measurement);
-   static State correctState(State prediction, State measurement, double dt);
-   static State predictState(State state, double dt);
+  Estimator();
+  void estimateStates();
 
  private:
   ros::NodeHandle nh_;
@@ -53,20 +51,33 @@ public:
   slash_dash_bang_hash::State state_;
   slash_dash_bang_hash::State state_prev_;
 
-  samplesQueue samples_;
-
   bool new_vision_data_;
   double sample_period_;
   double LPF_corner_freq_xy_;
   double LPF_alpha_xy_;
   double LPF_corner_freq_theta_;
   double LPF_alpha_theta_;
+  double xy_vel_damping_coeff_;
+  double theta_vel_damping_coeff_;
+  double tau_;
+
+  // Sample queue
+  State sampleQ_[MAX_QUEUE_SIZE]; // Array of States to keep track of samples
+  int sampleQ_size_;
+  int sampleQ_index_;
+  int sampleQ_cnt_;
+  void addSample(State sample);
+  State updateSamples(State update, int samples_old, double dt);
 
   // Estimator implementations
   void LPF_Estimator();
   void predictAndCorrectEstimator();
 
-  void lowPassFilterStates();
+  State correctStateWithMeasurementsOnly(State measurement, State predicted_state);
+  State correctState(State prediction, State measurement, double dt);
+  State predictState(State state, double dt);
+
+  State lowPassFilterStates(State prev_state, State measurement, double alpha_xy, double alpha_theta);
   void calculateVelocities();
   void publishStates();
 

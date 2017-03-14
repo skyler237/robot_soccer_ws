@@ -1,9 +1,9 @@
 #include "Estimator/estimator.h"
 #include "Utilities/utilities.h"
-
-static double xy_vel_damping_coeff_ = 0.9;
-static double theta_vel_damping_coeff_ = 0.9;
-static double tau_ = 0.2; // Dirty derivative gain
+#include <stdlib.h>
+#include <math.h>
+#include <ros/ros.h>
+#include <stdio.h>
 
 
 Estimator::Estimator() :
@@ -16,15 +16,13 @@ priv_nh("~")
   priv_nh.param<string>("team", team_, "home");
   tau_ = priv_nh.param<double>("dirty_deriv_gain", 0.05);
   sample_period_ = priv_nh.param<double>("sample_period", 0.01); // Default 100 Hz
-  LPF_corner_freq_xy_ = priv_nh.param<double>("LPF_corner_freq_xy", 10); // Default 10 Hz
+  LPF_corner_freq_xy_ = priv_nh.param<double>("LPF_corner_freq_xy", 100); // Default 10 Hz
   LPF_alpha_xy_ = priv_nh.param<double>("LPF_alpha_xy", exp(-1.0*LPF_corner_freq_xy_*sample_period_));
-  LPF_corner_freq_theta_ = priv_nh.param<double>("LPF_corner_freq_theta", 10); // Default 10 Hz
+  LPF_corner_freq_theta_ = priv_nh.param<double>("LPF_corner_freq_theta", 100); // Default 10 Hz
   LPF_alpha_theta_ = priv_nh.param<double>("LPF_alpha_theta", exp(-1.0*LPF_corner_freq_theta_*sample_period_));
   xy_vel_damping_coeff_ = priv_nh.param<double>("xy_vel_damping_coeff", 0.9);
   theta_vel_damping_coeff_ = priv_nh.param<double>("theta_vel_damping_coeff", 0.9);
   int queue_size = priv_nh.param<int>("sample_queue_size", 20);
-
-  samples_ = samplesQueue(queue_size);
 
   game_state_sub_ = nh_.subscribe<soccerref::GameState>("/game_state", 10, &Estimator::gameStateCallback, this);
   vision_data_sub_ = nh_.subscribe<slash_dash_bang_hash::Pose2DStamped>("vision_data", 10, &Estimator::visionCallback, this);
@@ -79,7 +77,7 @@ void Estimator::estimateStates()
 
 void Estimator::LPF_Estimator() {
   state_ = vision_data_;
-  lowPassFilterStates();
+  state_ = lowPassFilterStates(state_prev_, vision_data_, LPF_alpha_xy_, LPF_alpha_theta_);
   calculateVelocities();
 }
 
@@ -100,28 +98,29 @@ void Estimator::predictAndCorrectEstimator() {
     double lag_sample_periods = vision_lag/sample_period_;
 
     // Round to the nearest integer
-    int samples_old; // Number of actual samples
+    int samples_old_; // Number of actual samples
     if(fmod(lag_sample_periods, 1.0) >= 0.5) {
-      samples_old = (int) (lag_sample_periods + 1);
+      samples_old_ = (int) (lag_sample_periods + 1);
     }
     else {
-      samples_old = (int) lag_sample_periods;
+      samples_old_ = (int) lag_sample_periods;
     }
 
-    ROS_WARN("Vision Samples old = %d", samples_old);
+    ROS_WARN("Vision Samples old = %d", samples_old_);
 
     // Go back and update from the right sample
-    state_ = samples_.updateSamples(vision_data_, samples_old, dt);
+    state_ = updateSamples(vision_data_, samples_old_, dt);
 
 
-    lowPassFilterStates();
+    state_ = lowPassFilterStates(state_prev_, vision_data_, LPF_alpha_xy_, LPF_alpha_theta_);
   }
   else {
     // Predict states
+    ROS_ERROR("Pre-predicted state: x=%f, y=%f, theta=%f", state_.xhat, state_.yhat, state_.thetahat);
     state_ = predictState(state_, dt);
-
+    ROS_ERROR("Post-predicted state: x=%f, y=%f, theta=%f", state_.xhat, state_.yhat, state_.thetahat);
     // Store predictions in a queue to be updated
-    samples_.addSample(state_);
+    addSample(state_);
 
   }
 }
@@ -160,7 +159,7 @@ State Estimator::correctState(State prediction, State measurement, double dt)
   return corrected_state;
 }
 
-State Estimator::correctStateWithMeasurementsOnly(State measurement)
+State Estimator::correctStateWithMeasurementsOnly(State measurement, State predicted_state)
 {
   double now = ros::Time::now().toSec();
   static double prev = 0;
@@ -168,7 +167,8 @@ State Estimator::correctStateWithMeasurementsOnly(State measurement)
   prev = now;
 
   static State prev_measurement = measurement;
-  State corrected_state = prev_measurement;
+  State corrected_state = lowPassFilterStates(state_prev_, vision_data_, LPF_alpha_xy_, LPF_alpha_theta_);
+
 
   // Update velocities
   corrected_state.xdot = tustinDerivative(measurement.x, prev_measurement.xhat, prev_measurement.xdot, tau_, dt);
@@ -177,6 +177,7 @@ State Estimator::correctStateWithMeasurementsOnly(State measurement)
 
   // Re-predict states
   corrected_state = predictState(corrected_state, dt);
+  prev_measurement = measurement;
 
   return corrected_state;
 }
@@ -220,11 +221,13 @@ double Estimator::lowPassFilter(double alpha, double previous, double measured)
   return alpha*previous  + (1.0 - alpha)*measured;
 }
 
-void Estimator::lowPassFilterStates()
+State Estimator::lowPassFilterStates(State prev_state, State measurement, double alpha_xy, double alpha_theta)
 {
-  state_.xhat = lowPassFilter(LPF_alpha_xy_, state_prev_.xhat, vision_data_.x);
-  state_.yhat = lowPassFilter(LPF_alpha_xy_, state_prev_.yhat, vision_data_.y);
-  state_.thetahat = lowPassFilter(LPF_alpha_theta_, state_prev_.thetahat, vision_data_.theta);
+  State result = prev_state;
+  result.xhat = lowPassFilter(alpha_xy, prev_state.xhat, measurement.x);
+  result.yhat = lowPassFilter(alpha_xy, prev_state.yhat, measurement.y);
+  result.thetahat = lowPassFilter(alpha_theta, prev_state.thetahat, measurement.theta);
+  return result;
 }
 
 slash_dash_bang_hash::State Estimator::poseToState(geometry_msgs::Pose2D pose)
@@ -246,6 +249,39 @@ slash_dash_bang_hash::State Estimator::poseToState(geometry_msgs::Pose2D pose)
   }
 
   return state;
+}
+
+//==================================================================
+//======================= Samples Queue code =======================
+//==================================================================
+
+void Estimator::addSample(State sample) {
+  sampleQ_[sampleQ_index_] = sample;
+  sampleQ_index_ = (sampleQ_index_ + 1)%sampleQ_size_; // update index and wrap around
+  sampleQ_cnt_ = saturate(sampleQ_cnt_ + 1, 0, sampleQ_size_); // Saturate sample count at the size of the queue
+}
+
+State Estimator::updateSamples(State update, int samples_old_, double dt) {
+  samples_old_ = saturate(samples_old_, 0, sampleQ_cnt_); // Don't try to update past the data we have stored
+  int update_index = ((sampleQ_index_ - samples_old_) + sampleQ_size_) % sampleQ_size_; // Go back the right number of samples, but with wrap around
+
+  printVector(stateToVector(update), "State update");
+  printVector(stateToVector(sampleQ_[update_index]), "Pre-update state");
+
+  // Correct state here
+  sampleQ_[update_index] = correctStateWithMeasurementsOnly(update, sampleQ_[update_index]);
+
+  printVector(stateToVector(sampleQ_[update_index]), "Post-update state");
+
+  int curr_index = update_index;
+  int next_index;
+  for(int i = 0; i < samples_old_; i++) {
+    next_index = (curr_index + 1)%sampleQ_size_; // Get next index with wrap around
+    sampleQ_[next_index] = predictState(sampleQ_[curr_index], dt);
+    printVector(stateToVector(sampleQ_[update_index]), "Predicted state");
+    curr_index = next_index;
+  }
+  return sampleQ_[curr_index];
 }
 
 

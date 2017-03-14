@@ -56,8 +56,6 @@ include_directories(
 
 ## Declare a C++ executable
 add_executable(Estimator
-    include/Estimator/samplesQueue.h
-    src/Estimator/samplesQueue.cpp
     include/Estimator/estimator.h
     src/Estimator/estimator.cpp
     include/Utilities/utilities.h
