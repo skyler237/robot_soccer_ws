@@ -108,6 +108,8 @@ void Estimator::predictAndCorrectEstimator() {
       samples_old = (int) lag_sample_periods;
     }
 
+    ROS_WARN("Vision Samples old = %d", samples_old);
+
     // Go back and update from the right sample
     state_ = samples_.updateSamples(vision_data_, samples_old, dt);
 
