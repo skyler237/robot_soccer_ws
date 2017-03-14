@@ -5,6 +5,7 @@
 #include <math.h>
 #include <ros/ros.h>
 #include <stdio.h>
+#include "Utilities/utilities.h"
 
 
 samplesQueue::samplesQueue() {
@@ -31,14 +32,19 @@ State samplesQueue::updateSamples(State update, int samples_old, double dt) {
   samples_old = saturate(samples_old, 0, sample_cnt_); // Don't try to update past the data we have stored
   int update_index = ((index_ - samples_old) + size_) % size_; // Go back the right number of samples, but with wrap around
 
+  printVector(stateToVector(samples_[update_index]), "Pre-update state");
+
   // Correct state here
   samples_[update_index] = Estimator::correctStateWithMeasurementsOnly(update);
+
+  printVector(stateToVector(samples_[update_index]), "Post-update state");
 
   int curr_index = update_index;
   int next_index;
   for(int i = 0; i < samples_old; i++) {
     next_index = (curr_index + 1)%size_; // Get next index with wrap around
     samples_[next_index] = Estimator::predictState(samples_[curr_index], dt);
+    printVector(stateToVector(samples_[update_index]), "Predicted state");
     curr_index = next_index;
   }
   return samples_[curr_index];
