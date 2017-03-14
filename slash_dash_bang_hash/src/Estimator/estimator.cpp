@@ -109,10 +109,10 @@ void Estimator::predictAndCorrectEstimator() {
     ROS_WARN("Vision Samples old = %d", samples_old_);
 
     // Go back and update from the right sample
-    state_ = updateSamples(vision_data_, samples_old_, dt);
-
-
-    state_ = lowPassFilterStates(state_prev_, vision_data_, LPF_alpha_xy_, LPF_alpha_theta_);
+    if(samples_old_ < sampleQ_cnt_) {
+      state_ = updateSamples(vision_data_, samples_old_, dt);
+      state_ = lowPassFilterStates(state_prev_, vision_data_, LPF_alpha_xy_, LPF_alpha_theta_);      
+    }
   }
   else {
     // Predict states
