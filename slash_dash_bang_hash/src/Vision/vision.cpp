@@ -2,9 +2,8 @@
 #include "Utilities/utilities.h"
 
 //saturation values can remain constant
-#define SATURATE_LOW 0
+#define SATURATE_LOW 80
 #define SATURATE_HIGH 255
-
 
 #define YELLOW_MIN 27
 #define YELLOW_MAX 37
@@ -18,7 +17,7 @@
 #define BLUE_MIN 90
 #define BLUE_MAX 110
 #define BLUE_VAL_LOW 218
-#define BLUE_VAL_HIGH 240
+#define BLUE_VAL_HIGH 255
 
 #define RED_MIN 0
 #define RED_MAX 10
@@ -158,39 +157,59 @@ Vector3d Vision::convertToWorldCoord(Vector3d pixelCoord, int offSetX, int offSe
 //get the robot position and angle
 void Vision::getRobotPose(Mat img)
 {
+    //printf("Home robot:\n");
+
     //crop so we have just the mini robot location
-    //Vector3d offsetCenter = findCenterRobot(img, robot_color::red);
+    Vector3d offsetCenter = findCenterRobot(img, robot_color::blue);
 
     geometry_msgs::Pose2D robot_pos;
     //printf("center of the Bot lines: %d, %d\n", offsetCenter[0], offsetCenter[1]);
 
 
-    // robot_pos.x = offsetCenter[0];
-    // robot_pos.y = offsetCenter[1];
-    // //robot_pos.theta = offsetCenter[2] * 180.0 / M_PI;
-    // robot_pos.theta = offsetCenter[2];
-
+    robot_pos.x = offsetCenter[0];
+    robot_pos.y = offsetCenter[1];
+    //robot_pos.theta = offsetCenter[2] * 180.0 / M_PI;
+    robot_pos.theta = offsetCenter[2];
     slash_dash_bang_hash::Pose2DStamped stamped_pose;
-    // stamped_pose.header = img_header_;
-    // stamped_pose.pose = robot_pos;
-    // printf("robot home %f, %f, %f\n", robot_pos.x, robot_pos.y, robot_pos.theta);
-    //
-    // home1_pub.publish(stamped_pose);
+    stamped_pose.header = img_header_;
+    stamped_pose.pose = robot_pos;
+    //printf("  World coordinates: %f, %f, %f\n", robot_pos.x, robot_pos.y, robot_pos.theta);
 
+    home1_pub.publish(stamped_pose);
 
+    printf("Away robot:\n");
 
     //now get the away1
-    Vector3d offsetCenter = findCenterRobot(img, robot_color::blue);
+    offsetCenter = findCenterRobot(img, robot_color::red);
 
     robot_pos.x = offsetCenter[0];
     robot_pos.y = offsetCenter[1];
-    robot_pos.theta = offsetCenter[2] * 180.0 / M_PI;
-
+    //robot_pos.theta = offsetCenter[2] * 180.0 / M_PI;
+    robot_pos.theta = offsetCenter[2];
     stamped_pose.header = img_header_;
     stamped_pose.pose = robot_pos;
-    printf("robot away %f, %f, %f\n", robot_pos.x, robot_pos.y, robot_pos.theta);
+    printf("  World coordinates %f, %f, %f\n", robot_pos.x, robot_pos.y, robot_pos.theta);
 
     away1_pub.publish(stamped_pose);
+
+
+
+
+    ////////////////////////////////////
+    //////////////Debug image///////////
+    int radius = 25;
+    robot_pos.y *= -1.0;
+    robot_pos.x += (double)(FIELD_WIDTH / 2.0);
+    robot_pos.y += (double)(FIELD_HEIGHT / 2.0);
+    robot_pos.x /= (double)(FIELD_WIDTH);
+    robot_pos.y /= (double)FIELD_HEIGHT;
+    robot_pos.x *= (double)img.cols;
+    robot_pos.y *= (double)img.rows;
+
+    Point desiredCenter(robot_pos.x, (robot_pos.y));
+    circle(img, desiredCenter, radius, Scalar( 255, 0, 0 ));
+    imshow("vision location", img);
+
 
 
   // printf("the center of the bot is: %f, %f, %f\n", robot_pos.x, robot_pos.y, robot_pos.theta);
@@ -203,8 +222,7 @@ int Vision::findLongestLine(vector<Vec4f> lines)
 
   int indexOfLongestLine = 0;
   int N = lines.size();
-  for(int i = 1 ; i < N; i++)
-  {
+  for(int i = 1 ; i < N; i++){
     Vec4f v = lines.at(i);
     Vec4f v2 = lines.at(indexOfLongestLine);
     if(Distance(v[0], v[1], v[2], v[3]) > Distance(v2[0], v2[1], v2[2], v2[3]))
@@ -222,15 +240,14 @@ Point2d Vision::imageToWorldCoordinates(Point2d point_i, Mat img)
 
     // You have to split up the pixel to meter conversion
     // because it is a rect, not a square!
-    center_w.x *= (FIELD_WIDTH/img.cols);
-    center_w.y *= (FIELD_HEIGHT/img.rows);
+    center_w.x *= -1 * (FIELD_WIDTH/FIELD_WIDTH_PIXELS);
+    center_w.y *= (FIELD_HEIGHT/FIELD_HEIGHT_PIXELS);
 
     // Reflect y
     center_w.y = -center_w.y;
 
     return center_w;
 }
-
 Mat Vision::thresholdImage(Mat img, robot_color robotColor)
 {
 
@@ -295,7 +312,7 @@ Vector3d Vision::findCenterRobot(Mat img, robot_color robotColor)
   findContours(imgThresholded, contours, hierarchy, CV_RETR_CCOMP, CV_CHAIN_APPROX_SIMPLE);
 
   Vector3d ret(0, 0, 0);
-  //printf("hierarchy size: %d\n", hierarchy.size());
+  printf("  hierarchy size: %d\n", hierarchy.size());
   if (hierarchy.size() < 2)
          return ret;
 
@@ -307,17 +324,25 @@ Vector3d Vision::findCenterRobot(Mat img, robot_color robotColor)
   Moments mmLarge = mm[mm.size() - 1];
   Moments mmSmall = mm[mm.size() - 2];
 
-  Point2d centerLarge = imageToWorldCoordinates(getCenterOfMass(mmLarge), img);
-  Point2d centerSmall = imageToWorldCoordinates(getCenterOfMass(mmSmall), img);
+  //Print out the center of the robot in pixels for testing purposes
+  Point2d robotCenterPixels = (getCenterOfMass(mmLarge) + getCenterOfMass(mmSmall)) / 2.0;
+  printf("  Robot center (pixels): %f, %f\n", robotCenterPixels.x, robotCenterPixels.y);
 
-  Point2d robotCenter = (centerLarge + centerSmall) * (1.0 / 2);
+  //Convert to world coordinates
+
+  Vector3d robotCenterPixel3D(robotCenterPixels.x, robotCenterPixels.y, 0);
+
+  Vector3d centerSmall3d = convertToWorldCoord(robotCenterPixel3D, 0, 0, img.cols, img.rows);
+  Point2d centerLarge(getCenterOfMass(mmLarge));
+  Point2d centerSmall(getCenterOfMass(mmSmall));
+
   Point2d diff = centerSmall - centerLarge;
-  double angle = atan2(diff.y, diff.x);
+  double angle = atan2(-1.0*diff.y, diff.x);
 
   //convert angle to degrees
   angle = angle *180/M_PI;
   //printf("Center of the bot world %f, %f, %f\n", diff.x, diff.y, angle);
-  Vector3d pose(diff.x, diff.y, angle);
+  Vector3d pose(centerSmall3d[0], centerSmall3d[1], angle);
 
 
   return pose;
@@ -358,9 +383,12 @@ void Vision::findPinkBall(Mat img)
           }
       }
   }
-  x /= count;
-  y /= count;
 
+  if(count > 0)
+  {
+    x /= count;
+    y /= count;
+  }
 
 
   //printf("the ball location in pixels: %d, %d\n", x, y);
@@ -447,7 +475,7 @@ Rect Vision::crop(Mat img)
   //right
   croppedRectangle.x = (img.cols - HOR_BOUND);
   croppedRectangle.y = genericBuffer;
-  croppedRectangle.width = HOR_BOUND - widthOffset;
+  croppedRectangle.width = (HOR_BOUND - widthOffset);
   croppedRectangle.height = img.rows -genericBuffer;
   croppedImg = Mat(img, croppedRectangle);
   vector<Vec4f> linesRight = LSD(croppedImg);
@@ -620,6 +648,8 @@ void Vision::visionCallback(const sensor_msgs::ImageConstPtr& msg)
         Mat frame = cv_bridge::toCvShare(msg, "bgr8")->image;
         Mat img;
         img = frame;
+        imshow("original view", img);
+
         if(!cropped)
         {
           croppedRect = Vision::crop(img);
@@ -627,9 +657,12 @@ void Vision::visionCallback(const sensor_msgs::ImageConstPtr& msg)
         }
         img = Mat(img, croppedRect);
         getRobotPose(img);
-        imshow("original view", img);
+
+
+        imshow("cropped view", img);
 
         findPinkBall(img);
+
         Mat blurImg = Vision::smoothing(img, 5);
         colorSlider(blurImg);
         drawPosDest(img);
