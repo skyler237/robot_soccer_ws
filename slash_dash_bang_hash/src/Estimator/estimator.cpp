@@ -53,7 +53,6 @@ void Estimator::visionCallback(const Pose2DStampedConstPtr &msg)
     // ROS_INFO("Vision lag = %f", now - vision_header_.stamp.toSec());
     vision_data_ = poseToState(msg->pose);
 
-    printVector(stateToVector(vision_data_), "Vision data");
 
     new_vision_data_ = true;
 
@@ -75,7 +74,6 @@ void Estimator::estimateStates()
   predictAndCorrectEstimator();
   // LPF_Estimator();
 
-  printVector(stateToVector(state_), "Vision data (after estimator)");
 
   publishStates();
 }
@@ -111,7 +109,6 @@ void Estimator::predictAndCorrectEstimator() {
       samples_old_ = (int) lag_sample_periods;
     }
 
-    ROS_WARN("Vision Samples old = %d", samples_old_);
 
     // Go back and update from the right sample
     if(samples_old_ < sampleQ_cnt_) {
@@ -121,9 +118,7 @@ void Estimator::predictAndCorrectEstimator() {
   }
   else {
     // Predict states
-    ROS_ERROR("Pre-predicted state: x=%f, y=%f, theta=%f", state_.xhat, state_.yhat, state_.thetahat);
     state_ = predictState(state_, dt);
-    ROS_ERROR("Post-predicted state: x=%f, y=%f, theta=%f", state_.xhat, state_.yhat, state_.thetahat);
     // Store predictions in a queue to be updated
     addSample(state_);
 
@@ -270,20 +265,16 @@ State Estimator::updateSamples(State update, int samples_old_, double dt) {
   samples_old_ = saturate(samples_old_, 0, sampleQ_cnt_); // Don't try to update past the data we have stored
   int update_index = ((sampleQ_index_ - samples_old_) + sampleQ_size_) % sampleQ_size_; // Go back the right number of samples, but with wrap around
 
-  printVector(stateToVector(update), "State update");
-  printVector(stateToVector(sampleQ_[update_index]), "Pre-update state");
 
   // Correct state here
   sampleQ_[update_index] = correctStateWithMeasurementsOnly(update, sampleQ_[update_index]);
 
-  printVector(stateToVector(sampleQ_[update_index]), "Post-update state");
 
   int curr_index = update_index;
   int next_index;
   for(int i = 0; i < samples_old_; i++) {
     next_index = (curr_index + 1)%sampleQ_size_; // Get next index with wrap around
     sampleQ_[next_index] = predictState(sampleQ_[curr_index], dt);
-    printVector(stateToVector(sampleQ_[update_index]), "Predicted state");
     curr_index = next_index;
   }
   return sampleQ_[curr_index];
