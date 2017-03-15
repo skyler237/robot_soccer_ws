@@ -171,13 +171,16 @@ State Estimator::correctStateWithMeasurementsOnly(State measurement, State predi
 
 
   // Update velocities
-  corrected_state.xdot = tustinDerivative(measurement.x, prev_measurement.xhat, prev_measurement.xdot, tau_, dt);
-  corrected_state.ydot = tustinDerivative(measurement.y, prev_measurement.yhat, prev_measurement.ydot, tau_, dt);
-  corrected_state.thetadot = tustinDerivative(measurement.theta, prev_measurement.thetahat, prev_measurement.thetadot, tau_, dt);
+  corrected_state.xdot = tustinDerivative(measurement.x, prev_measurement.x, prev_measurement.xdot, tau_, dt);
+  corrected_state.ydot = tustinDerivative(measurement.y, prev_measurement.y, prev_measurement.ydot, tau_, dt);
+  corrected_state.thetadot = tustinDerivative(measurement.theta, prev_measurement.theta, prev_measurement.thetadot, tau_, dt);
 
   // Re-predict states
   corrected_state = predictState(corrected_state, dt);
   prev_measurement = measurement;
+  prev_measurement.xdot = corrected_state.xdot;
+  prev_measurement.ydot = corrected_state.ydot;
+  prev_measurement.thetadot = corrected_state.thetadot;
 
   return corrected_state;
 }

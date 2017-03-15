@@ -1,5 +1,6 @@
 #include "Vision/vision.h"
 #include "Utilities/utilities.h"
+#include <math.h>
 
 //saturation values can remain constant
 #define SATURATE_LOW 80
@@ -9,7 +10,6 @@
 #define YELLOW_MAX 37
 #define YELLOW_VAL_MIN 218
 #define YELLOW_VAL_MAX 255
-
 
 #define GREEN_MIN 43
 #define GREEN_MAX 81
@@ -174,7 +174,7 @@ void Vision::getRobotPose(Mat img)
     stamped_pose.header = img_header_;
     stamped_pose.pose = robot_pos;
     //printf("  World coordinates: %f, %f, %f\n", robot_pos.x, robot_pos.y, robot_pos.theta);
-    if(robot_pos.x != NULL && robot_pos.y != NULL && robot_pos.theta != NULL)
+    if(!(isnan(robot_pos.x) || isnan(robot_pos.y) || isnan(robot_pos.theta)))
       home1_pub.publish(stamped_pose);
 
     printf("Away robot:\n");
@@ -189,7 +189,7 @@ void Vision::getRobotPose(Mat img)
     stamped_pose.header = img_header_;
     stamped_pose.pose = robot_pos;
     printf("  World coordinates %f, %f, %f\n", robot_pos.x, robot_pos.y, robot_pos.theta);
-    if(robot_pos.x != NULL && robot_pos.y != NULL && robot_pos.theta != NULL)
+    if(!(isnan(robot_pos.x) || isnan(robot_pos.y) || isnan(robot_pos.theta)))
       away1_pub.publish(stamped_pose);
 
 
