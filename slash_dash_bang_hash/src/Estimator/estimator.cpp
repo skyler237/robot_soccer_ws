@@ -20,8 +20,8 @@ priv_nh("~")
   LPF_alpha_xy_ = priv_nh.param<double>("LPF_alpha_xy", exp(-1.0*LPF_corner_freq_xy_*sample_period_));
   LPF_corner_freq_theta_ = priv_nh.param<double>("LPF_corner_freq_theta", 100); // Default 10 Hz
   LPF_alpha_theta_ = priv_nh.param<double>("LPF_alpha_theta", exp(-1.0*LPF_corner_freq_theta_*sample_period_));
-  xy_vel_damping_coeff_ = priv_nh.param<double>("xy_vel_damping_coeff", 0.9);
-  theta_vel_damping_coeff_ = priv_nh.param<double>("theta_vel_damping_coeff", 0.9);
+  xy_vel_damping_coeff_ = priv_nh.param<double>("xy_vel_damping_coeff", 0.99);
+  theta_vel_damping_coeff_ = priv_nh.param<double>("theta_vel_damping_coeff", 0.99);
   sampleQ_size_ = priv_nh.param<int>("sample_queue_size", 20);
   sampleQ_cnt_ = 0;
   sampleQ_index_ = 0;
@@ -113,7 +113,7 @@ void Estimator::predictAndCorrectEstimator() {
     // Go back and update from the right sample
     if(samples_old_ < sampleQ_cnt_) {
       state_ = updateSamples(vision_data_, samples_old_, dt);
-      state_ = lowPassFilterStates(state_prev_, vision_data_, LPF_alpha_xy_, LPF_alpha_theta_);
+      // state_ = lowPassFilterStates(state_prev_, vision_data_, LPF_alpha_xy_, LPF_alpha_theta_);
     }
   }
   else {
@@ -174,6 +174,11 @@ State Estimator::correctStateWithMeasurementsOnly(State measurement, State predi
   corrected_state.xdot = tustinDerivative(measurement.x, prev_measurement.x, prev_measurement.xdot, tau_, dt);
   corrected_state.ydot = tustinDerivative(measurement.y, prev_measurement.y, prev_measurement.ydot, tau_, dt);
   corrected_state.thetadot = tustinDerivative(measurement.theta, prev_measurement.theta, prev_measurement.thetadot, tau_, dt);
+  // ROS_INFO("measurement: x=%f, y=%f, theta=%f", measurement.x, measurement.y, measurement.theta);
+  // ROS_INFO("prev_measurement: x=%f, y=%f, theta=%f", prev_measurement.x, prev_measurement.y, prev_measurement.theta);
+  // ROS_INFO("prev_measurement vel: x=%f, y=%f, theta=%f", prev_measurement.xdot, prev_measurement.ydot, prev_measurement.thetadot);
+  // ROS_INFO("corrected_state: x=%f, y=%f, theta=%f", corrected_state.x, corrected_state.y, corrected_state.theta);
+  // ROS_INFO("corrected_state vel: x=%f, y=%f, theta=%f", prev_measurement.xdot, prev_measurement.ydot, prev_measurement.thetadot);
 
   // Re-predict states
   corrected_state = predictState(corrected_state, dt);
