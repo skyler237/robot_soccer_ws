@@ -14,7 +14,7 @@ from geometry_msgs.msg import Twist, Pose2D, Vector3
 from slash_dash_bang_hash.msg import State, MotorSpeeds
 
 import numpy as np
-from math import cos, sin, pi
+from math import cos, sin, pi[
 
 # Kinematic constants
 RHO = 0.02875 # Wheel radius [m]
@@ -26,11 +26,11 @@ SY2 = S_SCALE*0.866
 SX3 = S_SCALE*0.5
 SY3 = S_SCALE*-0.866
 RX1 = 0.0 # Wheel position vectors - body frame (in meters)
-RY1 = -0.075
-RX2 = -0.06495
-RY2 = 0.0375
-RX3 = 0.06495
-RY3 = 0.0375
+RY1 = -0.079
+RX2 = -0.06841
+RY2 = 0.0395
+RX3 = 0.06841
+RY3 = 0.0395
 
 theta_ = 0
 vel_cmd_ = Vector3()
