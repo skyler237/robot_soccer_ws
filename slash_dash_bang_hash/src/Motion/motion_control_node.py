@@ -14,7 +14,7 @@ from geometry_msgs.msg import Twist, Pose2D, Vector3
 from slash_dash_bang_hash.msg import State, MotorSpeeds
 
 import numpy as np
-from math import cos, sin, pi[
+from math import cos, sin, pi
 
 # Kinematic constants
 RHO = 0.02875 # Wheel radius [m]
