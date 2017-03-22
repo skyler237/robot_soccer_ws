@@ -14,8 +14,8 @@
 #define GREEN_MIN 43
 #define GREEN_MAX 81
 
-#define BLUE_MIN 90
-#define BLUE_MAX 110
+#define BLUE_MIN 80
+#define BLUE_MAX 120
 #define BLUE_VAL_LOW 218
 #define BLUE_VAL_HIGH 255
 
@@ -101,6 +101,9 @@ void colorSlider(Mat img)
 
     dilate( imgThresholded, imgThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) );
     erode(imgThresholded, imgThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) );
+    imwrite( "../Gray_Image.jpg", imgThresholded );
+    imwrite( "../original.jpg", img );
+
     imshow("changed", imgThresholded);
 }
 
@@ -139,48 +142,41 @@ double Distance(float dX0, float dY0, float dX1, float dY1)
 
 
 
-Vector3d Vision::convertToWorldCoord(Vector3d pixelCoord, int offSetX, int offSetY, int cols, int rows)
-{
-  pixelCoord[0] += offSetX;
-  pixelCoord[1] += offSetY;
-  pixelCoord[0] /= cols;
-  pixelCoord[1] /= rows;
-  pixelCoord[0] *= FIELD_WIDTH;
-  pixelCoord[1] *= FIELD_HEIGHT;
-  pixelCoord[0] -= FIELD_WIDTH / 2;
-  pixelCoord[1] -= FIELD_HEIGHT / 2;
-  //reflect the y coordinates
-  pixelCoord[1] *= -1;
-  return pixelCoord;
-}
+
 
 //get the robot position and angle
 void Vision::getRobotPose(Mat img)
 {
-    //printf("Home robot:\n");
-
-    //crop so we have just the mini robot location
-    Vector3d offsetCenter = findCenterRobot(img, robot_color::blue);
-
+    Vector3d offsetCenter;
     geometry_msgs::Pose2D robot_pos;
-    //printf("center of the Bot lines: %d, %d\n", offsetCenter[0], offsetCenter[1]);
+    slash_dash_bang_hash::Pose2DStamped stamped_pose;
+    int circle_radius = 25;
+    printf("Home robot:\n");
+
+    // crop so we have just the mini robot location
+    offsetCenter = findCenterRobot(img, robot_color::red);
+
 
 
     robot_pos.x = offsetCenter[0];
     robot_pos.y = offsetCenter[1];
     //robot_pos.theta = offsetCenter[2] * 180.0 / M_PI;
     robot_pos.theta = offsetCenter[2];
-    slash_dash_bang_hash::Pose2DStamped stamped_pose;
     stamped_pose.header = img_header_;
     stamped_pose.pose = robot_pos;
-    //printf("  World coordinates: %f, %f, %f\n", robot_pos.x, robot_pos.y, robot_pos.theta);
+    printf("  World coordinates: %f, %f, %f\n", robot_pos.x, robot_pos.y, robot_pos.theta);
     if(!(isnan(robot_pos.x) || isnan(robot_pos.y) || isnan(robot_pos.theta)))
       home1_pub.publish(stamped_pose);
+
+    //////////////////////////////////////////////////
+    //////////////Home robot position image///////////
+    Point home_robot_center = convertWorldToPixel(robot_pos.x, robot_pos.y, img.cols, img.rows);
+    circle(img, home_robot_center, circle_radius, Scalar( 0, 0, 255 ));
 
     printf("Away robot:\n");
 
     //now get the away1
-    offsetCenter = findCenterRobot(img, robot_color::red);
+    offsetCenter = findCenterRobot(img, robot_color::blue);
 
     robot_pos.x = offsetCenter[0];
     robot_pos.y = offsetCenter[1];
@@ -195,19 +191,10 @@ void Vision::getRobotPose(Mat img)
 
 
 
-    ////////////////////////////////////
-    //////////////Debug image///////////
-    int radius = 25;
-    robot_pos.y *= -1.0;
-    robot_pos.x += (double)(FIELD_WIDTH / 2.0);
-    robot_pos.y += (double)(FIELD_HEIGHT / 2.0);
-    robot_pos.x /= (double)(FIELD_WIDTH);
-    robot_pos.y /= (double)FIELD_HEIGHT;
-    robot_pos.x *= (double)img.cols;
-    robot_pos.y *= (double)img.rows;
-
-    Point desiredCenter(robot_pos.x, (robot_pos.y));
-    circle(img, desiredCenter, radius, Scalar( 255, 0, 0 ));
+    //////////////////////////////////////////////////
+    //////////////Away robot position image///////////
+    Point away_robot_center = convertWorldToPixel(robot_pos.x, robot_pos.y, img.cols, img.rows);
+    circle(img, away_robot_center, circle_radius, Scalar( 255, 0, 0 ));
     imshow("vision location", img);
 
 
@@ -280,7 +267,7 @@ Mat Vision::thresholdImage(Mat img, robot_color robotColor)
       valueMin = BLUE_VAL_LOW;
       valueMax = BLUE_VAL_HIGH;
       hueMin = BLUE_MIN;
-      hueMax = BLUE_MIN;
+      hueMax = BLUE_MAX;
     break;
     case robot_color::green:                            //the color of the field
     break;
@@ -304,8 +291,16 @@ Vector3d Vision::findCenterRobot(Mat img, robot_color robotColor)
 {
   //Threshold the image
   Mat imgThresholded = thresholdImage(img, robotColor);
+  switch(robotColor)
+  {
+    case robot_color::red:
+      imshow("thresholdedRedImage", imgThresholded);
+      break;
 
-
+    case robot_color::blue:
+      imshow("thresholdedBlueImage", imgThresholded);
+      break;
+  }
   vector< vector<Point> > contours;
   vector<Moments> mm;
   vector<Vec4i> hierarchy;
@@ -332,7 +327,7 @@ Vector3d Vision::findCenterRobot(Mat img, robot_color robotColor)
 
   Vector3d robotCenterPixel3D(robotCenterPixels.x, robotCenterPixels.y, 0);
 
-  Vector3d centerSmall3d = convertToWorldCoord(robotCenterPixel3D, 0, 0, img.cols, img.rows);
+  Vector3d centerSmall3d = convertToWorldCoord(robotCenterPixel3D, img.cols, img.rows);
   Point2d centerLarge(getCenterOfMass(mmLarge));
   Point2d centerSmall(getCenterOfMass(mmSmall));
 
@@ -394,7 +389,7 @@ void Vision::findPinkBall(Mat img)
   //printf("the ball location in pixels: %d, %d\n", x, y);
   Vector3d coordinates(x, y , 0);
   Vector3d worldCoords;
-  worldCoords = convertToWorldCoord(coordinates, 0, 0, img.cols, img.rows);
+  worldCoords = convertToWorldCoord(coordinates, img.cols, img.rows);
   //printf("the ball location in world: %f, %f\n", worldCoords[0], worldCoords[1]);
   geometry_msgs::Pose2D ball_pos;
 
@@ -729,4 +724,30 @@ bool Vision::compareMomentAreas(Moments moment1, Moments moment2)
     double area1 = moment1.m00;
     double area2 = moment2.m00;
     return area1 < area2;
+}
+
+Point Vision::convertWorldToPixel(double world_x, double world_y, int cols, int rows) {
+  world_y *= -1.0;
+  world_x += (FIELD_WIDTH / 2.0);
+  world_y += (FIELD_HEIGHT / 2.0);
+  world_x /= FIELD_WIDTH;
+  world_y /= FIELD_HEIGHT;
+  world_x *= cols;
+  world_y *= rows;
+
+  Point pixel_coord(world_x, world_y);
+  return pixel_coord;
+}
+
+Vector3d Vision::convertToWorldCoord(Vector3d pixelCoord, int cols, int rows)
+{
+  pixelCoord[0] /= cols;
+  pixelCoord[1] /= rows;
+  pixelCoord[0] *= FIELD_WIDTH;
+  pixelCoord[1] *= FIELD_HEIGHT;
+  pixelCoord[0] -= FIELD_WIDTH / 2.0;
+  pixelCoord[1] -= FIELD_HEIGHT / 2.0;
+  //reflect the y coordinates
+  pixelCoord[1] *= -1;
+  return pixelCoord;
 }

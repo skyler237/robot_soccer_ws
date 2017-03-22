@@ -97,7 +97,6 @@ public:
   bool isInwhiteRange(int hue, int sat, int val);
   bool isInPinkRange(int hue, int sat, int val);
   void findPinkBall(Mat img);
-  Vector3d convertToWorldCoord(Vector3d pixelCoord, int offSetX, int offSetY, int cols, int rows);
   void drawPosDest(Mat img);
   void setDesiredPose(const StateConstPtr &msg);
   void setDestination(const StateConstPtr &msg);
@@ -107,6 +106,8 @@ public:
   Point2d imageToWorldCoordinates(Point2d point_i, Mat img);
   Mat thresholdImage(Mat img, robot_color robotColor);
   Vector3d findCenterRobot(Mat img, robot_color robotColor);
+  Vector3d convertToWorldCoord(Vector3d pixelCoord, int cols, int rows);
+  Point convertWorldToPixel(double world_x, double world_y, int cols, int rows);
 
 
 
