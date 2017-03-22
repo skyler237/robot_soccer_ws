@@ -151,10 +151,10 @@ void Vision::getRobotPose(Mat img)
     geometry_msgs::Pose2D robot_pos;
     slash_dash_bang_hash::Pose2DStamped stamped_pose;
     int circle_radius = 25;
-    printf("Home robot:\n");
+    printf("Home 1 robot:\n");
 
     // crop so we have just the mini robot location
-    offsetCenter = findCenterRobot(img, robot_color::red);
+    offsetCenter = findCenterRobot(img, home1_color_);
 
 
 
@@ -176,7 +176,7 @@ void Vision::getRobotPose(Mat img)
     printf("Away robot:\n");
 
     //now get the away1
-    offsetCenter = findCenterRobot(img, robot_color::blue);
+    offsetCenter = findCenterRobot(img, away1_color_);
 
     robot_pos.x = offsetCenter[0];
     robot_pos.y = offsetCenter[1];
@@ -678,6 +678,14 @@ priv_nh("~")
   // Having the nh_ private properly namespaces it.
   ros::NodeHandle priv_nh("~");
   tau_ = priv_nh.param<double>("dirty_deriv_gain", 0.05);
+  home1_color_str_ = priv_nh.param<std::string>("home1_color", "red");
+  home2_color_str_ = priv_nh.param<std::string>("home2_color", "yellow");
+  away1_color_str_ = priv_nh.param<std::string>("away1_color", "blue");
+  away2_color_str_ = priv_nh.param<std::string>("away2_color", "purple");
+  home1_color_ = getColorFromString(home1_color_str_);
+  home2_color_ = getColorFromString(home2_color_str_);
+  away1_color_ = getColorFromString(away1_color_str_);
+  away2_color_ = getColorFromString(away2_color_str_);
 
   // For mouse click input
   // // Create OpenCV Window and add a mouse callback for clicking
@@ -750,4 +758,26 @@ Vector3d Vision::convertToWorldCoord(Vector3d pixelCoord, int cols, int rows)
   //reflect the y coordinates
   pixelCoord[1] *= -1;
   return pixelCoord;
+}
+
+Vision::robot_color Vision::getColorFromString(std::string str) {
+  robot_color color;
+  if (str =="red") {
+    color = robot_color::red;
+  }
+  else if(str == "blue") {
+    color = robot_color::blue;
+  }
+  else if(str == "yellow") {
+    color = robot_color::yellow;
+  }
+  else if(str == "purple") {
+    color = robot_color::purple;
+  }
+  else {
+    ROS_ERROR("Invalid color input: %s", str.c_str());
+    color = robot_color::red;
+  }
+
+  return color;
 }

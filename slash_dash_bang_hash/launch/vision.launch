@@ -7,6 +7,16 @@
     <node name="slash_vision" pkg="slash_dash_bang_hash" type="Vision" output="screen">
       <remap from="destination" to="/slash_dash_bang_hash_$(arg team_side)/$(arg me)/$(arg me)_destination" />
       <remap from="desired_pose" to="/slash_dash_bang_hash_$(arg team_side)/$(arg me)/$(arg me)_desired_pose" />
+      <remap from="/vision/home1" to="/slash_vision/home1" />
+      <remap from="/vision/home2" to="/slash_vision/home2" />
+      <remap from="/vision/ally1" to="/slash_vision/ally1" />
+      <remap from="/vision/ally2" to="/slash_vision/ally2" />
+      <remap from="/vision/ball_stamped" to="/slash_vision/ball" />
+
+      <param name="home1_color" value="blue" />
+      <param name="home2_color" value="yellow" />
+      <param name="away1_color" value="red" />
+      <param name="away2_color" value="purple" />
     </node>
 
 

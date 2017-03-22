@@ -84,6 +84,15 @@ public:
 
   enum robot_color { red, green, blue, yellow, purple, pink };
 
+  std::string home1_color_str_;
+  std::string home2_color_str_;
+  std::string away1_color_str_;
+  std::string away2_color_str_;
+  robot_color home1_color_;
+  robot_color home2_color_;
+  robot_color away1_color_;
+  robot_color away2_color_;
+
 
 
   //Vision functions
@@ -108,6 +117,7 @@ public:
   Vector3d findCenterRobot(Mat img, robot_color robotColor);
   Vector3d convertToWorldCoord(Vector3d pixelCoord, int cols, int rows);
   Point convertWorldToPixel(double world_x, double world_y, int cols, int rows);
+  robot_color getColorFromString(std::string str);
 
 
 
