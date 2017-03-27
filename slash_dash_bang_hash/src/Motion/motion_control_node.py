@@ -145,9 +145,9 @@ def main():
 
     # Set the PIDQ values for all motors
     #setPID(0, 1, 0.3, 30000)
-    setPID(1, 1.5, 0.3, 49000)
-    setPID(2, 1.5, 0.3, 48000)
-    setPID(3, 1.5, 0.3, 49000)
+    setPID(1, -1, -0.4, 49000)
+    setPID(2, -1, -0.4, 48000)
+    setPID(3, -1, -0.4, 50000)
 
     # Set tick period (triggers PID control) and velocity filter corner frequency
     setT(20, 50)

@@ -10,7 +10,7 @@
     <arg name="LPF_corner_freq_xy" default="100" />
     <arg name="LPF_corner_freq_theta" default="100" />
     <arg name="dirty_deriv_gain" default="0.20" />
-    <arg name="manual_destinations" default="0" />
+    <arg name="manual_destinations" default="1" />
 
     <!-- using which side of the field we are on, determine the appropriate -->
     <!-- connections to the output of the vision system -->
