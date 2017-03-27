@@ -72,7 +72,7 @@
 
     </node>
 
-    <node name="controller" pkg="slash_dash_bang_hash" type="Controller" output="screen">
+    <node name="controller" pkg="slash_dash_bang_hash" type="Controller">
         <!-- The controller needs to know which robot state to listen to -->
         <remap from="robot_state" to="/slash_dash_bang_hash_$(arg team_side)/$(arg me)/$(arg me)_state" />
         <remap from="desired_pose" to="/slash_dash_bang_hash_$(arg team_side)/$(arg me)/$(arg me)_desired_pose" />
