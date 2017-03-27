@@ -619,7 +619,7 @@ void Vision::drawPosDest(Mat img)
   Point desiredCenter(center[0], center[1]);
   circle(img, desiredCenter, radius, Scalar( 255, 0, 0 ));
 
-  // imshow("circle", img);
+  imshow("circle", img);
 }
 
 

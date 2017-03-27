@@ -37,7 +37,7 @@ priv_nh("~")
   state_sub_ = nh_.subscribe<slash_dash_bang_hash::State>("robot_state", 1, &Controller::stateCallback, this);
   game_state_sub_ = nh_.subscribe<soccerref::GameState>("/game_state", 1, &Controller::gameStateCallback, this);
 
-  motor_pub_ = nh_.advertise<geometry_msgs::Twist>("vel_command", 5);
+  motor_pub_ = nh_.advertise<geometry_msgs::Twist>("vel_command", 1);
 
 }
 
