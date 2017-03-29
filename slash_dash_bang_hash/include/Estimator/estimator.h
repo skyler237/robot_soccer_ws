@@ -22,7 +22,7 @@ typedef boost::shared_ptr< ::slash_dash_bang_hash::Pose2DStamped const> Pose2DSt
 #define FIELD_HEIGHT 2.38
 #define ROBOT_RADIUS 0.10
 
-#define MAX_QUEUE_SIZE 30
+#define MAX_QUEUE_SIZE 200
 
 using namespace slash_dash_bang_hash;
 
