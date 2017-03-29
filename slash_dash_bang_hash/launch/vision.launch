@@ -3,6 +3,12 @@
   <arg name="me" default="ally1" />
   <arg name="team_side" default="home" />
 
+  <arg name="home1_color" default="blue" />
+  <arg name="home2_color" default="yellow" />
+  <arg name="away1_color" default="red" />
+  <arg name="away2_color" default="purple" />
+
+
     <!-- Hardware agnostic code -->
     <node name="slash_vision" pkg="slash_dash_bang_hash" type="Vision" output="screen">
       <remap from="destination" to="/slash_dash_bang_hash_$(arg team_side)/$(arg me)/$(arg me)_destination" />
@@ -13,10 +19,10 @@
       <remap from="/vision/ally2" to="/slash_vision/ally2" />
       <remap from="/vision/ball_stamped" to="/slash_vision/ball" />
 
-      <param name="home1_color" value="blue" />
-      <param name="home2_color" value="yellow" />
-      <param name="away1_color" value="red" />
-      <param name="away2_color" value="purple" />
+      <param name="home1_color" value="$(arg home1_color)" />
+      <param name="home2_color" value="$(arg home2_color)" />
+      <param name="away1_color" value="$(arg away1_color)" />
+      <param name="away2_color" value="$(arg away2_color)" />
     </node>
 
 
