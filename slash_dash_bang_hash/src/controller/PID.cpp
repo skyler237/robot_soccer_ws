@@ -59,17 +59,17 @@ double PID::computePID(double current, double desired, double dt)
 double PID::computePIDDirect(double error, double xdot, double dt)
 {
   // Handle border cases (don't compute anything)
-  if(dt == 0.0 || abs(error) > 9999999)
+  if(dt == 0.0 || fabs(error) > 9999999)
   {
     last_error_ = error;
     return 0.0;
   }
 
-  double stop_threshold = 0.1;
-  double integrate_threshold = 0.4;
+  double stop_threshold = 0.0;
+  double integrate_threshold = 5.0;
 
   // Numerical integration -- only apply when we are close to the target
-  if(error > stop_threshold && error < integrate_threshold) {
+  if(fabs(error) > stop_threshold && fabs(error) < integrate_threshold) {
     integrator_ += dt/2*(error + last_error_);
   }
   else {
@@ -83,7 +83,7 @@ double PID::computePIDDirect(double error, double xdot, double dt)
 
   // ROS_INFO("Control values: P=%f, I=%f, D=%f", kp_*error, ki_*integrator_, -kd_*xdot);
 
-  if(error < stop_threshold) {
+  if(fabs(error) < stop_threshold) {
     return 0.0;
   }
   else {
