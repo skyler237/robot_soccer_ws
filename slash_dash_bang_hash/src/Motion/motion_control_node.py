@@ -150,7 +150,7 @@ def main():
     #setPID(3, -1, -0.4, 50000)
 
     # Set tick period (triggers PID control) and velocity filter corner frequency
-    setT(20, 50)
+    setT(10, 50)
 
     # spin() simply keeps python from exiting until this node is stopped
     rospy.spin()

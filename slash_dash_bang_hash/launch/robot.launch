@@ -12,7 +12,7 @@
     <arg name="LPF_alpha_xy" default="0.2" />
     <arg name="LPF_alpha_theta" default="0.2" />
     <arg name="dirty_deriv_gain" default="0.20" />
-    <arg name="manual_destinations" default="1" />
+    <arg name="manual_destinations" default="0" />
 
     <!-- using which side of the field we are on, determine the appropriate -->
     <!-- connections to the output of the vision system -->
@@ -83,7 +83,7 @@
 
     </node>
 
-    <node name="controller" pkg="slash_dash_bang_hash" type="Controller">
+    <node name="controller" pkg="slash_dash_bang_hash" type="Controller" output="screen">
         <!-- The controller needs to know which robot state to listen to -->
         <remap from="robot_state" to="/slash_dash_bang_hash_$(arg team_side)/$(arg me)/$(arg me)_state" />
         <remap from="desired_pose" to="/slash_dash_bang_hash_$(arg team_side)/$(arg me)/$(arg me)_desired_pose" />
@@ -91,10 +91,10 @@
 
 
         <param name="tau" value="$(arg dirty_deriv_gain)"/>
-        <param name="x_P" value="0.8"/>
+        <param name="x_P" value="1.0"/>
         <param name="x_I" value="0.5"/>
         <param name="x_D" value="0.0"/>
-        <param name="y_P" value="0.8"/>
+        <param name="y_P" value="1.0"/>
         <param name="y_I" value="0.5"/>
         <param name="y_D" value="0.0"/>
 
