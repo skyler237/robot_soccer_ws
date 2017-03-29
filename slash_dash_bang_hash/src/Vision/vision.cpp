@@ -151,7 +151,7 @@ void Vision::getRobotPose(Mat img)
     geometry_msgs::Pose2D robot_pos;
     slash_dash_bang_hash::Pose2DStamped stamped_pose;
     int circle_radius = 25;
-    printf("Home 1 robot:\n");
+    // printf("Home 1 robot:\n");
 
     // crop so we have just the mini robot location
     offsetCenter = findCenterRobot(img, home1_color_);
@@ -164,7 +164,7 @@ void Vision::getRobotPose(Mat img)
     robot_pos.theta = offsetCenter[2];
     stamped_pose.header = img_header_;
     stamped_pose.pose = robot_pos;
-    printf("  World coordinates: %f, %f, %f\n", robot_pos.x, robot_pos.y, robot_pos.theta);
+    // printf("  World coordinates: %f, %f, %f\n", robot_pos.x, robot_pos.y, robot_pos.theta);
     if(!(isnan(robot_pos.x) || isnan(robot_pos.y) || isnan(robot_pos.theta)))
       home1_pub.publish(stamped_pose);
 
@@ -173,7 +173,21 @@ void Vision::getRobotPose(Mat img)
     Point home_robot_center = convertWorldToPixel(robot_pos.x, robot_pos.y, img.cols, img.rows);
     circle(img, home_robot_center, circle_radius, Scalar( 0, 0, 255 ));
 
-    printf("Away robot:\n");
+
+    //point 2
+    Point velocityPoint(home_robot_center.x + (command_.linear.x * circle_radius), home_robot_center.y + (command_.linear.y * circle_radius));
+    // printf("command_.linear.x: %g, command_linear.y: %g\n", command_.linear.x, command_.linear.y);
+    //stuff
+    //  vel.linear.x = command_(0);
+    //  //vel.linear.x = 0.0;
+    //  vel.linear.y = command_(1);
+    //  //vel.linear.y = 0.0;
+    // vel.angular.z = command_(2);
+
+    arrowedLine(img, home_robot_center, velocityPoint, Scalar(0, 0, 0));
+
+
+    // printf("Away robot:\n");
 
     //now get the away1
     offsetCenter = findCenterRobot(img, away1_color_);
@@ -184,7 +198,7 @@ void Vision::getRobotPose(Mat img)
     robot_pos.theta = offsetCenter[2];
     stamped_pose.header = img_header_;
     stamped_pose.pose = robot_pos;
-    printf("  World coordinates %f, %f, %f\n", robot_pos.x, robot_pos.y, robot_pos.theta);
+    // printf("  World coordinates %f, %f, %f\n", robot_pos.x, robot_pos.y, robot_pos.theta);
     if(!(isnan(robot_pos.x) || isnan(robot_pos.y) || isnan(robot_pos.theta)))
       away1_pub.publish(stamped_pose);
 
@@ -307,7 +321,7 @@ Vector3d Vision::findCenterRobot(Mat img, robot_color robotColor)
   findContours(imgThresholded, contours, hierarchy, CV_RETR_CCOMP, CV_CHAIN_APPROX_SIMPLE);
 
   Vector3d ret(0, 0, 0);
-  printf("  hierarchy size: %d\n", hierarchy.size());
+  // printf("  hierarchy size: %d\n", (int) hierarchy.size());
   if (hierarchy.size() < 2)
          return ret;
 
@@ -321,7 +335,7 @@ Vector3d Vision::findCenterRobot(Mat img, robot_color robotColor)
 
   //Print out the center of the robot in pixels for testing purposes
   Point2d robotCenterPixels = (getCenterOfMass(mmLarge) + getCenterOfMass(mmSmall)) / 2.0;
-  printf("  Robot center (pixels): %f, %f\n", robotCenterPixels.x, robotCenterPixels.y);
+  // printf("  Robot center (pixels): %f, %f\n", robotCenterPixels.x, robotCenterPixels.y);
 
   //Convert to world coordinates
 
@@ -508,8 +522,15 @@ Rect Vision::crop(Mat img)
 void Vision::setDestination(const StateConstPtr &msg)
 {
     destination_ = *msg;
+}
+
+void Vision::setVelCommand(const VelConstPtr &msg)
+{
+  //TODO:do stuff
+  command_ = *msg;
 
 }
+
 
 void Vision::setDesiredPose(const StateConstPtr &msg)
 {
@@ -585,7 +606,7 @@ void Vision::drawPosDest(Mat img)
   //extract the point from here
   Vector2d center;
   center[0] = destination_.x;
-  center[1] = destination_.y;
+  center[1] = -destination_.y; // HACK
   //convert world to pixel
 
 
@@ -604,7 +625,7 @@ void Vision::drawPosDest(Mat img)
 
   //extract the point from here
   center[0] = desired_pose_.x;
-  center[1] = desired_pose_.y;
+  center[1] = -desired_pose_.y; // HACK
   //convert world to pixel
 
   radius = 5;
@@ -618,6 +639,10 @@ void Vision::drawPosDest(Mat img)
 
   Point desiredCenter(center[0], center[1]);
   circle(img, desiredCenter, radius, Scalar( 255, 0, 0 ));
+
+
+
+
 
   imshow("circle", img);
 }
@@ -698,6 +723,8 @@ priv_nh("~")
   image_sub = it.subscribe("/usb_cam_away/image_raw", 1, &Vision::visionCallback, this);
   desired_pose_sub_ = nh_.subscribe<slash_dash_bang_hash::State>("desired_pose", 1, &Vision::setDesiredPose, this);
   destination_sub_ = nh_.subscribe<slash_dash_bang_hash::State>("destination", 1, &Vision::setDestination, this);
+  vel_command_sub_ = nh_.subscribe<geometry_msgs::Twist>("vel_command", 1, &Vision::setVelCommand, this);
+  geometry_msgs::Twist command_;
 
   home1_pub = nh_.advertise<slash_dash_bang_hash::Pose2DStamped>("/vision/home1", 5);
   home2_pub = nh_.advertise<slash_dash_bang_hash::Pose2DStamped>("/vision/home2", 5);
