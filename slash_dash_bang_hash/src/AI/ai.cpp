@@ -52,6 +52,11 @@ void AI::computeDestination() {
   double dt = now - prev;
   prev = now;
 
+  bool penalty = false;
+  if((team_ == "home" && gameState_.home_penalty) || (team_ == "away" && gameState_.away_penalty)) {
+    penalty = true;
+  }
+
   // if (dt > AI_TIME_STEP)
   // {
     if (gameState_.play)
@@ -96,7 +101,7 @@ void AI::computeDestination() {
 
         publishDestinations();
     }
-    else if (gameState_.reset_field)
+    else if (gameState_.reset_field || penalty)
     {
         ally1_destination_ = Skills::goToPoint(ally1_state_, ally1_startingPos_);
         ally2_destination_ = Skills::goToPoint(ally2_state_, ally2_startingPos_);
@@ -160,8 +165,9 @@ State AI::play_rushGoal(State robot, State ball)
     // compute position 10cm behind ball, but aligned with goal.
     Vector2d position = ball_vec - POSITION_BEHIND_BALL*n;
 
-    // if((position - stateToVector(robot)).norm() < 0.21)
-    if(isInFront(robot, ball, KICKER_WIDTH, POSITION_BEHIND_BALL + 0.05)) {
+    if((position - stateToVector(robot)).norm() < 0.25)
+    // if(isInFront(robot, ball, ROBOT_RADIUS*2, POSITION_BEHIND_BALL + 0.05))
+    {
       destination = Skills::goToPoint(robot, goal_);
     }
     else {

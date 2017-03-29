@@ -408,7 +408,7 @@ void Vision::findPinkBall(Mat img)
   geometry_msgs::Pose2D ball_pos;
 
   ball_pos.x = worldCoords[0];
-  ball_pos.y = -1.0 * worldCoords[1];
+  ball_pos.y = worldCoords[1];
   ball_pos.theta = 0;
 
   slash_dash_bang_hash::Pose2DStamped stamped_pose;
