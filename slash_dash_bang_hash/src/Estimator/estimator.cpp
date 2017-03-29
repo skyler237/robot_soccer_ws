@@ -26,6 +26,14 @@ priv_nh("~")
   sampleQ_cnt_ = 0;
   sampleQ_index_ = 0;
 
+  // Initialize the state off the field
+  state_.x = 5;
+  state_.y = 5;
+  state_.theta = 0;
+  state_.xhat = 5;
+  state_.yhat = 5;
+  state_.thetahat = 0;
+
 
 
 

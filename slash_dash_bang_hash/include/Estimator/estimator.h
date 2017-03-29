@@ -48,7 +48,7 @@ public:
   soccerref::GameState gameState_;
   slash_dash_bang_hash::State vision_data_;
   std_msgs::Header vision_header_;
-  slash_dash_bang_hash::State state_;
+  slash_dash_bang_hash::State state_;  
   slash_dash_bang_hash::State state_prev_;
 
   bool new_vision_data_;

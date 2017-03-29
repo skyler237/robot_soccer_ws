@@ -15,7 +15,7 @@
         <!-- <rosparam command="load" file="$(find slash_dash_bang_hash)/param/ally2.yaml" /> -->
 
         <!-- Start the robot up -->
-        <include file="$(find slash_dash_bang_hash)/launch/robot.launch">
+        <include file="$(find slash_dash_bang_hash)/launch/robot2.launch">
             <arg name="me" value="ally2" />
             <arg name="ally" value="ally1" />
             <arg name="sim_mode" value="$(arg sim_mode)" />
