@@ -65,8 +65,11 @@ double PID::computePIDDirect(double error, double xdot, double dt)
     return 0.0;
   }
 
+  stop_threshold = 0.1;
+  integrate_threshold = 0.4;
+
   // Numerical integration -- only apply when we are close to the target
-  if(error < 0.2) {
+  if(error > stop_threshold && error < integrate_threshold) {
     integrator_ += dt/2*(error + last_error_);
   }
   else {
@@ -75,12 +78,17 @@ double PID::computePIDDirect(double error, double xdot, double dt)
 
   last_error_ = error;
 
-  ROS_INFO("PIDDirect: error=%f, integrator=%f, xdot=%f", error, integrator_, xdot);
+  // ROS_INFO("PIDDirect: error=%f, integrator=%f, xdot=%f", error, integrator_, xdot);
 
-  
-  ROS_INFO("Control values: P=%f, I=%f, D=%f", kp_*error, ki_*integrator_, -kd_*xdot);
 
-  return kp_*error + ki_*integrator_ - kd_*xdot;
+  // ROS_INFO("Control values: P=%f, I=%f, D=%f", kp_*error, ki_*integrator_, -kd_*xdot);
+
+  if(error < stop_threshold) {
+    return 0.0;
+  }
+  else {
+    return kp_*error + ki_*integrator_ - kd_*xdot;
+  }
 }
 
 void PID::setGains(double p, double i, double d, double tau)
