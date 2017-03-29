@@ -12,6 +12,7 @@
 #include <cv_bridge/cv_bridge.h>
 #include "slash_dash_bang_hash/State.h"
 #include "slash_dash_bang_hash/Pose2DStamped.h"
+#include <geometry_msgs/Twist.h>
 
 
 #include <cmath>
@@ -27,6 +28,7 @@ using namespace Eigen;
 using namespace cv;
 
 typedef boost::shared_ptr< ::slash_dash_bang_hash::State const> StateConstPtr;
+typedef boost::shared_ptr< ::geometry_msgs::Twist const> VelConstPtr;
 
 #define FIELD_WIDTH 3.40  // in meters
 #define FIELD_HEIGHT 2.38
@@ -63,11 +65,14 @@ public:
   //subscriber to the desired pose
   ros::Subscriber desired_pose_sub_;
   ros::Subscriber destination_sub_;
+  ros::Subscriber vel_command_sub_;
+
 
   //desired pose
   slash_dash_bang_hash::State desired_pose_;
   //destination, end goal
   slash_dash_bang_hash::State destination_;
+  geometry_msgs::Twist command_;
 
   // Used to store image time stamps
   std_msgs::Header img_header_;
@@ -118,6 +123,7 @@ public:
   Vector3d convertToWorldCoord(Vector3d pixelCoord, int cols, int rows);
   Point convertWorldToPixel(double world_x, double world_y, int cols, int rows);
   robot_color getColorFromString(std::string str);
+  void setVelCommand(const VelConstPtr &msg);
 
 
 

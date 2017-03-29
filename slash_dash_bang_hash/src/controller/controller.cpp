@@ -89,9 +89,9 @@ void Controller::computeControl() {
     // theta_command = saturate(theta_PID_.computePID(robot_state_.theta, desired_pose_.theta, dt), -1*max_omega_, max_omega_);
 
     // HACK!
-    x_command = saturate(x_PID_.computePIDDirect(desired_pose_.x - robot_state_.x, robot_state_.xdot, 0.01), -1*max_xy_vel_, max_xy_vel_);
-    y_command = saturate(y_PID_.computePIDDirect(desired_pose_.y - robot_state_.y, robot_state_.ydot, 0.01), -1*max_xy_vel_, max_xy_vel_);
-    theta_command = saturate(theta_PID_.computePIDDirect(theta_error, robot_state_.thetadot, 0.01), -1*max_omega_, max_omega_);
+    x_command = saturate(x_PID_.computePIDDirect(desired_pose_.x - robot_state_.x, robot_state_.xdot, dt), -1*max_xy_vel_, max_xy_vel_);
+    y_command = saturate(y_PID_.computePIDDirect(desired_pose_.y - robot_state_.y, robot_state_.ydot, dt), -1*max_xy_vel_, max_xy_vel_);
+    theta_command = saturate(theta_PID_.computePIDDirect(theta_error, robot_state_.thetadot, dt), -1*max_omega_, max_omega_);
 
     command_ << x_command, y_command, theta_command;
 
