@@ -186,6 +186,28 @@ void Vision::getRobotPose(Mat img)
 
     arrowedLine(img, home_robot_center, velocityPoint, Scalar(0, 0, 0));
 
+    //home 2
+    offsetCenter = findCenterRobot(img, home2_color_);
+
+    robot_pos.x = offsetCenter[0];
+    robot_pos.y = offsetCenter[1];
+    //robot_pos.theta = offsetCenter[2] * 180.0 / M_PI;
+    robot_pos.theta = offsetCenter[2];
+    stamped_pose.header = img_header_;
+    stamped_pose.pose = robot_pos;
+    // printf("  World coordinates %f, %f, %f\n", robot_pos.x, robot_pos.y, robot_pos.theta);
+    if(!(isnan(robot_pos.x) || isnan(robot_pos.y) || isnan(robot_pos.theta))) {
+      home2_pub.publish(stamped_pose);
+    }
+    else { // If we don't see them, place them off the field
+      robot_pos.x = 5;
+      robot_pos.y = 5;
+      robot_pos.theta = 0;
+      stamped_pose.header = img_header_;
+      stamped_pose.pose = robot_pos;
+      home2_pub.publish(stamped_pose);
+    }
+
 
     // printf("Away robot:\n");
 
@@ -199,8 +221,40 @@ void Vision::getRobotPose(Mat img)
     stamped_pose.header = img_header_;
     stamped_pose.pose = robot_pos;
     // printf("  World coordinates %f, %f, %f\n", robot_pos.x, robot_pos.y, robot_pos.theta);
-    if(!(isnan(robot_pos.x) || isnan(robot_pos.y) || isnan(robot_pos.theta)))
+    if(!(isnan(robot_pos.x) || isnan(robot_pos.y) || isnan(robot_pos.theta))) {
       away1_pub.publish(stamped_pose);
+    }
+    else { // If we don't see them, place them off the field
+      robot_pos.x = 5;
+      robot_pos.y = 5;
+      robot_pos.theta = 0;
+      stamped_pose.header = img_header_;
+      stamped_pose.pose = robot_pos;
+      away1_pub.publish(stamped_pose);
+    }
+
+
+      //Away 2
+      offsetCenter = findCenterRobot(img, away2_color_);
+
+      robot_pos.x = offsetCenter[0];
+      robot_pos.y = offsetCenter[1];
+      //robot_pos.theta = offsetCenter[2] * 180.0 / M_PI;
+      robot_pos.theta = offsetCenter[2];
+      stamped_pose.header = img_header_;
+      stamped_pose.pose = robot_pos;
+      // printf("  World coordinates %f, %f, %f\n", robot_pos.x, robot_pos.y, robot_pos.theta);
+      if(!(isnan(robot_pos.x) || isnan(robot_pos.y) || isnan(robot_pos.theta))) {
+        away2_pub.publish(stamped_pose);
+      }
+      else { // If we don't see them, place them off the field
+        robot_pos.x = 5;
+        robot_pos.y = 5;
+        robot_pos.theta = 0;
+        stamped_pose.header = img_header_;
+        stamped_pose.pose = robot_pos;
+        away2_pub.publish(stamped_pose);
+      }
 
 
 
