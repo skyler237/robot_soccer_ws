@@ -61,12 +61,6 @@ def setPID(motor, p, i, qpps): #use motor = 0 to set all motors
 	writeFloat(p)
 	writeFloat(i)
 	writeFloat(qpps)
-def setAdvanced(motor, pwm_offset, dither_pwm, dither_period): #use motor = 0 to set all motors
-	ser.write('a')
-	ser.write(str(motor))
-	writeFloat(pwm_offset)
-	writeFloat(dither_pwm)
-	writeFloat(dither_period)
 def setT(period_ms, tau_ms):
 	ser.write('t')
 	writeFloat(period_ms)
@@ -155,10 +149,8 @@ def main():
     setPID(2, 1.5, 0.3, 48000)
     setPID(3, 1.5, 0.3, 49000)
 
-    setAdvanced(0, 30, 10, 0.001)
-
     # Set tick period (triggers PID control) and velocity filter corner frequency
-    setT(20, 100)
+    setT(20, 50)
 
     # spin() simply keeps python from exiting until this node is stopped
     rospy.spin()
