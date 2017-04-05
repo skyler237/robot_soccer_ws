@@ -104,8 +104,6 @@ void AI::computeDestination() {
     else if (gameState_.reset_field || penalty)
     {
   	Vector2d ally1_penaltyPos_;
-  	Vector2d ally1_penaltyPos_;
-  	Vector2d ally2_penaltyPos_;
   	Vector2d ally2_penaltyPos_;
   	ally1_penaltyPos_(0) = -0.5;
   	ally1_penaltyPos_(1) = -0.8;
