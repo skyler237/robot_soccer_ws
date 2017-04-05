@@ -30,7 +30,7 @@ double PID::computePID(double current, double desired, double dt)
   double error = desired - current;
 
   // Handle border cases (don't compute anything)
-  if(dt == 0.0 || abs(error) > 9999999)
+  if(dt == 0.0 || fabs(error) > 9999999)
   {
     last_error_ = error;
     last_state_ = current;

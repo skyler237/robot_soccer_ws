@@ -1,7 +1,7 @@
 #include "controller/controller.h"
 #include "Utilities/utilities.h"
 
-#define CONTROL_TIME_STEP 0.0
+#define CONTROL_TIME_STEP 0.01
 
 Controller::Controller() :
 nh_(ros::NodeHandle()),

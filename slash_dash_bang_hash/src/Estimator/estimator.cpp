@@ -22,7 +22,7 @@ priv_nh("~")
   LPF_alpha_theta_ = priv_nh.param<double>("LPF_alpha_theta", exp(-1.0*LPF_corner_freq_theta_*sample_period_));
   xy_vel_damping_coeff_ = priv_nh.param<double>("xy_vel_damping_coeff", 0.99);
   theta_vel_damping_coeff_ = priv_nh.param<double>("theta_vel_damping_coeff", 0.99);
-  sampleQ_size_ = priv_nh.param<int>("sample_queue_size", 20);
+  sampleQ_size_ = priv_nh.param<int>("sample_queue_size", 100);
   sampleQ_cnt_ = 0;
   sampleQ_index_ = 0;
 
@@ -42,7 +42,7 @@ priv_nh("~")
 
   state_pub_ = nh_.advertise<slash_dash_bang_hash::State>("state", 5);
 
-  ROS_INFO("Initializing estimator");
+  // ROS_INFO("Initializing estimator");
 
 
 }
@@ -117,7 +117,7 @@ void Estimator::predictAndCorrectEstimator() {
       samples_old_ = (int) lag_sample_periods;
     }
 
-
+    // ROS_INFO("Samples old: %d, sampleQ_cnt: %d", samples_old_, sampleQ_cnt_);
     // Go back and update from the right sample
     if(samples_old_ < sampleQ_cnt_) {
       state_ = updateSamples(vision_data_, samples_old_, dt);
@@ -182,11 +182,11 @@ State Estimator::correctStateWithMeasurementsOnly(State measurement, State predi
   corrected_state.xdot = tustinDerivative(measurement.x, prev_measurement.x, prev_measurement.xdot, tau_, dt);
   corrected_state.ydot = tustinDerivative(measurement.y, prev_measurement.y, prev_measurement.ydot, tau_, dt);
   corrected_state.thetadot = tustinDerivative(measurement.theta, prev_measurement.theta, prev_measurement.thetadot, tau_, dt);
-  // ROS_INFO("measurement: x=%f, y=%f, theta=%f", measurement.x, measurement.y, measurement.theta);
-  // ROS_INFO("prev_measurement: x=%f, y=%f, theta=%f", prev_measurement.x, prev_measurement.y, prev_measurement.theta);
-  // ROS_INFO("prev_measurement vel: x=%f, y=%f, theta=%f", prev_measurement.xdot, prev_measurement.ydot, prev_measurement.thetadot);
-  // ROS_INFO("corrected_state: x=%f, y=%f, theta=%f", corrected_state.x, corrected_state.y, corrected_state.theta);
-  // ROS_INFO("corrected_state vel: x=%f, y=%f, theta=%f", prev_measurement.xdot, prev_measurement.ydot, prev_measurement.thetadot);
+   // ROS_INFO("measurement: x=%f, y=%f, theta=%f", measurement.x, measurement.y, measurement.theta);
+   // ROS_INFO("prev_measurement: x=%f, y=%f, theta=%f", prev_measurement.x, prev_measurement.y, prev_measurement.theta);
+   // ROS_INFO("prev_measurement vel: x=%f, y=%f, theta=%f", prev_measurement.xdot, prev_measurement.ydot, prev_measurement.thetadot);
+   // ROS_INFO("corrected_state: x=%f, y=%f, theta=%f", corrected_state.xhat, corrected_state.yhat, corrected_state.thetahat);
+   // ROS_INFO("corrected_state vel: x=%f, y=%f, theta=%f", corrected_state.xdot, corrected_state.ydot, corrected_state.thetadot);
 
   // Re-predict states
   corrected_state = predictState(corrected_state, dt);
@@ -304,7 +304,7 @@ int main(int argc, char **argv)
 
     Estimator estimator_node;
 
-    ROS_INFO("Main for estimator");
+    // ROS_INFO("Main for estimator");
 
     // Initialize state_prev_
 

@@ -91,7 +91,7 @@ def _handle_velocity_command(msg):
     vel_cmd_.x = msg.linear.x
     vel_cmd_.y = msg.linear.y
     vel_cmd_.z = msg.angular.z*pi/180.0
-    print(msg)
+    #print(msg)
     computeMotorSpeeds()
 
 def computeMotorSpeeds():
@@ -109,13 +109,13 @@ def computeMotorSpeeds():
     velocities = np.array([vel_cmd_.x, vel_cmd_.y, vel_cmd_.z])
     wheel_speeds_ = np.dot(M_, R).dot(velocities)
 
-    print(wheel_speeds_)
+    #print(wheel_speeds_)
     max_speed = np.amax(np.array([abs(x) for x in wheel_speeds_]))
-    print(max_speed)
+    #print(max_speed)
 
     if (max_speed < 0.2):
       wheel_speeds_ = np.array([0, 0, 0])
-    elif max_speed < 2.0:
+    elif max_speed < 3.0:
       wheel_speeds_ = np.array([x*(2.0/max_speed) for x in wheel_speeds_])
 
     sendVelocityCommands()
@@ -125,7 +125,7 @@ def sendVelocityCommands():
     speedM2 = wheel_speeds_[1] # rot/s
     speedM3 = wheel_speeds_[2] # rot/s
 
-    print(wheel_speeds_)
+    #print(wheel_speeds_)
 
     # totalTime = 3   #seconds
     # sampleRate = 50 #samples per second
@@ -150,10 +150,10 @@ def main():
 
 
     # Set the PIDQ values for all motors
-    #setPID(0, 1, 0.3, 30000)
-    setPID(1, 1.5, 0.3, 49000)
-    setPID(2, 1.5, 0.3, 48000)
-    setPID(3, 1.5, 0.3, 49000)
+    setPID(0, 1.3, 0.55, 50000)
+    #setPID(1, -1, -0.4, 49000)
+    #setPID(2, -1, -0.4, 48000)
+    #setPID(3, -1, -0.4, 50000)
 
     setAdvanced(0, 30, 10, 0.001)
 
