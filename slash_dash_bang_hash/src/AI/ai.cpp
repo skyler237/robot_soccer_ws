@@ -79,8 +79,8 @@ void AI::computeDestination() {
 
 
         // robot #2 defend the goal
-        // ally2_destination_ = play_basicDefense(ally2_state_, ball_state_);
-        ally2_destination_ = Skills::hideInCorner(1); // Hide in back left corner -- for debugging
+        ally2_destination_ = play_basicDefense(ally2_state_, ball_state_);
+        // ally2_destination_ = Skills::hideInCorner(1); // Hide in back left corner -- for debugging
         checkForKick(2);
 
         ///////////////////////////////////////////////////////
