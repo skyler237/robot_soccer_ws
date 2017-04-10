@@ -127,10 +127,13 @@ def sendVelocityCommands():
 
     print(wheel_speeds_)
 
-    # totalTime = 3   #seconds
-    # sampleRate = 50 #samples per second
-    # pulsePerRotation = 4955 #Old motors
-    pulsePerRotation = 116.2 #New motors
+    if robot_number_ == 1:
+        # Slash constant
+        pulsePerRotation = 4955 #Old motors
+    else:
+        # Bang constant
+        pulsePerRotation = 116.2 #New motors
+
 
 
 
@@ -141,6 +144,7 @@ def sendVelocityCommands():
 
 
 def main():
+    global robot_number_
     rospy.init_node('MotionControl', anonymous=False)
 
     # Sub/Pub
@@ -148,15 +152,32 @@ def main():
     rospy.Subscriber('vel_command', Twist, _handle_velocity_command)
     motor_speed_pub_ = rospy.Publisher('motor_speeds', MotorSpeeds, queue_size=10)
 
-    pulsePerRotation = 116.2
-    # Set the PIDQ values for all motors
-    setPID(0, 1.5, 0.5, 6.04*pulsePerRotation)
-    #setPID(1, 1.5, 0.5, 49000)
-    #setPID(2, 1.5, 0.5, 48000)
-    #setPID(3, 1.5, 0.5, 49000)
+    robot_number_ = rospy.get_param('robot_number', 1)
 
-    # motor, offset, dither_pwm, dither_period
-    setAdvancedConstants(0, 30, 40, 0.04)
+
+
+    # Set the PIDQ values for all motors
+    if robot_number_ == 1:
+        # Slash constants
+        setPID(0, 1.3, 0.55, 50000)
+        #setPID(1, -1, -0.4, 49000)
+        #setPID(2, -1, -0.4, 48000)
+        #setPID(3, -1, -0.4, 50000)
+
+        # motor, offset, dither_pwm, dither_period
+        setAdvancedConstants(0, 30, 40, 0.04)
+    else:
+        # Bang constants
+        pulsePerRotation = 116.2
+        setPID(0, 1.5, 0.5, 6.04*pulsePerRotation)
+        #setPID(1, 1.5, 0.5, 49000)
+        #setPID(2, 1.5, 0.5, 48000)
+        #setPID(3, 1.5, 0.5, 49000)
+
+        # motor, offset, dither_pwm, dither_period
+        setAdvancedConstants(0, 30, 40, 0.04)
+
+
 
     # Set tick period (triggers PID control) and velocity filter corner frequency
     setT(20, 100)
