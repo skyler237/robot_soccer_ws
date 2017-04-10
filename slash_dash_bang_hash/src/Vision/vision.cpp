@@ -61,12 +61,12 @@ int iHighS = 255;
 int iLowV = 0;
 int iHighV = 255;
 
-int colorsMin [4] = {BLUE_MIN, PURPLE_MIN, RED_MIN, YELLOW_MIN};
-int colorsMax [4] = {BLUE_MAX, PURPLE_MAX, RED_MAX, YELLOW_MAX};
-int valuesMin [4] = {BLUE_VAL_LOW, PURPLE_VAL_LOW, RED_VAL_LOW, YELLOW_VAL_MIN};
-int valuesMax [4] = {BLUE_VAL_HIGH, PURPLE_VAL_HIGH, RED_VAL_HIGH, YELLOW_VAL_MAX};
-int saturationMin [4] = {SATURATE_LOW, SATURATE_LOW, SATURATE_LOW, SATURATE_LOW};
-int saturationMax [4] = {SATURATE_HIGH, SATURATE_HIGH, SATURATE_HIGH, SATURATE_HIGH};
+int colorsMin [] = {BLUE_MIN, PURPLE_MIN, RED_MIN, YELLOW_MIN, PINK_MIN};
+int colorsMax [] = {BLUE_MAX, PURPLE_MAX, RED_MAX, YELLOW_MAX, PINK_MAX};
+int valuesMin [] = {BLUE_VAL_LOW, PURPLE_VAL_LOW, RED_VAL_LOW, YELLOW_VAL_MIN, PINK_VAL_LOW};
+int valuesMax [] = {BLUE_VAL_HIGH, PURPLE_VAL_HIGH, RED_VAL_HIGH, YELLOW_VAL_MAX, PINK_VAL_HIGH};
+int saturationMin [] = {SATURATE_LOW, SATURATE_LOW, SATURATE_LOW, SATURATE_LOW, PINK_SAT_LOW};
+int saturationMax [] = {SATURATE_HIGH, SATURATE_HIGH, SATURATE_HIGH, SATURATE_HIGH, PINK_SAT_HIGH};
 int saturationLow = 80;
 int saturationHigh = 255;
 
@@ -155,9 +155,9 @@ double Distance(float dX0, float dY0, float dX1, float dY1)
 void Vision::createTrackbars(Mat img)
 {
 
-  static const char* colors[] = {"blue", "purple", "red", "yellow"};
-  static bool sliderShown[] = {false, false, false, false};
-  for(int i = 0; i < 4; i++){
+  static const char* colors[] = {"blue", "purple", "red", "yellow", "pink"};
+  static bool sliderShown[] = {false, false, false, false, false};
+  for(int i = 0; i < 5; i++){
 
   	//cvDestroyWindow(colors[i]);
     if(!sliderShown[i]){
@@ -200,7 +200,8 @@ void Vision::getRobotPose(Mat img)
     geometry_msgs::Pose2D robot_pos;
     slash_dash_bang_hash::Pose2DStamped stamped_pose;
     int circle_radius = 25;
-    printf("Home 1 robot:\n");
+    if(lastKeyPressed == 'p')
+      printf("Home 1 robot:\n");
 
     // crop so we have just the mini robot location
     offsetCenter = findCenterRobot(img, home1_color_);
@@ -213,7 +214,8 @@ void Vision::getRobotPose(Mat img)
     robot_pos.theta = offsetCenter[2];
     stamped_pose.header = img_header_;
     stamped_pose.pose = robot_pos;
-    printf("  World coordinates: %f, %f, %f\n", robot_pos.x, robot_pos.y, robot_pos.theta);
+    if(lastKeyPressed == 'p')
+      printf("  World coordinates: %f, %f, %f\n", robot_pos.x, robot_pos.y, robot_pos.theta);
     if(!(isnan(robot_pos.x) || isnan(robot_pos.y) || isnan(robot_pos.theta))) {
       home1_pub.publish(stamped_pose);
     }
@@ -262,8 +264,8 @@ void Vision::getRobotPose(Mat img)
     //home 2 blue
     Point home_2_robot_center = convertWorldToPixel(robot_pos.x, robot_pos.y, img.cols, img.rows);
     circle(img, home_2_robot_center, circle_radius, Scalar( 255, 0, 0 ));
-
-    printf("Away robot:\n");
+    if(lastKeyPressed == 'p')
+      printf("Away robot:\n");
 
     //now get the away1
     offsetCenter = findCenterRobot(img, away1_color_);
@@ -274,7 +276,8 @@ void Vision::getRobotPose(Mat img)
     robot_pos.theta = offsetCenter[2];
     stamped_pose.header = img_header_;
     stamped_pose.pose = robot_pos;
-    printf("  World coordinates %f, %f, %f\n", robot_pos.x, robot_pos.y, robot_pos.theta);
+    if(lastKeyPressed == 'p')
+      printf("  World coordinates %f, %f, %f\n", robot_pos.x, robot_pos.y, robot_pos.theta);
     if(!(isnan(robot_pos.x) || isnan(robot_pos.y) || isnan(robot_pos.theta))) {
       away1_pub.publish(stamped_pose);
     }
@@ -405,7 +408,13 @@ Mat Vision::thresholdImage(Mat img, robot_color robotColor)
       saturateMinVal = saturationMin[0];
       saturateMaxVal = saturationMax[0];
     break;
-    case robot_color::green:                            //the color of the field
+    case robot_color::pink:
+    valueMin = valuesMin[4];
+    valueMax = valuesMax[4];
+    hueMin = colorsMin[4];
+    hueMax = colorsMax[4];
+    saturateMinVal = saturationMin[4];
+    saturateMaxVal = saturationMax[4];                           //the color of the field
     break;
   }
 
@@ -447,7 +456,8 @@ Vector3d Vision::findCenterRobot(Mat img, robot_color robotColor)
   findContours(imgThresholded, contours, hierarchy, CV_RETR_CCOMP, CV_CHAIN_APPROX_SIMPLE);
 
   Vector3d ret(0, 0, 0);
-  printf("  hierarchy size: %d\n", (int) hierarchy.size());
+  if(lastKeyPressed == 'p')
+    printf("  hierarchy size: %d\n", (int) hierarchy.size());
   if (hierarchy.size() < 2)
          return ret;
 
@@ -461,7 +471,8 @@ Vector3d Vision::findCenterRobot(Mat img, robot_color robotColor)
 
   //Print out the center of the robot in pixels for testing purposes
   Point2d robotCenterPixels = (getCenterOfMass(mmLarge) + getCenterOfMass(mmSmall)) / 2.0;
-  printf("in findCenterRobot:  Robot center (pixels): %f, %f\n", robotCenterPixels.x, robotCenterPixels.y);
+  if(lastKeyPressed == 'p')
+    printf("in findCenterRobot:  Robot center (pixels): %f, %f\n", robotCenterPixels.x, robotCenterPixels.y);
 
   //Convert to world coordinates
 
@@ -476,7 +487,8 @@ Vector3d Vision::findCenterRobot(Mat img, robot_color robotColor)
 
   //convert angle to degrees
   angle = angle *180/M_PI;
-  printf("in findCenterRobot: Center of the bot world %f, %f, %f\n", diff.x, diff.y, angle);
+  if(lastKeyPressed == 'p')
+    printf("in findCenterRobot: Center of the bot world %f, %f, %f\n", diff.x, diff.y, angle);
   Vector3d pose(centerSmall3d[0], centerSmall3d[1], angle);
 
 
@@ -486,48 +498,26 @@ Vector3d Vision::findCenterRobot(Mat img, robot_color robotColor)
 void Vision::findPinkBall(Mat img)
 {
 
-  //blur this image
-  Mat blurImg = smoothing(img, 5);
-  vector<Mat> blurChannels;
-  split(blurImg, blurChannels);
-  Mat imgHSV;
-  cvtColor(blurImg, imgHSV, COLOR_BGR2HSV); //Convert the captured frame from BGR to HSV
-  vector<Mat> channels;
-  split(imgHSV, channels);
-  if (channels.size() == 0){
-    return;
-  }
+  Mat imgThresholded = thresholdImage(img, robot_color::pink);
 
-  int x = 0;
-  int y = 0;
-  int count = 0;
-  // search through the image to find yellow
-  for (int i = 0; i < imgHSV.cols; i++)
-  {
-      for (int j = 0; j < imgHSV.rows; j++)
-      {
-        int hue = channels[0].at<uchar>(j,i);
-        int sat = channels[1].at<uchar>(j,i);
-        int val = channels[2].at<uchar>(j, i);
-          if( isInPinkRange(hue, sat, val) && blurChannels[1].at<uchar>(j,i) < PINK_GREEN_MAX)
-          {
-            //this should be where the ball is
-            x += i;
-            y += j;
-            count ++;
-          }
-      }
-  }
+  vector< vector<Point> > contours;
+  vector<Moments> mm;
+  vector<Vec4i> hierarchy;
+  findContours(imgThresholded, contours, hierarchy, CV_RETR_CCOMP, CV_CHAIN_APPROX_SIMPLE);
 
-  if(count > 0)
-  {
-    x /= count;
-    y /= count;
-  }
+  if (hierarchy.size() < 1)
+         return ;
 
+  for(int i = 0; i < hierarchy.size(); i++)
+      mm.push_back(moments((Mat)contours[i]));
 
+  std::sort(mm.begin(), mm.end(), compareMomentAreas);
+
+  Moments mmLarge = mm[mm.size() - 1];
+
+  Point2d centerOfBall =  getCenterOfMass(mmLarge);
   //printf("the ball location in pixels: %d, %d\n", x, y);
-  Vector3d coordinates(x, y , 0);
+  Vector3d coordinates(centerOfBall.x, centerOfBall.y , 0);
   Vector3d worldCoords;
   worldCoords = convertToWorldCoord(coordinates, img.cols, img.rows);
   //printf("the ball location in world: %f, %f\n", worldCoords[0], worldCoords[1]);
@@ -542,10 +532,12 @@ void Vision::findPinkBall(Mat img)
   stamped_pose.pose = ball_pos;
   ball_pub.publish(stamped_pose);
   referee_ball_pub.publish(ball_pos);
+  if(lastKeyPressed == 'p'){
   //pink ball
   Point ball_center = convertWorldToPixel(ball_pos.x, ball_pos.y, img.cols, img.rows);
   circle(img, ball_center, 25, Scalar( 255, 255, 255 ));
   imshow("ball", img);
+  }
 }
 
 
@@ -592,7 +584,7 @@ Rect Vision::crop(Mat img)
 
   int croppingOffset = 70;
   int widthOffset = 80;
-  int leftBuffer = 100;
+  int leftBuffer = 150;
   int genericBuffer = 10;
 
   //get the lines for portions of the field
