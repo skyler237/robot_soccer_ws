@@ -124,6 +124,7 @@ public:
   Point convertWorldToPixel(double world_x, double world_y, int cols, int rows);
   robot_color getColorFromString(std::string str);
   void setVelCommand(const VelConstPtr &msg);
+  void createTrackbars(Mat img);
 
 
 

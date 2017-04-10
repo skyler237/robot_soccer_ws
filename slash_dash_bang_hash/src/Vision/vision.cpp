@@ -61,6 +61,19 @@ int iHighS = 255;
 int iLowV = 0;
 int iHighV = 255;
 
+int colorsMin [4] = {BLUE_MIN, PURPLE_MIN, RED_MIN, YELLOW_MIN};
+int colorsMax [4] = {BLUE_MAX, PURPLE_MAX, RED_MAX, YELLOW_MAX};
+int valuesMin [4] = {BLUE_VAL_LOW, PURPLE_VAL_LOW, RED_VAL_LOW, YELLOW_VAL_MIN};
+int valuesMax [4] = {BLUE_VAL_HIGH, PURPLE_VAL_HIGH, RED_VAL_HIGH, YELLOW_VAL_MAX};
+int saturationMin [4] = {SATURATE_LOW, SATURATE_LOW, SATURATE_LOW, SATURATE_LOW};
+int saturationMax [4] = {SATURATE_HIGH, SATURATE_HIGH, SATURATE_HIGH, SATURATE_HIGH};
+int saturationLow = 80;
+int saturationHigh = 255;
+
+int valueLow = 80;
+int valueHigh = 255;
+
+char lastKeyPressed;
 
 
 Mat Vision::smoothing(Mat img, int radius)
@@ -101,8 +114,6 @@ void colorSlider(Mat img)
 
     dilate( imgThresholded, imgThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) );
     erode(imgThresholded, imgThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) );
-    imwrite( "../Gray_Image.jpg", imgThresholded );
-    imwrite( "../original.jpg", img );
 
     imshow("changed", imgThresholded);
 }
@@ -140,8 +151,46 @@ double Distance(float dX0, float dY0, float dX1, float dY1)
     return sqrt((dX1 - dX0)*(dX1 - dX0) + (dY1 - dY0)*(dY1 - dY0));
 }
 
+//creates trackbar and output image for each of the 4 colors
+void Vision::createTrackbars(Mat img)
+{
+
+  static const char* colors[] = {"blue", "purple", "red", "yellow"};
+  static bool sliderShown[] = {false, false, false, false};
+  for(int i = 0; i < 4; i++){
+
+  	//cvDestroyWindow(colors[i]);
+    if(!sliderShown[i]){
+    namedWindow(colors[i], WINDOW_NORMAL);
+  	createTrackbar("Hue Low", std::string(colors[i]), &colorsMin[i], 179);
+    createTrackbar("Hue High", std::string(colors[i]), &colorsMax[i], 179);
+  	createTrackbar("Sat Low", std::string(colors[i]), &saturationMin[i], 255);
+    createTrackbar("Sat High", std::string(colors[i]), &saturationMax[i], 255);
+  	createTrackbar("Val Low", std::string(colors[i]), &valuesMin[i], 255);
+    createTrackbar("Val HIgh", std::string(colors[i]), &valuesMax[i], 255);
+
+  	moveWindow(colors[i], 0, 0);
+  	resizeWindow(colors[i], 400, 100);
+      sliderShown[i] = true;
+  }
 
 
+    Mat imgHSV;
+    cvtColor(img, imgHSV, COLOR_BGR2HSV); //Convert the captured frame from BGR to HSV
+
+    Mat imgThresholded;
+
+    inRange(imgHSV, Scalar(colorsMin[i], saturationMin[i], valuesMin[i]), Scalar(colorsMax[i], saturationMax[i], valuesMax[i]), imgThresholded); //Threshold the image
+    erode(imgThresholded, imgThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) );
+    dilate( imgThresholded, imgThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) );
+
+    dilate( imgThresholded, imgThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) );
+    erode(imgThresholded, imgThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) );
+
+    imshow(std::string(colors[i]) + " thresholded", imgThresholded);
+
+  }
+}
 
 
 //get the robot position and angle
@@ -151,7 +200,7 @@ void Vision::getRobotPose(Mat img)
     geometry_msgs::Pose2D robot_pos;
     slash_dash_bang_hash::Pose2DStamped stamped_pose;
     int circle_radius = 25;
-    // printf("Home 1 robot:\n");
+    printf("Home 1 robot:\n");
 
     // crop so we have just the mini robot location
     offsetCenter = findCenterRobot(img, home1_color_);
@@ -164,18 +213,20 @@ void Vision::getRobotPose(Mat img)
     robot_pos.theta = offsetCenter[2];
     stamped_pose.header = img_header_;
     stamped_pose.pose = robot_pos;
-    // printf("  World coordinates: %f, %f, %f\n", robot_pos.x, robot_pos.y, robot_pos.theta);
-    if(!(isnan(robot_pos.x) || isnan(robot_pos.y) || isnan(robot_pos.theta)))
+    printf("  World coordinates: %f, %f, %f\n", robot_pos.x, robot_pos.y, robot_pos.theta);
+    if(!(isnan(robot_pos.x) || isnan(robot_pos.y) || isnan(robot_pos.theta))) {
       home1_pub.publish(stamped_pose);
+    }
 
     //////////////////////////////////////////////////
     //////////////Home robot position image///////////
-    Point home_robot_center = convertWorldToPixel(robot_pos.x, robot_pos.y, img.cols, img.rows);
-    circle(img, home_robot_center, circle_radius, Scalar( 0, 0, 255 ));
+    //home 1 purple
+    Point home_1_robot_center = convertWorldToPixel(robot_pos.x, robot_pos.y, img.cols, img.rows);
+    circle(img, home_1_robot_center, circle_radius, Scalar( 255, 0, 255 ));
 
 
     //point 2
-    Point velocityPoint(home_robot_center.x + (command_.linear.x * circle_radius), home_robot_center.y + (command_.linear.y * circle_radius));
+    Point velocityPoint(home_1_robot_center.x + (command_.linear.x * circle_radius), home_1_robot_center.y + (command_.linear.y * circle_radius));
     // printf("command_.linear.x: %g, command_linear.y: %g\n", command_.linear.x, command_.linear.y);
     //stuff
     //  vel.linear.x = command_(0);
@@ -184,7 +235,7 @@ void Vision::getRobotPose(Mat img)
     //  //vel.linear.y = 0.0;
     // vel.angular.z = command_(2);
 
-    arrowedLine(img, home_robot_center, velocityPoint, Scalar(0, 0, 0));
+    arrowedLine(img, home_1_robot_center, velocityPoint, Scalar(0, 0, 0));
 
     //home 2
     offsetCenter = findCenterRobot(img, home2_color_);
@@ -208,8 +259,11 @@ void Vision::getRobotPose(Mat img)
       home2_pub.publish(stamped_pose);
     }
 
+    //home 2 blue
+    Point home_2_robot_center = convertWorldToPixel(robot_pos.x, robot_pos.y, img.cols, img.rows);
+    circle(img, home_2_robot_center, circle_radius, Scalar( 255, 0, 0 ));
 
-    // printf("Away robot:\n");
+    printf("Away robot:\n");
 
     //now get the away1
     offsetCenter = findCenterRobot(img, away1_color_);
@@ -220,7 +274,7 @@ void Vision::getRobotPose(Mat img)
     robot_pos.theta = offsetCenter[2];
     stamped_pose.header = img_header_;
     stamped_pose.pose = robot_pos;
-    // printf("  World coordinates %f, %f, %f\n", robot_pos.x, robot_pos.y, robot_pos.theta);
+    printf("  World coordinates %f, %f, %f\n", robot_pos.x, robot_pos.y, robot_pos.theta);
     if(!(isnan(robot_pos.x) || isnan(robot_pos.y) || isnan(robot_pos.theta))) {
       away1_pub.publish(stamped_pose);
     }
@@ -233,6 +287,9 @@ void Vision::getRobotPose(Mat img)
       away1_pub.publish(stamped_pose);
     }
 
+    //away 1 red
+    Point away_1_robot_center = convertWorldToPixel(robot_pos.x, robot_pos.y, img.cols, img.rows);
+    circle(img, away_1_robot_center, circle_radius, Scalar( 0, 0, 255 ));
 
       //Away 2
       offsetCenter = findCenterRobot(img, away2_color_);
@@ -261,9 +318,12 @@ void Vision::getRobotPose(Mat img)
 
     //////////////////////////////////////////////////
     //////////////Away robot position image///////////
-    Point away_robot_center = convertWorldToPixel(robot_pos.x, robot_pos.y, img.cols, img.rows);
-    circle(img, away_robot_center, circle_radius, Scalar( 255, 0, 0 ));
+    if(lastKeyPressed == 'p'){
+      //away 2 yellow
+    Point away_2_robot_center = convertWorldToPixel(robot_pos.x, robot_pos.y, img.cols, img.rows);
+    circle(img, away_2_robot_center, circle_radius, Scalar( 0, 255, 255 ));
     imshow("vision location", img);
+  }
 
 
 
@@ -308,41 +368,49 @@ Mat Vision::thresholdImage(Mat img, robot_color robotColor)
 
   Mat imgHSV;
   cvtColor(img, imgHSV, COLOR_BGR2HSV); //Convert the captured frame from BGR to HSV
-  int saturateMin =  SATURATE_LOW;
-  int saturateMax = SATURATE_HIGH;
+  int saturateMinVal =  SATURATE_LOW;
+  int saturateMaxVal = SATURATE_HIGH;
   int valueMin, valueMax;
   int hueMin, hueMax;
   switch (robotColor) {
     case robot_color::yellow:                         //will also work for orange
-      valueMin = YELLOW_VAL_MIN;
-      valueMax = YELLOW_VAL_MAX;
-      hueMin = YELLOW_MIN;
-      hueMax = YELLOW_MAX;
+      valueMin = valuesMin[3];
+      valueMax = valuesMax[3];
+      hueMin = colorsMin[3];
+      hueMax = colorsMax[3];
+      saturateMinVal = saturationMin[3];
+      saturateMaxVal = saturationMax[3];
     break;
     case robot_color::purple:
-      valueMin = PURPLE_VAL_LOW;
-      valueMax = PURPLE_VAL_HIGH;
-      hueMin = PURPLE_MIN;
-      hueMax = PURPLE_MAX;
+      valueMin = valuesMin[1];
+      valueMax = valuesMax[1];
+      hueMin = colorsMin[1];
+      hueMax = colorsMax[1];
+      saturateMinVal = saturationMin[1];
+      saturateMaxVal = saturationMax[1];
     break;
     case robot_color::red:
-      valueMin = RED_VAL_LOW;
-      valueMax = RED_VAL_HIGH;
-      hueMin = RED_MIN;
-      hueMax = RED_MAX;
+      valueMin = valuesMin[2];
+      valueMax = valuesMax[2];
+      hueMin = colorsMin[2];
+      hueMax = colorsMax[2];
+      saturateMinVal = saturationMin[2];
+      saturateMaxVal = saturationMax[2];
     break;
     case robot_color::blue:
-      valueMin = BLUE_VAL_LOW;
-      valueMax = BLUE_VAL_HIGH;
-      hueMin = BLUE_MIN;
-      hueMax = BLUE_MAX;
+      valueMin = valuesMin[0];
+      valueMax = valuesMax[0];
+      hueMin = colorsMin[0];
+      hueMax = colorsMax[0];
+      saturateMinVal = saturationMin[0];
+      saturateMaxVal = saturationMax[0];
     break;
     case robot_color::green:                            //the color of the field
     break;
   }
 
   Mat imgThresholded;
-  inRange(imgHSV, Scalar(hueMin, saturateMin, valueMin), Scalar(hueMax, saturateMax, valueMax), imgThresholded); //Threshold the image
+  inRange(imgHSV, Scalar(hueMin, saturateMinVal, valueMin), Scalar(hueMax, saturateMaxVal, valueMax), imgThresholded); //Threshold the image
 
   dilate( imgThresholded, imgThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) );
   erode(imgThresholded, imgThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) );
@@ -351,6 +419,8 @@ Mat Vision::thresholdImage(Mat img, robot_color robotColor)
   erode(imgThresholded, imgThresholded, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)) );
 
   return imgThresholded;
+
+
 }
 
 
@@ -359,15 +429,17 @@ Vector3d Vision::findCenterRobot(Mat img, robot_color robotColor)
 {
   //Threshold the image
   Mat imgThresholded = thresholdImage(img, robotColor);
-  switch(robotColor)
-  {
-    case robot_color::red:
-      imshow("thresholdedRedImage", imgThresholded);
-      break;
+  if(lastKeyPressed == 'p'){
+    switch(robotColor)
+    {
+      case robot_color::red:
+        imshow("thresholdedRedImage", imgThresholded);
+        break;
 
-    case robot_color::blue:
-      imshow("thresholdedBlueImage", imgThresholded);
-      break;
+      case robot_color::blue:
+        imshow("thresholdedBlueImage", imgThresholded);
+        break;
+    }
   }
   vector< vector<Point> > contours;
   vector<Moments> mm;
@@ -375,7 +447,7 @@ Vector3d Vision::findCenterRobot(Mat img, robot_color robotColor)
   findContours(imgThresholded, contours, hierarchy, CV_RETR_CCOMP, CV_CHAIN_APPROX_SIMPLE);
 
   Vector3d ret(0, 0, 0);
-  // printf("  hierarchy size: %d\n", (int) hierarchy.size());
+  printf("  hierarchy size: %d\n", (int) hierarchy.size());
   if (hierarchy.size() < 2)
          return ret;
 
@@ -389,7 +461,7 @@ Vector3d Vision::findCenterRobot(Mat img, robot_color robotColor)
 
   //Print out the center of the robot in pixels for testing purposes
   Point2d robotCenterPixels = (getCenterOfMass(mmLarge) + getCenterOfMass(mmSmall)) / 2.0;
-  // printf("  Robot center (pixels): %f, %f\n", robotCenterPixels.x, robotCenterPixels.y);
+  printf("in findCenterRobot:  Robot center (pixels): %f, %f\n", robotCenterPixels.x, robotCenterPixels.y);
 
   //Convert to world coordinates
 
@@ -404,7 +476,7 @@ Vector3d Vision::findCenterRobot(Mat img, robot_color robotColor)
 
   //convert angle to degrees
   angle = angle *180/M_PI;
-  //printf("Center of the bot world %f, %f, %f\n", diff.x, diff.y, angle);
+  printf("in findCenterRobot: Center of the bot world %f, %f, %f\n", diff.x, diff.y, angle);
   Vector3d pose(centerSmall3d[0], centerSmall3d[1], angle);
 
 
@@ -470,6 +542,10 @@ void Vision::findPinkBall(Mat img)
   stamped_pose.pose = ball_pos;
   ball_pub.publish(stamped_pose);
   referee_ball_pub.publish(ball_pos);
+  //pink ball
+  Point ball_center = convertWorldToPixel(ball_pos.x, ball_pos.y, img.cols, img.rows);
+  circle(img, ball_center, 25, Scalar( 255, 255, 255 ));
+  imshow("ball", img);
 }
 
 
@@ -722,25 +798,37 @@ void Vision::visionCallback(const sensor_msgs::ImageConstPtr& msg)
         Mat frame = cv_bridge::toCvShare(msg, "bgr8")->image;
         Mat img;
         img = frame;
-        imshow("original view", img);
-
+        if(lastKeyPressed == 'p'){
+          imshow("original view", img);
+        }
         if(!cropped)
         {
           croppedRect = Vision::crop(img);
           cropped = true;
+
         }
+
         img = Mat(img, croppedRect);
         getRobotPose(img);
-
-
-        imshow("cropped view", img);
-
         findPinkBall(img);
 
-        Mat blurImg = Vision::smoothing(img, 5);
-        colorSlider(blurImg);
-        drawPosDest(img);
-        waitKey(60);
+        if(lastKeyPressed == 'p'){
+          createTrackbars(img);
+          Mat blurImg = Vision::smoothing(img, 5);
+          colorSlider(blurImg);
+          drawPosDest(img);
+        }
+        else
+        {
+          imshow("cropped view", img);
+        }
+
+        char key = waitKey(1);
+        if(key != -1)
+          lastKeyPressed = key;
+
+
+        //waitKey(60);
     }
     catch (cv_bridge::Exception& e)
     {
@@ -757,10 +845,10 @@ priv_nh("~")
   // Having the nh_ private properly namespaces it.
   ros::NodeHandle priv_nh("~");
   tau_ = priv_nh.param<double>("dirty_deriv_gain", 0.05);
-  home1_color_str_ = priv_nh.param<std::string>("home1_color", "red");
-  home2_color_str_ = priv_nh.param<std::string>("home2_color", "yellow");
-  away1_color_str_ = priv_nh.param<std::string>("away1_color", "blue");
-  away2_color_str_ = priv_nh.param<std::string>("away2_color", "purple");
+  home1_color_str_ = priv_nh.param<std::string>("home1_color", "purple");
+  home2_color_str_ = priv_nh.param<std::string>("home2_color", "blue");
+  away1_color_str_ = priv_nh.param<std::string>("away1_color", "red");
+  away2_color_str_ = priv_nh.param<std::string>("away2_color", "yellow");
   home1_color_ = getColorFromString(home1_color_str_);
   home2_color_ = getColorFromString(home2_color_str_);
   away1_color_ = getColorFromString(away1_color_str_);
@@ -843,7 +931,7 @@ Vector3d Vision::convertToWorldCoord(Vector3d pixelCoord, int cols, int rows)
 
 Vision::robot_color Vision::getColorFromString(std::string str) {
   robot_color color;
-  if (str =="red") {
+  if (str == "red") {
     color = robot_color::red;
   }
   else if(str == "blue") {

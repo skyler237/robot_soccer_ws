@@ -3,10 +3,10 @@
   <arg name="me" default="ally1" />
   <arg name="team_side" default="home" />
 
-  <arg name="home1_color" default="blue" />
-  <arg name="home2_color" default="yellow" />
+  <arg name="home1_color" default="purple" />
+  <arg name="home2_color" default="blue" />
   <arg name="away1_color" default="red" />
-  <arg name="away2_color" default="purple" />
+  <arg name="away2_color" default="yellow" />
 
 
     <!-- Hardware agnostic code -->
