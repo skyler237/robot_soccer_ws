@@ -456,7 +456,8 @@ Vector3d Vision::findCenterRobot(Mat img, robot_color robotColor)
   findContours(imgThresholded, contours, hierarchy, CV_RETR_CCOMP, CV_CHAIN_APPROX_SIMPLE);
 
   Vector3d ret(0, 0, 0);
-  printf("  hierarchy size: %d\n", (int) hierarchy.size());
+  if(lastKeyPressed == 'p')
+    printf("  hierarchy size: %d\n", (int) hierarchy.size());
   if (hierarchy.size() < 2)
          return ret;
 
@@ -470,7 +471,8 @@ Vector3d Vision::findCenterRobot(Mat img, robot_color robotColor)
 
   //Print out the center of the robot in pixels for testing purposes
   Point2d robotCenterPixels = (getCenterOfMass(mmLarge) + getCenterOfMass(mmSmall)) / 2.0;
-  printf("in findCenterRobot:  Robot center (pixels): %f, %f\n", robotCenterPixels.x, robotCenterPixels.y);
+  if(lastKeyPressed == 'p')
+    printf("in findCenterRobot:  Robot center (pixels): %f, %f\n", robotCenterPixels.x, robotCenterPixels.y);
 
   //Convert to world coordinates
 
@@ -485,7 +487,8 @@ Vector3d Vision::findCenterRobot(Mat img, robot_color robotColor)
 
   //convert angle to degrees
   angle = angle *180/M_PI;
-  printf("in findCenterRobot: Center of the bot world %f, %f, %f\n", diff.x, diff.y, angle);
+  if(lastKeyPressed == 'p')
+    printf("in findCenterRobot: Center of the bot world %f, %f, %f\n", diff.x, diff.y, angle);
   Vector3d pose(centerSmall3d[0], centerSmall3d[1], angle);
 
 
@@ -502,7 +505,6 @@ void Vision::findPinkBall(Mat img)
   vector<Vec4i> hierarchy;
   findContours(imgThresholded, contours, hierarchy, CV_RETR_CCOMP, CV_CHAIN_APPROX_SIMPLE);
 
-  printf("  hierarchy size: %d\n", (int) hierarchy.size());
   if (hierarchy.size() < 1)
          return ;
 
@@ -582,7 +584,7 @@ Rect Vision::crop(Mat img)
 
   int croppingOffset = 70;
   int widthOffset = 80;
-  int leftBuffer = 100;
+  int leftBuffer = 150;
   int genericBuffer = 10;
 
   //get the lines for portions of the field
