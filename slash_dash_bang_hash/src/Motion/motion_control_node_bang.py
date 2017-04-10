@@ -61,6 +61,12 @@ def setPID(motor, p, i, qpps): #use motor = 0 to set all motors
 	writeFloat(p)
 	writeFloat(i)
 	writeFloat(qpps)
+def setAdvancedConstants(motor, offset, dither_pwm, dither_period)
+	ser.write('a')
+	ser.write(str(motor))
+	writeFloat(offset)
+	writeFloat(dither_pwm)
+	writeFloat(dither_period)
 def setT(period_ms, tau_ms):
 	ser.write('t')
 	writeFloat(period_ms)
@@ -123,8 +129,8 @@ def sendVelocityCommands():
 
     # totalTime = 3   #seconds
     # sampleRate = 50 #samples per second
-    pulsePerRotation = 4955 #Old motors
-    # pulsePerRotation = 116.2 #New motors
+    # pulsePerRotation = 4955 #Old motors
+    pulsePerRotation = 116.2 #New motors
 
 
 
@@ -142,15 +148,18 @@ def main():
     rospy.Subscriber('vel_command', Twist, _handle_velocity_command)
     motor_speed_pub_ = rospy.Publisher('motor_speeds', MotorSpeeds, queue_size=10)
 
-
+    pulsePerRotation = 116.2
     # Set the PIDQ values for all motors
-    #setPID(0, 1, 0.3, 30000)
-    setPID(1, 1.5, 0.3, 49000)
-    setPID(2, 1.5, 0.3, 48000)
-    setPID(3, 1.5, 0.3, 49000)
+    setPID(0, 1.5, 0.5, 6.04*pulsePerRotation)
+    #setPID(1, 1.5, 0.5, 49000)
+    #setPID(2, 1.5, 0.5, 48000)
+    #setPID(3, 1.5, 0.5, 49000)
+
+    # motor, offset, dither_pwm, dither_period
+    setAdvancedConstants(0, 30, 40, 0.04)
 
     # Set tick period (triggers PID control) and velocity filter corner frequency
-    setT(20, 50)
+    setT(20, 100)
 
     # spin() simply keeps python from exiting until this node is stopped
     rospy.spin()

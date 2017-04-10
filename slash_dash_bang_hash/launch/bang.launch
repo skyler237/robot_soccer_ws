@@ -12,7 +12,7 @@
     <arg name="LPF_alpha_xy" default="0.2" />
     <arg name="LPF_alpha_theta" default="0.2" />
     <arg name="dirty_deriv_gain" default="0.20" />
-    <arg name="manual_destinations" default="0" />
+    <arg name="manual_destinations" default="1" />
 
     <!-- using which side of the field we are on, determine the appropriate -->
     <!-- connections to the output of the vision system -->

@@ -79,8 +79,8 @@ void AI::computeDestination() {
 
 
         // robot #2 defend the goal
-        // ally2_destination_ = play_basicDefense(ally2_state_, ball_state_);
-        ally2_destination_ = Skills::hideInCorner(1); // Hide in back left corner -- for debugging
+        ally2_destination_ = play_basicDefense(ally2_state_, ball_state_);
+        // ally2_destination_ = Skills::hideInCorner(1); // Hide in back left corner -- for debugging
         checkForKick(2);
 
         ///////////////////////////////////////////////////////
@@ -103,9 +103,20 @@ void AI::computeDestination() {
     }
     else if (gameState_.reset_field || penalty)
     {
-        ally1_destination_ = Skills::goToPoint(ally1_state_, ally1_startingPos_);
-        ally2_destination_ = Skills::goToPoint(ally2_state_, ally2_startingPos_);
-
+  	Vector2d ally1_penaltyPos_;
+  	Vector2d ally2_penaltyPos_;
+  	ally1_penaltyPos_(0) = -0.5;
+  	ally1_penaltyPos_(1) = -0.8;
+  	ally2_penaltyPos_(0) = -0.3;
+  	ally2_penaltyPos_(1) = 0.8;
+        if (penalty) {
+		ally1_destination_ = Skills::goToPoint(ally1_state_, ally1_penaltyPos_);
+	        ally2_destination_ = Skills::goToPoint(ally2_state_, ally2_penaltyPos_);
+	}
+	else {
+        	ally1_destination_ = Skills::goToPoint(ally1_state_, ally1_startingPos_);
+        	ally2_destination_ = Skills::goToPoint(ally2_state_, ally2_startingPos_);
+	}
         publishDestinations();
     }
   // }

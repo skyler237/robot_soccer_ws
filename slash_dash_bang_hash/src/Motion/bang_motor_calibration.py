@@ -2,6 +2,7 @@ import struct
 import time
 import serial
 import matplotlib.pyplot as plt
+import numpy as np
 
 # ser = serial.Serial('COM11', 115200, timeout=None) #windows
 #ser = serial.Serial('/dev/ttyUSB0', 115200, timeout=None) #linux
@@ -90,12 +91,12 @@ while current_pwm >= 0 and not (avg_speedM1 + avg_speedM2 + avg_speedM3) == 0:
 	table_speedsM3.append(avg_speedM3)
 
 	# Increase counters
-	index += 1
+	current_index += 1
 	current_pwm -= pwm_step_size
 
 disengage()
 
-table_data = np.array([table_pwm, table_speedsM1, table_speedsM2, table_speedsM3)
+table_data = np.array([table_pwm, table_speedsM1, table_speedsM2, table_speedsM3])
 np.save('bang_lookup_table.npy', table_data)
 
 # Plot table values
