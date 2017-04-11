@@ -41,7 +41,7 @@ M_ = (1/RHO)*np.array([[SX1, SY1, (SY1*RX1 - SX1*RY1)],
                       [SX2, SY2, (SY2*RX2 - SX2*RY2)],
                       [SX3, SY3, (SY3*RX3 - SX3*RY3)]])
 
-model_offset_ = 30
+model_offset_ = 0
 dither_pwm_ = 0
 dither_period_ = 0.04
 
@@ -128,6 +128,9 @@ def computeMotorSpeeds():
 
 def sendVelocityCommands():
     global robot_number_
+    global model_offset_
+    global dither_pwm_
+    global dither_period_
     speedM1 = wheel_speeds_[0] # rot/s
     speedM2 = wheel_speeds_[1] # rot/s
     speedM3 = wheel_speeds_[2] # rot/s
@@ -144,18 +147,28 @@ def sendVelocityCommands():
 
 
     # HACK
-    setAdvancedConstants(1, speedM1/abs(speedM1)*offset_, dither_pwm_, dither_period_)
-    setAdvancedConstants(2, speedM2/abs(speedM2)*offset_, dither_pwm_, dither_period_)
-    setAdvancedConstants(3, speedM3/abs(speedM3)*offset_, dither_pwm_, dither_period_)
-
+    #setAdvancedConstants(1, sign(speedM1)*model_offset_, dither_pwm_, dither_period_)
+    #setAdvancedConstants(2, sign(speedM2)*model_offset_, dither_pwm_, dither_period_)
+    #setAdvancedConstants(3, sign(speedM3)*model_offset_, dither_pwm_, dither_period_)
     setSpeed(speedM1*pulsePerRotation, speedM2*pulsePerRotation, speedM3*pulsePerRotation)
     #speeds_actual_raw = getSpeed()
     #speeds_actual = [x/pulsePerRotation for x in speeds_actual_raw]
     #print(speeds_actual)
 
+def sign(value):
+    if value > 0:
+	return 1
+    if value < 0:
+	return -1
+    else:
+	return 0
+
 
 def main():
     global robot_number_
+    global model_offset_
+    global dither_pwm_
+    global dither_period_
     rospy.init_node('MotionControl', anonymous=False)
 
     # Sub/Pub
@@ -176,7 +189,7 @@ def main():
         #setPID(3, -1, -0.4, 50000)
 
         # motor, offset, dither_pwm, dither_period
-        setAdvancedConstants(0, offset_, dither_pwm_, dither_period_)
+        setAdvancedConstants(0, model_offset_, dither_pwm_, dither_period_)
     else:
         # Bang constants
         pulsePerRotation = 116.2
@@ -186,7 +199,7 @@ def main():
         #setPID(3, 1.5, 0.5, 49000)
 
         # motor, offset, dither_pwm, dither_period
-        setAdvancedConstants(0, offset_, dither_pwm_, dither_period_)
+        setAdvancedConstants(0, model_offset_, dither_pwm_, dither_period_)
 
 
 
