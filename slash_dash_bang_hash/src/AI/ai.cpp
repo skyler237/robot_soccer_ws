@@ -109,16 +109,16 @@ void AI::computeDestination() {
   	ally1_penaltyPos_(1) = -0.8;
   	ally2_penaltyPos_(0) = -0.3;
   	ally2_penaltyPos_(1) = 0.8;
-        if (penalty) {
-		ally1_destination_ = Skills::goToPoint(ally1_state_, ally1_penaltyPos_);
-	        ally2_destination_ = Skills::goToPoint(ally2_state_, ally2_penaltyPos_);
-	}
-	else {
-        	ally1_destination_ = Skills::goToPoint(ally1_state_, ally1_startingPos_);
-        	ally2_destination_ = Skills::goToPoint(ally2_state_, ally2_startingPos_);
-	}
-        publishDestinations();
-    }
+    if (penalty) {
+  		ally1_destination_ = Skills::goToPoint(ally1_state_, ally1_penaltyPos_);
+      ally2_destination_ = Skills::goToPoint(ally2_state_, ally2_penaltyPos_);
+  	}
+  	else {
+    	ally1_destination_ = Skills::goToPoint(ally1_state_, ally1_startingPos_);
+    	ally2_destination_ = Skills::goToPoint(ally2_state_, ally2_startingPos_);
+  	}
+          publishDestinations();
+      }
   // }
 
 }

@@ -12,7 +12,7 @@
     <arg name="LPF_alpha_xy" default="0.2" />
     <arg name="LPF_alpha_theta" default="0.2" />
     <arg name="dirty_deriv_gain" default="0.20" />
-    <arg name="manual_destinations" default="1" />
+    <arg name="manual_destinations" default="0" />
 
     <!-- using which side of the field we are on, determine the appropriate -->
     <!-- connections to the output of the vision system -->
@@ -20,7 +20,7 @@
     <arg name="other_side" value="home" if="$(eval team_side == 'away')" />
 
     <!-- Hardware agnostic code -->
-    <node name="ally1_estimator" pkg="slash_dash_bang_hash" type="Estimator" >
+    <node name="ally1_estimator" pkg="slash_dash_bang_hash" type="Estimator" output="screen">
       <remap from="vision_data" to="/slash_vision/$(arg team_side)1" />
       <remap from="state" to="/slash_dash_bang_hash_$(arg team_side)/$(arg me)/ally1_state" />
       <param name="team" value="$(arg team_side)" />
@@ -74,6 +74,10 @@
     <node name="AI" pkg="slash_dash_bang_hash" type="AI">
       <param name="robot_number" value="$(arg robot_number)" />
       <param name="manual_destinations" value="$(arg manual_destinations)" />
+      <remap from="ally1_state" to="/slash_dash_bang_hash_$(arg team_side)/$(arg me)/ally1_state" />
+      <remap from="ally2_state" to="/slash_dash_bang_hash_$(arg team_side)/$(arg me)/ally2_state" />
+      <remap from="opp1_state" to="/slash_dash_bang_hash_$(arg team_side)/$(arg me)/opp1_state" />
+      <remap from="opp2_state" to="/slash_dash_bang_hash_$(arg team_side)/$(arg me)/opp2_state" />
     </node>
 
     <node name="path_planner" pkg="slash_dash_bang_hash" type="PathPlanner" >
@@ -83,7 +87,7 @@
 
     </node>
 
-    <node name="controller" pkg="slash_dash_bang_hash" type="Controller" output="screen">
+    <node name="controller" pkg="slash_dash_bang_hash" type="Controller">
         <!-- The controller needs to know which robot state to listen to -->
         <remap from="robot_state" to="/slash_dash_bang_hash_$(arg team_side)/$(arg me)/$(arg me)_state" />
         <remap from="desired_pose" to="/slash_dash_bang_hash_$(arg team_side)/$(arg me)/$(arg me)_desired_pose" />
@@ -91,11 +95,11 @@
 
 
         <param name="tau" value="$(arg dirty_deriv_gain)"/>
-        <param name="x_P" value="1.0"/>
-        <param name="x_I" value="0.5"/>
+        <param name="x_P" value="2.0"/>
+        <param name="x_I" value="0.2"/>
         <param name="x_D" value="0.0"/>
-        <param name="y_P" value="1.0"/>
-        <param name="y_I" value="0.5"/>
+        <param name="y_P" value="2.0"/>
+        <param name="y_I" value="0.2"/>
         <param name="y_D" value="0.0"/>
 
 
@@ -109,8 +113,9 @@
     <!-- Hardware dependent code  -->
     <group unless="$(arg sim_mode)">
         <!-- Only if not running on simulation -->
-        <node name="MotorControl" pkg="slash_dash_bang_hash" type="motion_control_node_bang.py" output="screen">
+        <node name="MotorControl" pkg="slash_dash_bang_hash" type="motion_control_node_slash.py" output="screen">
           <remap from="robot_state" to="/slash_dash_bang_hash_$(arg team_side)/$(arg me)/$(arg me)_state" />
+          <param name="robot_number" value="$(arg robot_number)" />
         </node>
     </group>
 

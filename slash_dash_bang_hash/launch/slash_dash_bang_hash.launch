@@ -4,6 +4,7 @@
     <arg name="team_side" default="home" />
     <arg name="sim_mode" default="false" />
     <arg name="two_robots" default="false" />
+    <arg name="manual_destinations" default="0" />
 
     <!-- Outputs to either real world or simulation -->
     <arg name="vel_cmd_ally1" default="vel_cmds" />
@@ -24,6 +25,7 @@
             <arg name="sim_mode" value="$(arg sim_mode)" />
             <arg name="team_side" value="$(arg team_side)" />
             <arg name="vel_cmds_remap" value="$(arg vel_cmd_ally1)" />
+            <arg name="manual_destinations" value="$(arg manual_destinations)" />
         </include>
 
         <!-- start up ally2 -->
@@ -33,6 +35,7 @@
                 <arg name="sim_mode" value="$(arg sim_mode)" />
                 <arg name="team_side" value="$(arg team_side)" />
                 <arg name="vel_cmds_remap" value="$(arg vel_cmd_ally2)" />
+                <arg name="manual_destinations" value="$(arg manual_destinations)" />
             </include>
         </group>
 
