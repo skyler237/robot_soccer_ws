@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<launch>
+  <group ns="slash_referee">
+    <include file="$(find soccerref)/launch/referee.launch">
+      <arg name="camera" value="away" />
+    </include>
+  </group>
+
+
+</launch>
