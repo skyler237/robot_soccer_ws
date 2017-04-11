@@ -24,10 +24,12 @@
 #define RED_VAL_LOW 218
 #define RED_VAL_HIGH 240
 
-#define PURPLE_MIN 121
-#define PURPLE_MAX 136
+#define PURPLE_MIN 135
+#define PURPLE_MAX 160
 #define PURPLE_VAL_LOW 218
 #define PURPLE_VAL_HIGH 240
+#define PURPLE_SAT_LOW 0
+#define PURPLE_SAT_HIGH 50
 
 #define WHITE_MIN 0
 #define WHITE_MAX 23
@@ -41,6 +43,13 @@
 #define PINK_VAL_HIGH 255
 #define PINK_SAT_LOW 0
 #define PINK_SAT_HIGH 50
+
+#define LIGHT_PINK_MIN 160
+#define LIGHT_PINK_MAX 179
+#define LIGHT_PINK_VAL_LOW 225
+#define LIGHT_PINK_VAL_HIGH 255
+#define LIGHT_PINK_SAT_LOW 0
+#define LIGHT_PINK_SAT_HIGH 45
 
 #define PINK_GREEN_MAX 215
 
@@ -61,12 +70,12 @@ int iHighS = 255;
 int iLowV = 0;
 int iHighV = 255;
 
-int colorsMin [] = {BLUE_MIN, PURPLE_MIN, RED_MIN, YELLOW_MIN, PINK_MIN};
-int colorsMax [] = {BLUE_MAX, PURPLE_MAX, RED_MAX, YELLOW_MAX, PINK_MAX};
-int valuesMin [] = {BLUE_VAL_LOW, PURPLE_VAL_LOW, RED_VAL_LOW, YELLOW_VAL_MIN, PINK_VAL_LOW};
-int valuesMax [] = {BLUE_VAL_HIGH, PURPLE_VAL_HIGH, RED_VAL_HIGH, YELLOW_VAL_MAX, PINK_VAL_HIGH};
-int saturationMin [] = {SATURATE_LOW, SATURATE_LOW, SATURATE_LOW, SATURATE_LOW, PINK_SAT_LOW};
-int saturationMax [] = {SATURATE_HIGH, SATURATE_HIGH, SATURATE_HIGH, SATURATE_HIGH, PINK_SAT_HIGH};
+int colorsMin [] = {BLUE_MIN, PURPLE_MIN, RED_MIN, YELLOW_MIN, LIGHT_PINK_MIN};
+int colorsMax [] = {BLUE_MAX, PURPLE_MAX, RED_MAX, YELLOW_MAX, LIGHT_PINK_MAX};
+int valuesMin [] = {BLUE_VAL_LOW, PURPLE_VAL_LOW, RED_VAL_LOW, YELLOW_VAL_MIN, LIGHT_PINK_VAL_LOW};
+int valuesMax [] = {BLUE_VAL_HIGH, PURPLE_VAL_HIGH, RED_VAL_HIGH, YELLOW_VAL_MAX, LIGHT_PINK_VAL_HIGH};
+int saturationMin [] = {SATURATE_LOW, PURPLE_SAT_LOW, SATURATE_LOW, SATURATE_LOW, LIGHT_PINK_SAT_LOW};
+int saturationMax [] = {SATURATE_HIGH, PURPLE_SAT_HIGH, SATURATE_HIGH, SATURATE_HIGH, LIGHT_PINK_SAT_HIGH};
 int saturationLow = 80;
 int saturationHigh = 255;
 
@@ -276,8 +285,10 @@ void Vision::getRobotPose(Mat img)
     robot_pos.theta = offsetCenter[2];
     stamped_pose.header = img_header_;
     stamped_pose.pose = robot_pos;
-    if(lastKeyPressed == 'p')
+    if(lastKeyPressed == 'p') {
       printf("  World coordinates %f, %f, %f\n", robot_pos.x, robot_pos.y, robot_pos.theta);
+    }
+
     if(!(isnan(robot_pos.x) || isnan(robot_pos.y) || isnan(robot_pos.theta))) {
       away1_pub.publish(stamped_pose);
     }
@@ -526,12 +537,26 @@ void Vision::findPinkBall(Mat img)
   ball_pos.x = worldCoords[0];
   ball_pos.y = worldCoords[1];
   ball_pos.theta = 0;
-
   slash_dash_bang_hash::Pose2DStamped stamped_pose;
   stamped_pose.header = img_header_;
   stamped_pose.pose = ball_pos;
-  ball_pub.publish(stamped_pose);
-  referee_ball_pub.publish(ball_pos);
+
+  if(!(isnan(ball_pos.x) || isnan(ball_pos.y) || isnan(ball_pos.theta))) {
+    ball_pub.publish(stamped_pose);
+    referee_ball_pub.publish(ball_pos);
+  }
+  else { // If we don't see them, place them off the field
+    ball_pos.x = -0;
+    ball_pos.y = -0;
+    ball_pos.theta = -0;
+    stamped_pose.header = img_header_;
+    stamped_pose.pose = ball_pos;
+
+    ball_pub.publish(stamped_pose);
+    referee_ball_pub.publish(ball_pos);
+  }
+
+
   if(lastKeyPressed == 'p'){
   //pink ball
   Point ball_center = convertWorldToPixel(ball_pos.x, ball_pos.y, img.cols, img.rows);
@@ -860,11 +885,11 @@ priv_nh("~")
   vel_command_sub_ = nh_.subscribe<geometry_msgs::Twist>("vel_command", 1, &Vision::setVelCommand, this);
   geometry_msgs::Twist command_;
 
-  home1_pub = nh_.advertise<slash_dash_bang_hash::Pose2DStamped>("/vision/home1", 5);
-  home2_pub = nh_.advertise<slash_dash_bang_hash::Pose2DStamped>("/vision/home2", 5);
-  away1_pub = nh_.advertise<slash_dash_bang_hash::Pose2DStamped>("/vision/away1", 5);
-  away2_pub = nh_.advertise<slash_dash_bang_hash::Pose2DStamped>("/vision/away2", 5);
-  ball_pub = nh_.advertise<slash_dash_bang_hash::Pose2DStamped>("/vision/ball_stamped", 5);
+  home1_pub = nh_.advertise<slash_dash_bang_hash::Pose2DStamped>("/slash_vision/home1", 5);
+  home2_pub = nh_.advertise<slash_dash_bang_hash::Pose2DStamped>("/slash_vision/home2", 5);
+  away1_pub = nh_.advertise<slash_dash_bang_hash::Pose2DStamped>("/slash_vision/away1", 5);
+  away2_pub = nh_.advertise<slash_dash_bang_hash::Pose2DStamped>("/slash_vision/away2", 5);
+  ball_pub = nh_.advertise<slash_dash_bang_hash::Pose2DStamped>("/slash_vision/ball_stamped", 5);
   referee_ball_pub = nh_.advertise<geometry_msgs::Pose2D>("/vision/ball", 5);
 
 }

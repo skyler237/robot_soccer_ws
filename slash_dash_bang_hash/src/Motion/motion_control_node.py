@@ -41,6 +41,10 @@ M_ = (1/RHO)*np.array([[SX1, SY1, (SY1*RX1 - SX1*RY1)],
                       [SX2, SY2, (SY2*RX2 - SX2*RY2)],
                       [SX3, SY3, (SY3*RX3 - SX3*RY3)]])
 
+model_offset_ = 30
+dither_pwm_ = 0
+dither_period_ = 0.04
+
 # ============== MOTOR FUNCTIONS ====================
 def writeFloat(f):
 	ser.write(struct.pack('>i', int(f*1000)))
@@ -139,7 +143,10 @@ def sendVelocityCommands():
         pulsePerRotation = 116.2 #New motors
 
 
-
+    # HACK
+    setAdvancedConstants(1, speedM1/abs(speedM1)*offset_, dither_pwm_, dither_period_)
+    setAdvancedConstants(2, speedM2/abs(speedM2)*offset_, dither_pwm_, dither_period_)
+    setAdvancedConstants(3, speedM3/abs(speedM3)*offset_, dither_pwm_, dither_period_)
 
     setSpeed(speedM1*pulsePerRotation, speedM2*pulsePerRotation, speedM3*pulsePerRotation)
     #speeds_actual_raw = getSpeed()
@@ -169,7 +176,7 @@ def main():
         #setPID(3, -1, -0.4, 50000)
 
         # motor, offset, dither_pwm, dither_period
-        setAdvancedConstants(0, 30, 0, 0.04)
+        setAdvancedConstants(0, offset_, dither_pwm_, dither_period_)
     else:
         # Bang constants
         pulsePerRotation = 116.2
@@ -179,7 +186,7 @@ def main():
         #setPID(3, 1.5, 0.5, 49000)
 
         # motor, offset, dither_pwm, dither_period
-        setAdvancedConstants(0, 30, 40, 0.04)
+        setAdvancedConstants(0, offset_, dither_pwm_, dither_period_)
 
 
 
