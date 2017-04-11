@@ -96,10 +96,10 @@
 
         <param name="tau" value="$(arg dirty_deriv_gain)"/>
         <param name="x_P" value="2.0"/>
-        <param name="x_I" value="0.2"/>
+        <param name="x_I" value="0.5"/>
         <param name="x_D" value="0.0"/>
         <param name="y_P" value="2.0"/>
-        <param name="y_I" value="0.2"/>
+        <param name="y_I" value="0.5"/>
         <param name="y_D" value="0.0"/>
 
 
@@ -113,7 +113,7 @@
     <!-- Hardware dependent code  -->
     <group unless="$(arg sim_mode)">
         <!-- Only if not running on simulation -->
-        <node name="MotorControl" pkg="slash_dash_bang_hash" type="motion_control_node_slash.py" output="screen">
+        <node name="MotorControl" pkg="slash_dash_bang_hash" type="motion_control_node.py" output="screen">
           <remap from="robot_state" to="/slash_dash_bang_hash_$(arg team_side)/$(arg me)/$(arg me)_state" />
           <param name="robot_number" value="$(arg robot_number)" />
         </node>

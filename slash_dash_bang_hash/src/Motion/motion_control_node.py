@@ -35,6 +35,7 @@ RY3 = 0.0395
 theta_ = 0
 vel_cmd_ = Vector3()
 wheel_speeds_ = np.zeros(shape=(3))
+robot_number_ = 1
 
 M_ = (1/RHO)*np.array([[SX1, SY1, (SY1*RX1 - SX1*RY1)],
                       [SX2, SY2, (SY2*RX2 - SX2*RY2)],
@@ -61,7 +62,7 @@ def setPID(motor, p, i, qpps): #use motor = 0 to set all motors
 	writeFloat(p)
 	writeFloat(i)
 	writeFloat(qpps)
-def setAdvancedConstants(motor, offset, dither_pwm, dither_period)
+def setAdvancedConstants(motor, offset, dither_pwm, dither_period):
 	ser.write('a')
 	ser.write(str(motor))
 	writeFloat(offset)
@@ -109,24 +110,27 @@ def computeMotorSpeeds():
     velocities = np.array([vel_cmd_.x, vel_cmd_.y, vel_cmd_.z])
     wheel_speeds_ = np.dot(M_, R).dot(velocities)
 
-    print(wheel_speeds_)
-    max_speed = np.amax(np.array([abs(x) for x in wheel_speeds_]))
-    print(max_speed)
+    #print(wheel_speeds_)
+    #max_speed = np.amax(np.array([abs(x) for x in wheel_speeds_]))
+    mid_speed = np.median(np.array([abs(x) for x in wheel_speeds_]))
+    #print(max_speed)
 
-    if (max_speed < 0.2):
+    if (mid_speed < 0.2):
       wheel_speeds_ = np.array([0, 0, 0])
-    elif max_speed < 2.0:
-      wheel_speeds_ = np.array([x*(2.0/max_speed) for x in wheel_speeds_])
+    elif mid_speed < 2.0:
+      wheel_speeds_ = np.array([x*(2.0/mid_speed) for x in wheel_speeds_])
 
     sendVelocityCommands()
 
 def sendVelocityCommands():
+    global robot_number_
     speedM1 = wheel_speeds_[0] # rot/s
     speedM2 = wheel_speeds_[1] # rot/s
     speedM3 = wheel_speeds_[2] # rot/s
 
     print(wheel_speeds_)
 
+    pulsePerRotation = 0
     if robot_number_ == 1:
         # Slash constant
         pulsePerRotation = 4955 #Old motors
@@ -138,9 +142,9 @@ def sendVelocityCommands():
 
 
     setSpeed(speedM1*pulsePerRotation, speedM2*pulsePerRotation, speedM3*pulsePerRotation)
-    # speeds_actual_raw = getSpeed()
-    # speeds_actual = [x/pulsePerRotation for x in speeds_actual_raw]
-    # print(speeds_actual)
+    #speeds_actual_raw = getSpeed()
+    #speeds_actual = [x/pulsePerRotation for x in speeds_actual_raw]
+    #print(speeds_actual)
 
 
 def main():
@@ -165,7 +169,7 @@ def main():
         #setPID(3, -1, -0.4, 50000)
 
         # motor, offset, dither_pwm, dither_period
-        setAdvancedConstants(0, 30, 40, 0.04)
+        setAdvancedConstants(0, 30, 0, 0.04)
     else:
         # Bang constants
         pulsePerRotation = 116.2
