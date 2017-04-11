@@ -276,8 +276,10 @@ void Vision::getRobotPose(Mat img)
     robot_pos.theta = offsetCenter[2];
     stamped_pose.header = img_header_;
     stamped_pose.pose = robot_pos;
-    if(lastKeyPressed == 'p')
+    if(lastKeyPressed == 'p') {
       printf("  World coordinates %f, %f, %f\n", robot_pos.x, robot_pos.y, robot_pos.theta);
+    }
+
     if(!(isnan(robot_pos.x) || isnan(robot_pos.y) || isnan(robot_pos.theta))) {
       away1_pub.publish(stamped_pose);
     }
@@ -526,12 +528,26 @@ void Vision::findPinkBall(Mat img)
   ball_pos.x = worldCoords[0];
   ball_pos.y = worldCoords[1];
   ball_pos.theta = 0;
-
   slash_dash_bang_hash::Pose2DStamped stamped_pose;
   stamped_pose.header = img_header_;
   stamped_pose.pose = ball_pos;
-  ball_pub.publish(stamped_pose);
-  referee_ball_pub.publish(ball_pos);
+
+  if(!(isnan(ball_pos.x) || isnan(ball_pos.y) || isnan(ball_pos.theta))) {
+    ball_pub.publish(stamped_pose);
+    referee_ball_pub.publish(ball_pos);
+  }
+  else { // If we don't see them, place them off the field
+    ball_pos.x = -0;
+    ball_pos.y = -0;
+    ball_pos.theta = -0;
+    stamped_pose.header = img_header_;
+    stamped_pose.pose = ball_pos;
+
+    ball_pub.publish(stamped_pose);
+    referee_ball_pub.publish(ball_pos);
+  }
+
+
   if(lastKeyPressed == 'p'){
   //pink ball
   Point ball_center = convertWorldToPixel(ball_pos.x, ball_pos.y, img.cols, img.rows);
@@ -860,11 +876,11 @@ priv_nh("~")
   vel_command_sub_ = nh_.subscribe<geometry_msgs::Twist>("vel_command", 1, &Vision::setVelCommand, this);
   geometry_msgs::Twist command_;
 
-  home1_pub = nh_.advertise<slash_dash_bang_hash::Pose2DStamped>("/vision/home1", 5);
-  home2_pub = nh_.advertise<slash_dash_bang_hash::Pose2DStamped>("/vision/home2", 5);
-  away1_pub = nh_.advertise<slash_dash_bang_hash::Pose2DStamped>("/vision/away1", 5);
-  away2_pub = nh_.advertise<slash_dash_bang_hash::Pose2DStamped>("/vision/away2", 5);
-  ball_pub = nh_.advertise<slash_dash_bang_hash::Pose2DStamped>("/vision/ball_stamped", 5);
+  home1_pub = nh_.advertise<slash_dash_bang_hash::Pose2DStamped>("/slash_vision/home1", 5);
+  home2_pub = nh_.advertise<slash_dash_bang_hash::Pose2DStamped>("/slash_vision/home2", 5);
+  away1_pub = nh_.advertise<slash_dash_bang_hash::Pose2DStamped>("/slash_vision/away1", 5);
+  away2_pub = nh_.advertise<slash_dash_bang_hash::Pose2DStamped>("/slash_vision/away2", 5);
+  ball_pub = nh_.advertise<slash_dash_bang_hash::Pose2DStamped>("/slash_vision/ball_stamped", 5);
   referee_ball_pub = nh_.advertise<geometry_msgs::Pose2D>("/vision/ball", 5);
 
 }
