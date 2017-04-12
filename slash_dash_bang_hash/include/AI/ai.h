@@ -34,6 +34,8 @@ public:
 
   ros::Publisher ally1_destination_pub_;
   ros::Publisher ally2_destination_pub_;
+  ros::Publisher ally1_kick_pub_;
+  ros::Publisher ally2_kick_pub_;
 
   ros::Subscriber ally1_state_sub_, ally2_state_sub_;
   ros::Subscriber opp1_state_sub_, opp2_state_sub_;

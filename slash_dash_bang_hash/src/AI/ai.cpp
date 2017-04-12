@@ -27,6 +27,8 @@ priv_nh("~")
 
   ally1_destination_pub_ = nh_.advertise<slash_dash_bang_hash::State>("ally1_destination", 5);
   ally2_destination_pub_ = nh_.advertise<slash_dash_bang_hash::State>("ally2_destination", 5);
+  ally1_kick_pub_ = nh_.advertise<std_msgs::Bool>("ally1_kick", 1);
+  ally2_kick_pub_ = nh_.advertise<std_msgs::Bool>("ally2_kick", 1);
 
   // This is sort of ad-hoc (would be much better to be a parameter) but it works for now
   ally1_startingPos_(0) = -0.5;
@@ -79,9 +81,9 @@ void AI::computeDestination() {
 
 
         // robot #2 defend the goal
-        ally2_destination_ = play_basicDefense(ally2_state_, ball_state_);
+        // ally2_destination_ = play_basicDefense(ally2_state_, ball_state_);
         // ally2_destination_ = Skills::hideInCorner(1); // Hide in back left corner -- for debugging
-        checkForKick(2);
+        // checkForKick(2);
 
         ///////////////////////////////////////////////////////
         ////////////////////DEBUG//////////////////////////////
@@ -110,15 +112,15 @@ void AI::computeDestination() {
   	ally2_penaltyPos_(0) = -0.3;
   	ally2_penaltyPos_(1) = 0.8;
     if (penalty) {
-  		ally1_destination_ = Skills::goToPoint(ally1_state_, ally1_penaltyPos_);
+      ally1_destination_ = Skills::goToPoint(ally1_state_, ally1_penaltyPos_);
       ally2_destination_ = Skills::goToPoint(ally2_state_, ally2_penaltyPos_);
   	}
   	else {
-    	ally1_destination_ = Skills::goToPoint(ally1_state_, ally1_startingPos_);
-    	ally2_destination_ = Skills::goToPoint(ally2_state_, ally2_startingPos_);
+          	ally1_destination_ = Skills::goToPoint(ally1_state_, ally1_startingPos_);
+          	ally2_destination_ = Skills::goToPoint(ally2_state_, ally2_startingPos_);
   	}
-          publishDestinations();
-      }
+        publishDestinations();
+    }
   // }
 
 }
@@ -144,6 +146,12 @@ void AI::checkForKick(int robotId)
   {
       // TODO: check for minimum re-kick time?
       Skills::kick(team_, robotId);
+      if (robotId == 1) {
+        ally1_kick_pub_.publish(true);
+      }
+      else {
+        ally2_kick_pub_.publish(true);
+      }
   }
 }
 
