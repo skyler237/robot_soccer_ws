@@ -27,8 +27,8 @@ priv_nh("~")
 
   ally1_destination_pub_ = nh_.advertise<slash_dash_bang_hash::State>("ally1_destination", 5);
   ally2_destination_pub_ = nh_.advertise<slash_dash_bang_hash::State>("ally2_destination", 5);
-  ally1_kick_pub_ = nh_.advertise<std_msgs::Bool>("ally1_kick", 1);
-  ally2_kick_pub_ = nh_.advertise<std_msgs::Bool>("ally2_kick", 1);
+  // ally1_kick_pub_ = nh_.advertise<std_msgs::Bool>("ally1_kick", 1);
+  // ally2_kick_pub_ = nh_.advertise<std_msgs::Bool>("ally2_kick", 1);
 
   // This is sort of ad-hoc (would be much better to be a parameter) but it works for now
   ally1_startingPos_(0) = -0.5;
@@ -146,12 +146,12 @@ void AI::checkForKick(int robotId)
   {
       // TODO: check for minimum re-kick time?
       Skills::kick(team_, robotId);
-      if (robotId == 1) {
-        ally1_kick_pub_.publish(true);
-      }
-      else {
-        ally2_kick_pub_.publish(true);
-      }
+      // if (robotId == 1) {
+      //   ally1_kick_pub_.publish(true);
+      // }
+      // else {
+      //   ally2_kick_pub_.publish(true);
+      // }
   }
 }
 

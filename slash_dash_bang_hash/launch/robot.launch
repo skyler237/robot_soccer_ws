@@ -13,6 +13,7 @@
     <arg name="LPF_alpha_theta" default="0.2" />
     <arg name="dirty_deriv_gain" default="0.20" />
     <arg name="manual_destinations" default="0" />
+    <arg name="referee_namespace" default="" />
 
     <!-- using which side of the field we are on, determine the appropriate -->
     <!-- connections to the output of the vision system -->
@@ -23,6 +24,7 @@
     <node name="ally1_estimator" pkg="slash_dash_bang_hash" type="Estimator" output="screen">
       <remap from="vision_data" to="/slash_vision/$(arg team_side)1" />
       <remap from="state" to="/slash_dash_bang_hash_$(arg team_side)/$(arg me)/ally1_state" />
+      <remap from="/game_state" to="$(arg referee_namespace)/game_state" />
       <param name="team" value="$(arg team_side)" />
       <param name="LPF_corner_freq_xy" value="$(arg LPF_corner_freq_xy)" />
       <param name="LPF_corner_freq_theta" value="$(arg LPF_corner_freq_theta)" />
@@ -33,6 +35,7 @@
     <node name="ally2_estimator" pkg="slash_dash_bang_hash" type="Estimator" >
       <remap from="vision_data" to="/slash_vision/$(arg team_side)2" />
       <remap from="state" to="/slash_dash_bang_hash_$(arg team_side)/$(arg me)/ally2_state" />
+      <remap from="/game_state" to="$(arg referee_namespace)/game_state" />
       <param name="team" value="$(arg team_side)" />
       <param name="LPF_corner_freq_xy" value="$(arg LPF_corner_freq_xy)" />
       <param name="LPF_corner_freq_theta" value="$(arg LPF_corner_freq_theta)" />
@@ -43,6 +46,7 @@
     <node name="opp1_estimator" pkg="slash_dash_bang_hash" type="Estimator" >
       <remap from="vision_data" to="/slash_vision/$(arg other_side)1" />
       <remap from="state" to="/slash_dash_bang_hash_$(arg team_side)/$(arg me)/opp1_state" />
+      <remap from="/game_state" to="$(arg referee_namespace)/game_state" />
       <param name="team" value="$(arg team_side)" />
       <param name="LPF_corner_freq_xy" value="$(arg LPF_corner_freq_xy)" />
       <param name="LPF_corner_freq_theta" value="$(arg LPF_corner_freq_theta)" />
@@ -53,6 +57,7 @@
     <node name="opp2_estimator" pkg="slash_dash_bang_hash" type="Estimator" >
       <remap from="vision_data" to="/slash_vision/$(arg other_side)2" />
       <remap from="state" to="/slash_dash_bang_hash_$(arg team_side)/$(arg me)/opp2_state" />
+      <remap from="/game_state" to="$(arg referee_namespace)/game_state" />
       <param name="team" value="$(arg team_side)" />
       <param name="LPF_corner_freq_xy" value="$(arg LPF_corner_freq_xy)" />
       <param name="LPF_corner_freq_theta" value="$(arg LPF_corner_freq_theta)" />
@@ -63,6 +68,7 @@
     <node name="ball_estimator" pkg="slash_dash_bang_hash" type="Estimator" >
       <remap from="vision_data" to="/slash_vision/ball" />
       <remap from="state" to="/slash_dash_bang_hash_$(arg team_side)/$(arg me)/ball_state" />
+      <remap from="/game_state" to="$(arg referee_namespace)/game_state" />
       <param name="team" value="$(arg team_side)" />
       <param name="LPF_corner_freq_xy" value="$(arg LPF_corner_freq_xy)" />
       <param name="LPF_corner_freq_theta" value="$(arg LPF_corner_freq_theta)" />
@@ -80,11 +86,13 @@
       <remap from="opp2_state" to="/slash_dash_bang_hash_$(arg team_side)/$(arg me)/opp2_state" />
       <remap from="ally1_kick" to="/slash_dash_bang_hash_$(arg team_side)/$(arg me)/ally1_kick" />
       <remap from="ally2_kick" to="/slash_dash_bang_hash_$(arg team_side)/$(arg me)/ally2_kick" />
+      <remap from="/game_state" to="$(arg referee_namespace)/game_state" />
     </node>
 
     <node name="path_planner" pkg="slash_dash_bang_hash" type="PathPlanner" >
       <remap from="destination" to="/slash_dash_bang_hash_$(arg team_side)/$(arg me)/$(arg me)_destination" />
       <remap from="desired_pose" to="/slash_dash_bang_hash_$(arg team_side)/$(arg me)/$(arg me)_desired_pose" />
+      <remap from="/game_state" to="$(arg referee_namespace)/game_state" />
       <param name="robot_number" value="$(arg robot_number)" />
 
     </node>
@@ -94,6 +102,7 @@
         <remap from="robot_state" to="/slash_dash_bang_hash_$(arg team_side)/$(arg me)/$(arg me)_state" />
         <remap from="desired_pose" to="/slash_dash_bang_hash_$(arg team_side)/$(arg me)/$(arg me)_desired_pose" />
         <remap if="$(arg sim_mode)" from="vel_command" to="/$(arg team_side)$(arg robot_number)/command" />
+        <remap from="/game_state" to="$(arg referee_namespace)/game_state" />
 
 
         <param name="tau" value="$(arg dirty_deriv_gain)"/>
@@ -120,9 +129,9 @@
           <param name="robot_number" value="$(arg robot_number)" />
         </node>
 
-        <node name="Kicker" pkg="slash_dash_bang_hash" type="kicker_node.py" output="screen">
+        <!-- <node name="Kicker" pkg="slash_dash_bang_hash" type="kicker_node.py" output="screen">
           <remap from="kick" to="/slash_dash_bang_hash_$(arg team_side)/$(arg me)/$(arg me)_kick" />
-        </node>
+        </node> -->
     </group>
 
 </launch>
