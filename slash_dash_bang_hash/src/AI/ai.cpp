@@ -184,8 +184,8 @@ State AI::play_rushGoal(State robot, State ball)
     // compute position 10cm behind ball, but aligned with goal.
     Vector2d position = ball_vec - POSITION_BEHIND_BALL*n;
 
-    if((position - stateToVector(robot)).norm() < 0.25)
-    // if(isInFront(robot, ball, ROBOT_RADIUS*2, POSITION_BEHIND_BALL + 0.05))
+    // if((position - stateToVector(robot)).norm() < 0.25)
+    if(isInFront(robot, ball, ROBOT_RADIUS, POSITION_BEHIND_BALL + 0.05))
     {
       destination = Skills::goToPoint(robot, goal_);
     }

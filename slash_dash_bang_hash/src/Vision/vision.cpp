@@ -81,6 +81,10 @@ int saturationHigh = 255;
 
 int valueLow = 80;
 int valueHigh = 255;
+int left_crop = 80;
+int right_crop = 730;
+int top_crop = 10;
+int bottom_crop = 440;
 
 char lastKeyPressed;
 
@@ -237,16 +241,8 @@ void Vision::getRobotPose(Mat img)
 
 
     //point 2
-    Point velocityPoint(home_1_robot_center.x + (command_.linear.x * circle_radius), home_1_robot_center.y + (command_.linear.y * circle_radius));
-    // printf("command_.linear.x: %g, command_linear.y: %g\n", command_.linear.x, command_.linear.y);
-    //stuff
-    //  vel.linear.x = command_(0);
-    //  //vel.linear.x = 0.0;
-    //  vel.linear.y = command_(1);
-    //  //vel.linear.y = 0.0;
-    // vel.angular.z = command_(2);
-
-    arrowedLine(img, home_1_robot_center, velocityPoint, Scalar(0, 0, 0));
+    //Point velocityPoint(home_1_robot_center.x + (command_.linear.x * circle_radius), home_1_robot_center.y + (command_.linear.y * circle_radius));
+    //arrowedLine(img, home_1_robot_center, velocityPoint, Scalar(0, 0, 0));
 
     //home 2
     offsetCenter = findCenterRobot(img, home2_color_);
@@ -508,6 +504,7 @@ Vector3d Vision::findCenterRobot(Mat img, robot_color robotColor)
 
 void Vision::findPinkBall(Mat img)
 {
+  static geometry_msgs::Pose2D ball_pos_prev;
 
   Mat imgThresholded = thresholdImage(img, robot_color::pink);
 
@@ -543,12 +540,14 @@ void Vision::findPinkBall(Mat img)
 
   if(!(isnan(ball_pos.x) || isnan(ball_pos.y) || isnan(ball_pos.theta))) {
     ball_pub.publish(stamped_pose);
+    ball_pos_prev = ball_pos;
     referee_ball_pub.publish(ball_pos);
   }
   else { // If we don't see them, place them off the field
     ball_pos.x = -0;
     ball_pos.y = -0;
     ball_pos.theta = -0;
+    ball_pos = ball_pos_prev;
     stamped_pose.header = img_header_;
     stamped_pose.pose = ball_pos;
 
@@ -603,64 +602,24 @@ vector<Vec4f> removeStrayLines(vector<Vec4f> lines)
 //crop the field
 Rect Vision::crop(Mat img)
 {
-  img = smoothing(img, 50);
+  //crop the image yall
+
+
+  cvCreateTrackbar("Left", "Crop Control", &left_crop, img.cols);
+  cvCreateTrackbar("Right", "Crop Control", &right_crop, img.cols);
+  cvCreateTrackbar("Top", "Crop Control", &top_crop, img.rows);
+  cvCreateTrackbar("Bottom", "Crop Control", &bottom_crop, img.rows);
   Rect croppedRectangle;
+  croppedRectangle.x = left_crop;
+  croppedRectangle.y = top_crop;
+  croppedRectangle.width = right_crop - left_crop;
+  croppedRectangle.height = bottom_crop - top_crop;
+
+
   Mat croppedImg;
-
-  int croppingOffset = 70;
-  int widthOffset = 80;
-  int leftBuffer = 150;
-  int genericBuffer = 10;
-
-  //get the lines for portions of the field
-  //top
-  croppedRectangle.x = croppingOffset;
-  croppedRectangle.y = genericBuffer;
-  croppedRectangle.width = img.cols - (widthOffset);
-  croppedRectangle.height = VERT_BOUND;
   croppedImg = Mat(img, croppedRectangle);
-  vector<Vec4f> linesTop = LSD(croppedImg);
-
-
-  //left
-  croppedRectangle.width = HOR_BOUND - leftBuffer;
-  croppedRectangle.height = img.rows -genericBuffer;
-  croppedImg = Mat(img, croppedRectangle);
-  vector<Vec4f> linesLeft = LSD(croppedImg);
-
-  //right
-  croppedRectangle.x = (img.cols - HOR_BOUND);
-  croppedRectangle.y = genericBuffer;
-  croppedRectangle.width = (HOR_BOUND - widthOffset);
-  croppedRectangle.height = img.rows -genericBuffer;
-  croppedImg = Mat(img, croppedRectangle);
-  vector<Vec4f> linesRight = LSD(croppedImg);
-
-  //bottom
-  croppedRectangle.x = croppingOffset;
-  croppedRectangle.y = img.rows - VERT_BOUND;
-  croppedRectangle.width = img.cols - (widthOffset);
-  croppedRectangle.height = VERT_BOUND;
-  croppedImg = Mat(img, croppedRectangle);
-  vector<Vec4f> linesBottom = LSD(croppedImg);
-
-
-  //so we can find the long line and the biggest concentration of lines
-  //we know that there should be several points nearby each of the lines
-
-
-  //get the rectangle of the crop
-  croppedRectangle.x = linesLeft.at(findLongestLine(removeStrayLines(linesLeft)))[0] + widthOffset;
-  croppedRectangle.y = linesTop.at(findLongestLine(removeStrayLines(linesTop)))[1] + genericBuffer;
-  croppedRectangle.width = ((img.cols - HOR_BOUND) + linesRight.at(findLongestLine(removeStrayLines(linesRight)))[0] - croppedRectangle.x ) - genericBuffer;
-  croppedRectangle.height = ((img.rows - VERT_BOUND) + linesBottom.at(findLongestLine(removeStrayLines(linesBottom)))[1] - croppedRectangle.y) - genericBuffer;
-  // printf("x %d\n", croppedRectangle.x);
-  // printf("x %d\n", croppedRectangle.y);
-  // printf("height %d\n", croppedRectangle.height);
-  // printf("width %d\n", croppedRectangle.width);
-
-  croppedImg = Mat(img, croppedRectangle);
-
+  //imshow("cropped Image control", croppedImg);
+  imshow("Crop Control", croppedImg);
 
   return croppedRectangle;
 
@@ -673,79 +632,13 @@ void Vision::setDestination(const StateConstPtr &msg)
 
 void Vision::setVelCommand(const VelConstPtr &msg)
 {
-  //TODO:do stuff
   command_ = *msg;
-
 }
-
 
 void Vision::setDesiredPose(const StateConstPtr &msg)
 {
   desired_pose_ = *msg;
 }
-
-// ============= This code could be used to get input from the OpenCV screen for testing.
-// void Vision::mouseCallback(int event, int x, int y, int flags, void* userdata) {
-//     static bool mouse_left_down = false;
-//
-//     if (event == EVENT_LBUTTONDOWN) {
-//         mouse_left_down = true;
-//         Vector2d point_meters = imageToWorldCoordinates(Vector2d(x, y));
-//         char buffer[50];
-//         sprintf(buffer, "Location: (%.3f m, %.3f m)", point_meters(0), point_meters(1));
-//         displayStatusBar(GUI_NAME, buffer, 10000);
-//
-//     } else if (event == EVENT_MOUSEMOVE) {
-//         if (mouse_left_down) sendBallMessage(x, y);
-//
-//     } else if (event == EVENT_LBUTTONUP) {
-//         sendBallMessage(x, y);
-//         mouse_left_down = false;
-//     }
-//
-// }
-//
-// void Vision::sendBallMessage(int x, int y) {
-//     // Expects x, y in pixels
-//
-//     // Convert pixels to meters for sending  simulated ball position from mouse clicks
-//     float x_meters, y_meters;
-//
-//     // shift data by half the pixels so (0, 0) is in center
-//     x_meters = x - (CAMERA_WIDTH/2.0);
-//     y_meters = y - (CAMERA_HEIGHT/2.0);
-//
-//     // Multiply by aspect-ratio scaling factor
-//     x_meters = x_meters * (FIELD_WIDTH/FIELD_WIDTH_PIXELS);
-//     y_meters = y_meters * (FIELD_HEIGHT/FIELD_HEIGHT_PIXELS);
-//
-//     // mirror y over y-axis
-//     y_meters = -1*y_meters;
-//
-//     // cout << "x: " << x_meters << ", y: " << y_meters << endl;
-//
-//     geometry_msgs::Vector3 msg;
-//     msg.x = x_meters;
-//     msg.y = y_meters;
-//     msg.z = 0;
-//     ball_position_pub.publish(msg);
-// }
-//
-//
-// // Alternate function to convertToWorldCoord
-// Vector2d imageToWorldCoordinates(Vector2d image_point, double FIELD_WIDTH, double FIELD_HEIGHT, int cols, int rows)
-// {
-//     Vector2d world_point = image_point;
-//     world_point[0] += FIELD_WIDTH / 2.0;
-//     world_point[1] += FIELD_HEIGHT / 2.0;
-//     world_point[0] /= FIELD_WIDTH;
-//     world_point[1] /= FIELD_HEIGHT;
-//     world_point[0] *= cols;
-//     world_point[1] *= rows;
-//
-//     return world_point;
-// }
-
 
 //draw desired position and the desired destination
 void Vision::drawPosDest(Mat img)
@@ -787,10 +680,6 @@ void Vision::drawPosDest(Mat img)
   Point desiredCenter(center[0], center[1]);
   circle(img, desiredCenter, radius, Scalar( 255, 0, 0 ));
 
-
-
-
-
   imshow("circle", img);
 }
 
@@ -817,15 +706,14 @@ void Vision::visionCallback(const sensor_msgs::ImageConstPtr& msg)
         img = frame;
         if(lastKeyPressed == 'p'){
           imshow("original view", img);
+          Vision::crop(img);
         }
-        if(!cropped)
-        {
-          croppedRect = Vision::crop(img);
-          cropped = true;
-
-        }
-
-        img = Mat(img, croppedRect);
+        Rect croppedRectangle;
+        croppedRectangle.x = left_crop;
+        croppedRectangle.y = top_crop;
+        croppedRectangle.width = right_crop - left_crop;
+        croppedRectangle.height = bottom_crop - top_crop;
+        img = Mat(img, croppedRectangle);
         getRobotPose(img);
         findPinkBall(img);
 
@@ -843,9 +731,6 @@ void Vision::visionCallback(const sensor_msgs::ImageConstPtr& msg)
         char key = waitKey(1);
         if(key != -1)
           lastKeyPressed = key;
-
-
-        //waitKey(60);
     }
     catch (cv_bridge::Exception& e)
     {
