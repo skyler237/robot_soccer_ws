@@ -115,14 +115,18 @@ def computeMotorSpeeds():
     wheel_speeds_ = np.dot(M_, R).dot(velocities)
 
     #print(wheel_speeds_)
-    #max_speed = np.amax(np.array([abs(x) for x in wheel_speeds_]))
-    mid_speed = np.median(np.array([abs(x) for x in wheel_speeds_]))
+    max_speed = np.amax(np.array([abs(x) for x in wheel_speeds_]))
+    #mid_speed = np.median(np.array([abs(x) for x in wheel_speeds_]))
     #print(max_speed)
 
-    if (mid_speed < 0.2):
+    #if (mid_speed < 0.2):
+    #  wheel_speeds_ = np.array([0, 0, 0])
+    #elif mid_speed < 2.0:
+    #  wheel_speeds_ = np.array([x*(2.0/mid_speed) for x in wheel_speeds_])
+    if (max_speed < 0.2):
       wheel_speeds_ = np.array([0, 0, 0])
-    elif mid_speed < 2.0:
-      wheel_speeds_ = np.array([x*(2.0/mid_speed) for x in wheel_speeds_])
+    elif max_speed < 2.0:
+      wheel_speeds_ = np.array([x*(2.0/max_speed) for x in wheel_speeds_])
 
     sendVelocityCommands()
 
@@ -183,7 +187,7 @@ def main():
     # Set the PIDQ values for all motors
     if robot_number_ == 1:
         # Slash constants
-        setPID(0, 1.3, 0.55, 50000)
+        setPID(0, 12.5, 0.4, 50000)
         #setPID(1, -1, -0.4, 49000)
         #setPID(2, -1, -0.4, 48000)
         #setPID(3, -1, -0.4, 50000)

@@ -13,7 +13,11 @@
     <arg name="LPF_alpha_theta" default="0.2" />
     <arg name="dirty_deriv_gain" default="0.20" />
     <arg name="manual_destinations" default="0" />
-    <arg name="referee_namespace" default="" />
+    <arg name="practice_mode" default="0" />
+
+   
+    <arg name="referee_namespace" value="/slash_referee" if="$(eval practice_mode == '1')"/>
+    <arg name="referee_namespace" value="" if="$(eval practice_mode == '0')"/>
 
     <!-- using which side of the field we are on, determine the appropriate -->
     <!-- connections to the output of the vision system -->
@@ -107,10 +111,10 @@
 
         <param name="tau" value="$(arg dirty_deriv_gain)"/>
         <param name="x_P" value="2.0"/>
-        <param name="x_I" value="0.5"/>
+        <param name="x_I" value="0.1"/>
         <param name="x_D" value="0.0"/>
         <param name="y_P" value="2.0"/>
-        <param name="y_I" value="0.5"/>
+        <param name="y_I" value="0.1"/>
         <param name="y_D" value="0.0"/>
 
 
