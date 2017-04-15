@@ -16,8 +16,8 @@
     <arg name="practice_mode" default="0" />
 
    
-    <arg name="referee_namespace" value="/slash_referee" if="$(eval practice_mode == '1')"/>
-    <arg name="referee_namespace" value="" if="$(eval practice_mode == '0')"/>
+    <arg name="referee_namespace" value="/slash_referee" if="$(eval practice_mode == 1)"/>
+    <arg name="referee_namespace" value="" if="$(eval practice_mode == 0)"/>
 
     <!-- using which side of the field we are on, determine the appropriate -->
     <!-- connections to the output of the vision system -->
