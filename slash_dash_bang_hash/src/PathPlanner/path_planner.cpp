@@ -161,7 +161,6 @@ State PathPlanner::avoidBall(State destination)
   Vector2d final_destination(destination.x, destination.y);
   //
   // // ==== Check if the ball is in the path ====
-  // Vector2d toDestination = final_destination - robot_pose;
   // Vector2d perp = getVecPerpendicularTo(toDestination);
   Vector2d toBall = ball_predicted_pose - robot_pose;
   //
@@ -172,9 +171,11 @@ State PathPlanner::avoidBall(State destination)
   // Vector2d robotForwardVec(cos(robot_state.theta*M_PI/180.0),sin(robot_state.theta*M_PI/180.0));
   Vector2d robotForwardVec(cos(destination.theta*M_PI/180.0),sin(destination.theta*M_PI/180.0));
 
-  double ballForwardDistance = vectorProjectedDistance(toBall, robotForwardVec);
+  // double ballForwardDistance = vectorProjectedDistance(toBall, robotForwardVec);
+  Vector2d toDestination = final_destination - robot_pose;
+  Vector2d ballForwardVector = vectorProjection(toBall, toDestination);
 
-  bool ballOnDestinationPath = (ballForwardDistance > 0.0);
+  bool ballOnDestinationPath = (ballForwardVector(0) > 0.0);
   // ROS_INFO("Ball angle=%f, robot angle=%f", ballAngle, robot_state.theta);
   // ROS_INFO("ballForwardDistance=%f", ballForwardDistance);
 

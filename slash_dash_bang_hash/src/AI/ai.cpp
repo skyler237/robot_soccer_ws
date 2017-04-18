@@ -63,7 +63,7 @@ void AI::computeDestination() {
   // {
     if (gameState_.play)
     {
-        ROS_INFO("Computing destination");
+        //ROS_INFO("Computing destination");
         /*********************************************************************/
         // Choose strategies and update ally1/ally2_destination_ variables
 
@@ -188,21 +188,22 @@ State AI::play_rushGoal(State robot, State ball)
 
     if(goToGoal) {
       destination = Skills::goToPoint(robot, goal_);
-      if (robot.x - 0.25 > ball_vec(0))	{
+      if (robot.x - 0.15 > ball_vec(0))	{
 	//ROS_INFO("goToGoal=false, robot.x=%f, ball_vec(0)=%f", robot.x, ball_vec(0));
 	goToGoal = false;
       }
     }
     else {
       destination = Skills::goToPoint(robot, position);
-      double dist_behind_ball = vectorProjectedDistance(stateToVector(robot), n);
-      double dist_perp_ball = vectorProjectedDistance(stateToVector(robot), getVecPerpendicularTo(n));
+      Vector2d ballToRobot = stateToVector(robot) - ball_vec;
+      double dist_behind_ball = vectorProjectedDistance(ballToRobot, n);
+      double dist_perp_ball = vectorProjectedDistance(ballToRobot, getVecPerpendicularTo(n));
       // if(isInFront(robot, ball, ROBOT_RADIUS, POSITION_BEHIND_BALL + 0.05))
       if(dist_behind_ball <= -(ROBOT_RADIUS+0.05) && fabs(dist_perp_ball) < (ROBOT_RADIUS))
       //if(robot.x < ball_vec(0) && fabs(dist_perp_ball) < ROBOT_RADIUS)
       {
 	//ROS_INFO("goToGoal=true");
-        ROS_INFO("robot.x=%f, ball_vec(0)=%f, dist_perp_ball=%f", robot.x, ball_vec(0), dist_perp_ball);
+        // ROS_INFO("robot.x=%f, ball_vec(0)=%f, dist_perp_ball=%f", robot.x, ball_vec(0), dist_perp_ball);
 	goToGoal = true;
       } 
     }
@@ -217,7 +218,7 @@ State AI::play_findBestShot(int robotId, State robot, State ball)
   // normal vector from ball to goal
   Vector2d ball_vec = stateToVector(ball);
   double open_zone_midpoint = Skills::findBestShot(ball, ally1_state_, opp1_state_, opp2_state_);
-  ROS_INFO("Shot midpoint: y=%f", open_zone_midpoint);
+  // ROS_INFO("Shot midpoint: y=%f", open_zone_midpoint);
   Vector2d shot_destination(FIELD_WIDTH/2.0, open_zone_midpoint);
 
   // TODO: Does not dribble the ball...
@@ -285,7 +286,7 @@ State AI::play_standardOffense()
     }
   }
 
-  ROS_INFO("play_state=%d", play_state);
+  // ROS_INFO("play_state=%d", play_state);
 
   // Simple spot to test shooting
   Vector2d shot_spot_test(GOAL_X - 1.0, GOAL_Y + 0.5);
@@ -378,7 +379,7 @@ void AI::stateCallback(const StateConstPtr &msg, const std::string& robot)
 {
     if(robot == "ally1") {
       ally1_state_ = *msg;
-      ROS_INFO("Getting ally1 state");
+      //ROS_INFO("Getting ally1 state");
     }
 
     else if(robot == "ally2")
