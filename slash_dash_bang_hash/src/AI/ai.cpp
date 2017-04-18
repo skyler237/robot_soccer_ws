@@ -3,7 +3,7 @@
 #include "AI/skills.h"
 
 #define AI_TIME_STEP 0.00
-#define POSITION_BEHIND_BALL 0.20
+#define POSITION_BEHIND_BALL 0.15
 
 AI::AI() :
 nh_(ros::NodeHandle()),
@@ -39,7 +39,7 @@ priv_nh("~")
 
   goal_ << FIELD_WIDTH/2, 0;
 
-  ROS_INFO("Initializing AI");
+  //ROS_INFO("Initializing AI");
 
 }
 
@@ -70,10 +70,10 @@ void AI::computeDestination() {
         // robot #1 positions itself behind ball and rushes the goal.
         // ally1_destination_ = play_findBestShot(1, ally1_state_, ball_state_);
         // ally1_destination_ = play_rushGoal(ally1_state_, ball_state_);
-        // ally1_destination_ = play_standardOffense();
+        ally1_destination_ = play_standardOffense();
         // ally1_destination_ = play_skillsTournament(ally1_state_);
         // ally1_destination_ = play_playsTournament(ally1_state_);
-        ally1_destination_ = play_onePlayer(ally1_state_);
+        // ally1_destination_ = play_onePlayer(ally1_state_);
 
         // checkForKick(1);
         //ROS_INFO("Ally1_destination: x=%f, y=%f", ally1_destination_.x, ally1_destination_.y);
@@ -82,6 +82,7 @@ void AI::computeDestination() {
 
         // robot #2 defend the goal
         // ally2_destination_ = play_basicDefense(ally2_state_, ball_state_);
+        ally2_destination_ = play_rushGoal(ally2_state_, ball_state_);
         // ally2_destination_ = Skills::hideInCorner(1); // Hide in back left corner -- for debugging
         // checkForKick(2);
 
@@ -173,10 +174,11 @@ void AI::publishDestinations()
 // defense would be a strategy.
 State AI::play_rushGoal(State robot, State ball)
 {
+    static bool goToGoal = false;
     State destination;
     // normal vector from ball to goal
-    // Vector2d ball_vec = stateToVector(ball);
-    Vector2d ball_vec = Skills::ballIntercept(robot, ball);
+    Vector2d ball_vec = stateToVector(ball);
+    //Vector2d ball_vec = Skills::ballIntercept(robot, ball);
     // ROS_INFO("ball_vel: xdot=%f, ydot=%f", ball.xdot, ball.ydot);
     // printVector(ball_vec, "ball_vec");
     Vector2d n = (goal_ - ball_vec).normalized();
@@ -184,16 +186,28 @@ State AI::play_rushGoal(State robot, State ball)
     // compute position 10cm behind ball, but aligned with goal.
     Vector2d position = ball_vec - POSITION_BEHIND_BALL*n;
 
-    // if((position - stateToVector(robot)).norm() < 0.25)
-    if(isInFront(robot, ball, ROBOT_RADIUS, POSITION_BEHIND_BALL + 0.05))
-    {
+    if(goToGoal) {
       destination = Skills::goToPoint(robot, goal_);
+      if (robot.x - 0.25 > ball_vec(0))	{
+	//ROS_INFO("goToGoal=false, robot.x=%f, ball_vec(0)=%f", robot.x, ball_vec(0));
+	goToGoal = false;
+      }
     }
     else {
       destination = Skills::goToPoint(robot, position);
+      double dist_behind_ball = vectorProjectedDistance(stateToVector(robot), n);
+      double dist_perp_ball = vectorProjectedDistance(stateToVector(robot), getVecPerpendicularTo(n));
+      // if(isInFront(robot, ball, ROBOT_RADIUS, POSITION_BEHIND_BALL + 0.05))
+      if(dist_behind_ball <= -(ROBOT_RADIUS+0.05) && fabs(dist_perp_ball) < (ROBOT_RADIUS))
+      //if(robot.x < ball_vec(0) && fabs(dist_perp_ball) < ROBOT_RADIUS)
+      {
+	//ROS_INFO("goToGoal=true");
+        ROS_INFO("robot.x=%f, ball_vec(0)=%f, dist_perp_ball=%f", robot.x, ball_vec(0), dist_perp_ball);
+	goToGoal = true;
+      } 
     }
 
-    printVector(stateToVector(destination), "Rush goal destination");
+    //printVector(stateToVector(destination), "Rush goal destination");
 
     return destination;
 }

@@ -79,8 +79,8 @@ void Estimator::gameStateCallback(const soccerref::GameState::ConstPtr &msg)
 
 void Estimator::estimateStates()
 {
-  predictAndCorrectEstimator();
-  // LPF_Estimator();
+  // predictAndCorrectEstimator();
+  LPF_Estimator();
 
 
   publishStates();

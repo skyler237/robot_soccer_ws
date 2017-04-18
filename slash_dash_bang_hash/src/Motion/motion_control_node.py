@@ -96,7 +96,7 @@ def _handle_velocity_command(msg):
     vel_cmd_.x = msg.linear.x
     vel_cmd_.y = msg.linear.y
     vel_cmd_.z = msg.angular.z*pi/180.0
-    print(msg)
+    #print(msg)
     computeMotorSpeeds()
 
 def computeMotorSpeeds():
@@ -139,17 +139,15 @@ def sendVelocityCommands():
     speedM2 = wheel_speeds_[1] # rot/s
     speedM3 = wheel_speeds_[2] # rot/s
 
-    print(wheel_speeds_)
+    #print(wheel_speeds_)
 
     pulsePerRotation = 0
-    if robot_number_ == "1":
+    if robot_number_ == 1:
         # Slash constant
         pulsePerRotation = 4955 #Old motors
-        print("robot 1 4955")
     else:
         # Bang constant
         pulsePerRotation = 116.2 #New motors
-        print("robot 2 116.2")
 
 
     # HACK
@@ -157,9 +155,9 @@ def sendVelocityCommands():
     #setAdvancedConstants(2, sign(speedM2)*model_offset_, dither_pwm_, dither_period_)
     #setAdvancedConstants(3, sign(speedM3)*model_offset_, dither_pwm_, dither_period_)
     setSpeed(speedM1*pulsePerRotation, speedM2*pulsePerRotation, speedM3*pulsePerRotation)
-    speeds_actual_raw = getSpeed()
-    speeds_actual = [x/pulsePerRotation for x in speeds_actual_raw]
-    print(speeds_actual)
+    #speeds_actual_raw = getSpeed()
+    #speeds_actual = [x/pulsePerRotation for x in speeds_actual_raw]
+    #print(speeds_actual)
 
 def sign(value):
     if value > 0:
@@ -182,12 +180,12 @@ def main():
     rospy.Subscriber('vel_command', Twist, _handle_velocity_command)
     motor_speed_pub_ = rospy.Publisher('motor_speeds', MotorSpeeds, queue_size=10)
 
-    robot_number_ = rospy.get_param('robot_number', 1)
+    robot_number_ = rospy.get_param('~robot_number', 1)
 
 
 
     # Set the PIDQ values for all motors
-    if robot_number_ == "1":
+    if robot_number_ == 1:
         # Slash constants
         setPID(0, 12.5, 0.4, 50000)
         #setPID(1, -1, -0.4, 49000)
@@ -196,7 +194,6 @@ def main():
 
         # motor, offset, dither_pwm, dither_period
         setAdvancedConstants(0, 0, 0, 0.01)
-        print("robot 1 0, 0, 0.01")
     else:
         # Bang constants
         pulsePerRotation = 116.2
@@ -207,7 +204,6 @@ def main():
 
         # motor, offset, dither_pwm, dither_period
         setAdvancedConstants(0, 0, 0, 0.01)
-        print("robot 2 0, 0, 0.01")
 
 
 

@@ -22,7 +22,7 @@
             <arg name="ally" value="ally1" />
             <arg name="sim_mode" value="$(arg sim_mode)" />
             <arg name="team_side" value="$(arg team_side)" />
-            <arg name="robot_number" value="$(arg robot_number)" />
+            <arg name="robot_number" value="2" />
             <arg name="vel_cmds_remap" value="$(arg vel_cmds_remap)" />
             <arg name="manual_destinations" value="$(arg manual_destinations)" />
             <arg name="practice_mode" value="$(arg practice_mode)" />

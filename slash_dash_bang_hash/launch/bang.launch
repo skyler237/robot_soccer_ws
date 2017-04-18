@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<launch>
+    <!-- declare arg to be passed in -->
+    <arg name="team_side" default="home" />
+    <arg name="sim_mode" default="false" />
+    <arg name="two_robots" default="false" />
+    <arg name="manual_destinations" default="0" />
+    <arg name="practice_mode" default="0" />
+
+    <!-- Outputs to either real world or simulation -->
+    <arg name="vel_cmd_ally1" default="vel_cmds" />
+    <arg name="vel_cmd_ally2" default="vel_cmds" />
+    <arg name="kick_ally1" default="kick" />
+    <arg name="kick_ally2" default="kick" />
+
+    <group ns="slash_dash_bang_hash_$(arg team_side)">
+
+        <!-- Set ROS parameters that the code can access -->
+        <param name="simulation_mode" type="bool" value="$(arg sim_mode)" />
+        <param name="team_side" type="string" value="$(arg team_side)" />
+        <!-- <node name="vision" pkg="slash_dash_bang_hash" type="Vision" output="screen">
+        </node> -->
+
+        <!-- start up ally2 -->
+        <include file="$(find slash_dash_bang_hash)/launch/ally2.launch">
+            <arg name="sim_mode" value="$(arg sim_mode)" />
+            <arg name="team_side" value="$(arg team_side)" />
+            <arg name="vel_cmds_remap" value="$(arg vel_cmd_ally1)" />
+            <arg name="manual_destinations" value="$(arg manual_destinations)" />
+            <arg name="practice_mode" value="$(arg practice_mode)" />
+        </include>
+
+
+    </group>
+</launch>
