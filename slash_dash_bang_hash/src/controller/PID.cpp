@@ -65,8 +65,8 @@ double PID::computePIDDirect(double error, double xdot, double dt)
     return 0.0;
   }
 
-  double stop_threshold = 0.0;
-  double integrate_threshold = 5.0;
+  double stop_threshold = 0.05;
+  double integrate_threshold = 0.2;
 
   // Numerical integration -- only apply when we are close to the target
   if(fabs(error) > stop_threshold && fabs(error) < integrate_threshold) {
