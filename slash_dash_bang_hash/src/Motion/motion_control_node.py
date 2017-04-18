@@ -115,14 +115,18 @@ def computeMotorSpeeds():
     wheel_speeds_ = np.dot(M_, R).dot(velocities)
 
     #print(wheel_speeds_)
-    #max_speed = np.amax(np.array([abs(x) for x in wheel_speeds_]))
-    mid_speed = np.median(np.array([abs(x) for x in wheel_speeds_]))
+    max_speed = np.amax(np.array([abs(x) for x in wheel_speeds_]))
+    #mid_speed = np.median(np.array([abs(x) for x in wheel_speeds_]))
     #print(max_speed)
 
-    if (mid_speed < 0.2):
+    #if (mid_speed < 0.2):
+    #  wheel_speeds_ = np.array([0, 0, 0])
+    #elif mid_speed < 2.0:
+    #  wheel_speeds_ = np.array([x*(2.0/mid_speed) for x in wheel_speeds_])
+    if (max_speed < 0.2):
       wheel_speeds_ = np.array([0, 0, 0])
-    elif mid_speed < 2.0:
-      wheel_speeds_ = np.array([x*(2.0/mid_speed) for x in wheel_speeds_])
+    elif max_speed < 2.0:
+      wheel_speeds_ = np.array([x*(2.0/max_speed) for x in wheel_speeds_])
 
     sendVelocityCommands()
 
@@ -138,12 +142,14 @@ def sendVelocityCommands():
     print(wheel_speeds_)
 
     pulsePerRotation = 0
-    if robot_number_ == 1:
+    if robot_number_ == "1":
         # Slash constant
         pulsePerRotation = 4955 #Old motors
+        print("robot 1 4955")
     else:
         # Bang constant
         pulsePerRotation = 116.2 #New motors
+        print("robot 2 116.2")
 
 
     # HACK
@@ -151,9 +157,9 @@ def sendVelocityCommands():
     #setAdvancedConstants(2, sign(speedM2)*model_offset_, dither_pwm_, dither_period_)
     #setAdvancedConstants(3, sign(speedM3)*model_offset_, dither_pwm_, dither_period_)
     setSpeed(speedM1*pulsePerRotation, speedM2*pulsePerRotation, speedM3*pulsePerRotation)
-    #speeds_actual_raw = getSpeed()
-    #speeds_actual = [x/pulsePerRotation for x in speeds_actual_raw]
-    #print(speeds_actual)
+    speeds_actual_raw = getSpeed()
+    speeds_actual = [x/pulsePerRotation for x in speeds_actual_raw]
+    print(speeds_actual)
 
 def sign(value):
     if value > 0:
@@ -181,25 +187,27 @@ def main():
 
 
     # Set the PIDQ values for all motors
-    if robot_number_ == 1:
+    if robot_number_ == "1":
         # Slash constants
-        setPID(0, 1.3, 0.55, 50000)
+        setPID(0, 12.5, 0.4, 50000)
         #setPID(1, -1, -0.4, 49000)
         #setPID(2, -1, -0.4, 48000)
         #setPID(3, -1, -0.4, 50000)
 
         # motor, offset, dither_pwm, dither_period
-        setAdvancedConstants(0, model_offset_, dither_pwm_, dither_period_)
+        setAdvancedConstants(0, 0, 0, 0.01)
+        print("robot 1 0, 0, 0.01")
     else:
         # Bang constants
         pulsePerRotation = 116.2
-        setPID(0, 1.5, 0.5, 6.04*pulsePerRotation)
+        setPID(0, 3.5, 0.0, 6.04*pulsePerRotation)
         #setPID(1, 1.5, 0.5, 49000)
         #setPID(2, 1.5, 0.5, 48000)
         #setPID(3, 1.5, 0.5, 49000)
 
         # motor, offset, dither_pwm, dither_period
-        setAdvancedConstants(0, model_offset_, dither_pwm_, dither_period_)
+        setAdvancedConstants(0, 0, 0, 0.01)
+        print("robot 2 0, 0, 0.01")
 
 
 

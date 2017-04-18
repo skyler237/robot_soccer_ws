@@ -6,6 +6,8 @@
     <arg name="vel_cmds_remap" default="vel_cmds" />
     <arg name="robot_number" default="1" />
     <arg name="manual_destinations" default="0" />
+    <arg name="practice_mode" default="0" />
+
 
     <group ns="ally1">
         <!-- Load this robot's param file with physical params -->
@@ -24,6 +26,7 @@
             <arg name="robot_number" value="$(arg robot_number)" />
             <arg name="vel_cmds_remap" value="$(arg vel_cmds_remap)" />
             <arg name="manual_destinations" value="$(arg manual_destinations)" />
+    	    <arg name="practice_mode" value="$(arg practice_mode)" />
         </include>
 
     </group>
